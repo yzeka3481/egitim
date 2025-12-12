@@ -605,7 +605,85 @@
     }
 
 
-    /* Veli özeti ve Sözlük stilleri orijinalden korunmuştur */
+    /* Sözlük Stilleri Güncellendi */
+    .dictionary-search {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+    .dictionary-input {
+        flex-grow: 1;
+        padding: 10px 15px;
+        border-radius: 999px;
+        border: 1px solid #d0d8ea;
+        font-size: 14px;
+        background: #fff;
+    }
+    .dictionary-btn {
+        background: var(--primary);
+        color: #fff;
+        padding: 8px 15px;
+        border: none;
+        border-radius: 999px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+    .dictionary-btn:hover { background: #18a7b1; }
+    
+    .dictionary-status {
+        font-size: 12px;
+        color: var(--text-soft);
+        margin-bottom: 15px;
+        padding: 8px 12px;
+        background: var(--primary-soft);
+        border-radius: 12px;
+    }
+
+    .dictionary-section-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--secondary);
+        margin-top: 20px;
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+        border-bottom: 2px solid #ffe9d0;
+    }
+
+    .dictionary-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .dictionary-item {
+        background: #f9fbff;
+        border-radius: 12px;
+        padding: 10px 15px;
+        border: 1px solid #e3e7f1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .dictionary-word {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .dictionary-meaning {
+        font-size: 13px;
+        color: var(--text-main);
+        line-height: 1.4;
+    }
+    
+    .dictionary-history-item {
+        background: #fff;
+        border: 1px solid #e3e7f1;
+        border-left: 5px solid var(--secondary);
+    }
+
 
     .hidden { display: none; }
     
@@ -841,19 +919,19 @@
       </div>
     </section>
 
-    <!-- TÜRKÇE SÖZLÜK (Orijinal hali korunmuştur) -->
+    <!-- TÜRKÇE SÖZLÜK (GÜNCELLENDİ) -->
     <div id="screen-label-dictionary" class="screen-label hidden">
       Ekran • Türkçe Sözlük
     </div>
     <section id="screen-dictionary" class="screen-card hidden">
       <div class="screen-header">
         <div>
-          <div class="screen-title">Türkçe Sözlük (2. Sınıf Düzeyi)</div>
+          <div class="screen-title">Türkçe Sözlük (TDK Destekli)</div>
           <div class="screen-subtitle">
-            Bilinmeyen kelimeleri TDK Güncel Türkçe Sözlük ve yerel sözlükle öğren.
+            Bilinmeyen kelimeleri Türk Dil Kurumu (TDK) verileriyle anında öğren.
           </div>
         </div>
-        <div class="tag">İnternet varsa TDK, yoksa yerel sözlük</div>
+        <div class="tag">Çevrimiçi Arama</div>
       </div>
 
       <div class="dictionary-search">
@@ -861,13 +939,28 @@
           type="text"
           id="dictionary-input"
           class="dictionary-input"
-          placeholder="Örneğin: dikkat, sayı, öğretmen, saygı..."
+          placeholder="Anlamını merak ettiğin kelimeyi yaz..."
         />
         <button id="dictionary-search-btn" class="dictionary-btn">Ara</button>
       </div>
-      <div id="dictionary-status" class="dictionary-status"></div>
+      
+      <div id="dictionary-status" class="dictionary-status">Kelimeleri arayarak öğrenmeye başla.</div>
 
-      <div id="dictionary-list" class="dictionary-list"></div>
+      <!-- Arama Sonucu Burada Görünecek -->
+      <div id="dictionary-result-container">
+        <div class="dictionary-section-title">Arama Sonucu</div>
+        <div id="dictionary-list" class="dictionary-list">
+          <!-- Arama sonucu dinamik olarak buraya yerleşecek -->
+          <div style="font-size: 13px; color: var(--text-soft); padding: 10px;">Lütfen yukarıdaki kutuya bir kelime yazıp "Ara" butonuna basınız.</div>
+        </div>
+      </div>
+      
+      <!-- Arama Geçmişi Burada Görünecek -->
+      <div class="dictionary-section-title">Son Aranan 10 Kelime</div>
+      <div id="dictionary-history" class="dictionary-list">
+        <!-- Geçmiş dinamik olarak buraya yerleşecek -->
+      </div>
+      
     </section>
 
     <!-- VELİ ÖZETİ (Orijinal hali korunmuştur) -->
@@ -1607,11 +1700,7 @@
                 title: 'Dil Bilgisi: Sıfatlara Giriş (Ön Adlar)',
                 html: `
               <h4>Sıfatlara Giriş (Ön Adlar)</h4>
-              <p>Sıfatlar, isimlerin önüne gelerek onları niteleyen veya belirten kelimelerdir. İsme "Nasıl?" veya "Kaç?" sorularını sorarak sıfatı buluruz.</p>
-              <ul>
-                <li>Niteleme: <b>Kırmızı</b> elma, <b>büyük</b> ev, <b>çalışkan</b> öğrenci.</li>
-                <li>Belirtme: <b>Üç</b> top, <b>bu</b> defter, <b>birkaç</b> kişi.</li>
-              </ul>
+              <p>Sıfatlar, isimlerin önüne gelerek onları niteleyen veya belirten kelimelerdir. İsme "Nasıl?" veya "Kaç?" sorularını sorarak sıfatı buluruz. (Örn: <b>Kırmızı</b> elma, <b>büyük</b> ev, <b>çalışkan</b> öğrenci.)</p>
               <div class="mini-question">"Beyaz masa" ifadesindeki sıfat hangisidir?</div>
               <div class="mini-options"><button class="mini-option-btn" data-correct="true">Beyaz</button><button class="mini-option-btn" data-correct="false">Masa</button></div>
             `
@@ -1620,7 +1709,7 @@
             // Temalar, Dinleme/İzleme, Konuşma, Okuma, Yazma (Genel Kapsam)
             temalar_okuma: {
                 title: 'Temalar: Okuma Metinleri ve Hikaye Oluşturma',
-                html: '<h4>Temalar ve Ana Fikir</h4><p>2. sınıf temaları (Okul Heyecanım, Sağlıklı Hayat, Oyun ve Spor) metinler aracılığıyla işlenir. Okuduğumuz metinde **ana fikir** nedir ve **yardımcı fikirler** nelerdir, bunu anlarız.</p><p>Hikayelerde Giriş (Kim, Nerede, Ne Zaman), Gelişme (Olay, Sorun) ve Sonuç (Çözüm) bölümlerini ayırt etmeyi öğreniriz.</p>'
+                html: '<h4>Temalar ve Ana Fikir</h4><p>2. sınıf temaları (Okul Heyecanım, Sağlıklı Hayat, Oyun ve Spor) metinler aracılığıyla işlenir. Okuduğumuz metinde **ana fikir** nedir ve **yardımcı fikirler** nelerdir, bunu anlarız. Hikayelerde Giriş (Kim, Nerede, Ne Zaman), Gelişme (Olay, Sorun) ve Sonuç (Çözüm) bölümlerini ayırt etmeyi öğreniriz.</p>'
             },
             dinleme_izleme: {
                 title: 'Dinleme - İzleme Becerileri',
@@ -2219,8 +2308,6 @@
     }
     };
 
-    // ... (Geri kalan tüm JS fonksiyonları olduğu gibi kalacaktır: setupMiniOptions, setupFoodActivity, setupMathVisual, setupRitmikSayma, setLessonTopic, initTopicSelects, loadTest, renderTest, selectOption, finishTest, resetTest, filterDictionary, dictionaryData, vb.)
-
     // Matplotlib Simülasyonu JS'i
     function setupMathVisual() {
         const visualEl = document.getElementById('ten-minus-four-visual');
@@ -2272,7 +2359,6 @@
     function setupMiniOptions(container) {
         // Mini-option'lar HTML içinde yeniden oluşturulduğu için, event listener'ları her seferinde yeniden atamamız gerekir.
         container.querySelectorAll('.mini-options .mini-option-btn').forEach(btn => {
-            // Önceki olay dinleyicilerini kaldır (tekrarlı yüklenmeyi önlemek için) - Sadece dinamik olarak oluşturulmuş içerikler için gerekli
             // Basitleştirmek adına, olay dinleyicisini her seferinde doğrudan atıyoruz.
             btn.addEventListener('click', handleMiniOptionClick);
         });
@@ -2577,105 +2663,138 @@
     document.getElementById('btn-reset-test').addEventListener('click', resetTest);
 
 
-    /* TÜRKÇE SÖZLÜK – TDK + yerel */
-    const dictionaryData = [
-      { word: "dikkat",   meaning: "Bir şeye zihnimizi vererek onu iyi görme ve anlama durumu." },
-      { word: "öğretmen", meaning: "Okulda öğrencilere ders anlatan, onlara rehberlik eden kişi." },
-      { word: "problem",  meaning: "Çözülmesi gereken soru, işlem veya durum." },
-      { word: "sayı",     meaning: "Nesnelerin kaç tane olduğunu gösteren işaretler (1, 2, 3 gibi)." },
-      { word: "renk",     meaning: "Eşyaların gözümüzde bıraktığı görünüş (kırmızı, mavi, yeşil gibi)." },
-      { word: "arkadaş",  meaning: "Birlikte vakit geçirdiğimiz, oyun oynadığımız kişi." },
-      { word: "kitap",    meaning: "Okumak için sayfaları olan, içinde yazılar ve resimler bulunan nesne." },
-      { word: "ödev",     meaning: "Öğrencinin okul dışında yapması için verilen çalışma." },
-      { word: "tahta",    meaning: "Sınıfta öğretmenin yazı yazdığı büyük yazı alanı." },
-      { word: "sınıf",    meaning: "Öğrencilerin birlikte ders yaptığı oda." },
-      { word: "oyun",     meaning: "Eğlenmek için yapılan etkinlik." },
-      { word: "sayfa",    meaning: "Kitap veya defterin çevrilen her bir yüzü." },
-      { word: "temizlik", meaning: "Eşyaların ve bedenin kirden uzak olması durumu." },
-      { word: "trafik",   meaning: "Araçların ve yayaların yollardaki hareketi." },
-      { word: "saygı",    meaning: "Başkalarını önemsemek, incitmemeye özen göstermek." },
-      { word: "sevgi",    meaning: "Bir kimseye veya şeye karşı duyulan sıcak bağlılık." },
-      { word: "mutlu",    meaning: "Sevinçli, neşeli olma durumu." },
-      { word: "üzgün",    meaning: "Mutsuz, içi sıkılmış hissetme durumu." },
-      { word: "zaman",    meaning: "Olayların peş peşe sıralanmasını gösteren kavram." },
-      { word: "soru",     meaning: "Cevap bekleyen cümle." },
-      { word: "cevap",    meaning: "Bir soruya verilen yanıt." },
-      { word: "hece",     meaning: "Bir kelimeyi okurken tek seferde söylenen ses grubu." },
-      { word: "cümle",    meaning: "Duygu veya düşünceyi anlatan kelime grubu." }
-    ];
+    /* TÜRKÇE SÖZLÜK – TDK entegrasyonu ve Geçmiş */
 
+    // Geçmişi tutacak dizi (max 10 öğe)
+    let searchHistory = []; 
+    const MAX_HISTORY = 10;
+    
+    // Geçmiş kelimelerin TDK anlamı bulunamadığında kullanılacak temel kelimeler (Artık TDK odaklı olduğu için bu listeyi kaldırdık, sadece arama geçmişini göstereceğiz)
+    
     const dictionaryListEl = document.getElementById('dictionary-list');
+    const dictionaryHistoryEl = document.getElementById('dictionary-history');
     const dictionaryInputEl = document.getElementById('dictionary-input');
     const dictionarySearchBtn = document.getElementById('dictionary-search-btn');
     const dictionaryStatusEl = document.getElementById('dictionary-status');
 
-    function renderDictionary(list) {
-      dictionaryListEl.innerHTML = '';
+    function renderDictionary(list, containerEl, isHistory = false) {
+      containerEl.innerHTML = '';
       if (list.length === 0) {
         const empty = document.createElement('div');
-        empty.textContent = 'Sonuç bulunamadı. Başka bir kelime dene.';
+        empty.textContent = isHistory ? 'Henüz kelime aranmadı.' : 'Sonuç bulunamadı.';
         empty.style.fontSize = '13px';
-        empty.style.color = '#666';
-        dictionaryListEl.appendChild(empty);
+        empty.style.color = 'var(--text-soft)';
+        empty.style.padding = isHistory ? '0' : '10px';
+        containerEl.appendChild(empty);
         return;
       }
+      
       list.forEach(item => {
         const card = document.createElement('div');
-        card.className = 'dictionary-item';
+        card.className = 'dictionary-item' + (isHistory ? ' dictionary-history-item' : '');
+        
         const w = document.createElement('div');
         w.className = 'dictionary-word';
-        w.textContent = item.word;
+        w.textContent = item.word.charAt(0).toUpperCase() + item.word.slice(1).toLowerCase(); // İlk harfi büyük yap
+        
         const m = document.createElement('div');
         m.className = 'dictionary-meaning';
-        m.textContent = item.meaning;
+        // Birden fazla anlam varsa listele
+        if (Array.isArray(item.meanings) && item.meanings.length > 0) {
+            m.innerHTML = item.meanings.map((m, index) => {
+                return `<b>${index + 1}.</b> ${m}`;
+            }).join('<br>');
+        } else {
+             m.textContent = item.meaning || 'Anlamı bulunamadı.';
+        }
+        
         card.appendChild(w);
         card.appendChild(m);
-        dictionaryListEl.appendChild(card);
+        containerEl.appendChild(card);
       });
     }
 
+    function updateHistory(newResult) {
+        const wordLower = newResult.word.toLowerCase();
+        
+        // Aynı kelime zaten varsa önce onu kaldır
+        searchHistory = searchHistory.filter(item => item.word.toLowerCase() !== wordLower);
+
+        // Yeni sonucu en başa ekle
+        searchHistory.unshift(newResult);
+
+        // Geçmişi maksimum boyutta tut
+        if (searchHistory.length > MAX_HISTORY) {
+            searchHistory = searchHistory.slice(0, MAX_HISTORY);
+        }
+
+        renderDictionary(searchHistory, dictionaryHistoryEl, true);
+    }
+
+
     async function filterDictionary() {
-      const query = dictionaryInputEl.value.trim();
+      const query = dictionaryInputEl.value.trim().toLowerCase();
       if (!query) {
-        if (dictionaryStatusEl) dictionaryStatusEl.textContent = '';
-        renderDictionary(dictionaryData);
+        if (dictionaryStatusEl) dictionaryStatusEl.textContent = 'Lütfen aramak istediğiniz kelimeyi girin.';
+        // Arama kutusu boşsa sadece geçmişi gösterir.
+        renderDictionary([], dictionaryListEl, false);
         return;
       }
+      
+      // Arama sonucunu temizle
+      dictionaryListEl.innerHTML = `<div style="text-align:center; padding: 10px; color: var(--text-soft);">Kelime aranıyor...</div>`;
+
 
       if (dictionaryStatusEl) {
-        dictionaryStatusEl.textContent = 'TDK üzerinden aranıyor...';
+        dictionaryStatusEl.textContent = `"${query}" kelimesi TDK Güncel Türkçe Sözlük'te aranıyor...`;
       }
 
       try {
         const response = await fetch('https://sozluk.gov.tr/gts?ara=' + encodeURIComponent(query));
         if (!response.ok) throw new Error('TDK isteği başarısız: ' + response.status);
         const json = await response.json();
-        if (Array.isArray(json) && json.length > 0) {
+        
+        if (Array.isArray(json) && json.length > 0 && json[0].anlamlarListe) {
           const first = json[0];
           const headWord = first.madde || query;
           const meaningsList = first.anlamlarListe || [];
-          const results = meaningsList
+          
+          // Anlamları ayıkla
+          const meanings = meaningsList
             .filter(m => m && m.anlam)
-            .map(m => ({ word: headWord, meaning: m.anlam }));
-          if (results.length > 0) {
-            renderDictionary(results);
+            .map(m => m.anlam);
+            
+          const result = {
+              word: headWord, 
+              meanings: meanings
+          };
+
+          if (result.meanings.length > 0) {
+            // Başarılı TDK sonucu
+            renderDictionary([result], dictionaryListEl, false);
             if (dictionaryStatusEl) {
-              dictionaryStatusEl.textContent = "Sonuçlar TDK Güncel Türkçe Sözlük'ten getirildi.";
+              dictionaryStatusEl.textContent = `✅ Sonuçlar TDK Güncel Türkçe Sözlük'ten getirildi.`;
             }
+            
+            // Geçmişi güncelle
+            updateHistory(result); 
             return;
           }
         }
+        
+        // TDK anlam bulamadı
         throw new Error('TDK anlam bulamadı');
+
       } catch (err) {
         console.error('TDK sözlük hatası:', err);
+        
+        // Başarısız TDK sonucu
+        const failedResult = { word: query, meaning: "TDK'da anlamı bulunamadı. Lütfen kelimenin doğru yazıldığından emin olun." };
+        renderDictionary([failedResult], dictionaryListEl, false);
+        
         if (dictionaryStatusEl) {
-          dictionaryStatusEl.textContent = 'TDK yanıt veremedi, yerel sözlükten sonuçlar gösteriliyor.';
+          dictionaryStatusEl.textContent = `❌ Hata: "${query}" için TDK'da sonuç bulunamadı.`;
         }
-        const qLower = query.toLowerCase();
-        const filtered = dictionaryData.filter(item =>
-          item.word.toLowerCase().includes(qLower)
-        );
-        renderDictionary(filtered);
       }
     }
 
@@ -2683,10 +2802,10 @@
     dictionaryInputEl.addEventListener('keyup', e => {
       if (e.key === 'Enter') filterDictionary();
     });
-
+    
     /* BAŞLANGIÇ */
     initTopicSelects();
-    renderDictionary(dictionaryData);
+    renderDictionary([], dictionaryHistoryEl, true); // Boş geçmişi göster
     updateProgress(0);
     showScreen('home');
   </script>
