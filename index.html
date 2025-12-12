@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>2. Sınıf Çalışma Adası</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --primary: #1fb9c4;
+      --primary-soft: #e0f7f9;
+      --secondary: #ffb74d;
+      --accent: #ff6f61;
+      --bg: #f5f7fb;
+      --card-bg: #ffffff;
+      --text-main: #222b3f;
+      --text-soft: #6c7a92;
+      --heading-red: #d32f2f;
+      --success: #4caf50;
+      --danger: #e53935;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      padding: 16px;
+      font-size: 16px;
+    }
+
+    .app-container { max-width: 1050px; margin: 0 auto 48px; }
+
+    header.app-header {
+      background: linear-gradient(120deg, var(--primary), #3fd3a5);
+      border-radius: 24px;
+      padding: 20px 24px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      margin-bottom: 24px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .app-title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .app-subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-top: 5px;
+      max-width: 520px;
+    }
+
+    .header-actions {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .header-btn {
+      border-radius: 999px;
+      padding: 7px 13px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .header-btn:hover { background: rgba(255,255,255,0.25); }
+
+    .mascot {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mascot-avatar {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+
+    .mascot-text {
+      font-size: 14px;
+      max-width: 220px;
+      line-height: 1.5;
+    }
+
+    .screen-label {
+      margin: 24px 0 8px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-soft);
+      font-weight: 600;
+    }
+
+    .screen-card {
+      background: var(--card-bg);
+      border-radius: 24px;
+      padding: 20px 18px 20px;
+      box-shadow: 0 6px 14px rgba(15, 32, 60, 0.08);
+      margin-bottom: 24px;
+    }
+
+    .screen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .screen-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--heading-red);
+    }
+
+    .screen-subtitle {
+      font-size: 14px;
+      color: var(--text-soft);
+      margin-top: 4px;
+      max-width: 640px;
+    }
+
+    .chip {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .progress-wrapper { margin: 10px 0 18px; }
+
+    .progress-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-soft);
+      margin-bottom: 6px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 11px;
+      border-radius: 999px;
+      background: #e3e7f1;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--secondary), var(--accent));
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .lesson-card {
+      background: var(--primary-soft);
+      border-radius: 20px;
+      padding: 16px;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .lesson-card:nth-child(2) { background: #ffe9d0; }
+    .lesson-card:nth-child(3) { background: #e3f3ff; }
+    .lesson-card:nth-child(4) { background: #f0e8ff; }
+
+    .lesson-card::after {
+      content: "▶";
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      font-size: 20px;
+      opacity: 0.5;
+    }
+
+    .lesson-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+    }
+
+    .lesson-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--heading-red);
+    }
+
+    .lesson-desc {
+      font-size: 14px;
+      color: var(--text-soft);
+    }
+
+    .lesson-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      font-size: 12px;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.9);
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .topic-select-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+      margin-top: 2px;
+    }
+
+    .topic-label {
+      font-size: 14px;
+      color: var(--text-soft);
+      min-width: 90px;
+    }
+
+    .topic-select {
+      flex: 1;
+      min-width: 200px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid #d0d8ea;
+      font-size: 14px;
+      background: #f5f7ff;
+    }
+
+    .lesson-topic-content {
+      margin-top: 6px;
+      font-size: 15px;
+      color: var(--text-soft);
+      line-height: 1.6;
+    }
+
+    .lesson-topic-content h4 {
+      font-size: 18px;
+      margin-bottom: 6px;
+      color: var(--heading-red);
+    }
+
+    .lesson-topic-content ul {
+      margin-left: 20px;
+      margin-top: 4px;
+    }
+
+    .lesson-topic-content li { margin-bottom: 4px; }
+
+    .visual-box {
+      margin-top: 10px;
+      background: #fff7e6;
+      border-radius: 16px;
+      padding: 10px 12px;
+      border: 1px solid #ffe0a3;
+      font-size: 14px;
+    }
+
+    .visual-title {
+      font-weight: 600;
+      margin-bottom: 3px;
+      color: var(--heading-red);
+    }
+
+    .buttons-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .primary-btn, .secondary-btn {
+      border-radius: 999px;
+      padding: 8px 16px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .primary-btn { background: var(--primary); color: #fff; }
+    .primary-btn:hover { background: #18a7b1; }
+
+    .secondary-btn { background: #e3e7f1; color: var(--text-main); }
+    .secondary-btn:hover { background: #d6dbea; }
+
+    .tag {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f1f3fb;
+      color: var(--text-soft);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .question-card {
+      background: #f9fbff;
+      border-radius: 18px;
+      padding: 14px 13px;
+      border: 1px solid #e2e7f4;
+      margin-bottom: 10px;
+    }
+
+    .question-text {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--heading-red);
+    }
+
+    .options-column {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .option-item {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #dde3f1;
+      cursor: pointer;
+    }
+
+    .option-item:hover { background: #f2f4ff; }
+
+    .option-badge {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: #f1f3fb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+
+    .option-item.selected {
+      border-color: var(--primary);
+      background: #e0f7f9;
+    }
+
+    .option-item.correct {
+      border-color: var(--success);
+      background: #e7f7ea;
+    }
+
+    .option-item.wrong {
+      border-color: var(--danger);
+      background: #ffebee;
+    }
+
+    .result-card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 12px;
+      border: 1px dashed #d0d8ea;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      margin-top: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .result-score {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .stars-big { font-size: 22px; }
+
+    .dictionary-search {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+      margin-top: 4px;
+    }
+
+    .dictionary-input {
+      flex: 1;
+      min-width: 180px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid #d0d8ea;
+      font-size: 14px;
+    }
+
+    .dictionary-btn {
+      border-radius: 999px;
+      padding: 8px 14px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .dictionary-btn:hover { background: #18a7b1; }
+
+    .dictionary-status {
+      font-size: 13px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .dictionary-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    .dictionary-item {
+      background: #f9fbff;
+      border-radius: 14px;
+      padding: 8px 10px;
+      border: 1px solid #e2e7f4;
+    }
+
+    .dictionary-word { font-weight: 700; margin-bottom: 3px; }
+    .dictionary-meaning { color: var(--text-soft); }
+
+    .hidden { display: none; }
+
+    @media (max-width: 800px) {
+      header.app-header { flex-direction: column; align-items: flex-start; }
+      .mascot-text { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- HEADER -->
+    <header class="app-header">
+      <div>
+        <div class="app-title">2. Sınıf Çalışma Adası</div>
+        <div class="app-subtitle">
+          Tüm 2. sınıf dersleri için konu anlatımı ve her konu sonunda mini testler.
+        </div>
+        <div class="header-actions">
+          <button class="header-btn" data-nav="home">🏠 Ana Sayfa</button>
+          <button class="header-btn" data-nav="dictionary">📖 Türkçe Sözlük</button>
+        </div>
+      </div>
+      <div class="mascot">
+        <div class="mascot-avatar">🎒</div>
+        <div class="mascot-text">
+          Bugün bir ders seç, konuyu oku ve testini çöz.  
+          Her test, tam öğrenmeye göre hazırlanmış sorular içerir.
+        </div>
+      </div>
+    </header>
+
+    <!-- ANA EKRAN -->
+    <div id="label-home" class="screen-label">Ekran • Ana Sayfa</div>
+    <section id="screen-home" class="screen-card">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title">Bugün hangi dersi çalışmak istersin?</div>
+          <div class="screen-subtitle">
+            İstediğin dersi seç, sonra açılır listeden konu başlığını belirle.  
+            Anlatımı oku, en alttaki “Testi Başlat” butonu ile 15 soruluk testi çöz.
+          </div>
+        </div>
+        <div class="chip" id="daily-chip">Yükleniyor...</div>
+      </div>
+
+      <div class="progress-wrapper">
+        <div class="progress-label-row">
+          <span>Günlük ilerleme</span>
+          <span id="daily-progress-label">%0</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div id="daily-progress-bar" class="progress-bar-fill"></div>
+        </div>
+      </div>
+
+      <div class="cards-grid">
+        <div class="lesson-card" data-lesson="turkce">
+          <div class="lesson-title">Türkçe</div>
+          <div class="lesson-desc">Okuma, yazma, noktalama, 5N1K, eş/zıt anlamlı, yazım.</div>
+          <div class="lesson-meta">
+            <span class="pill">Konu anlatımı + Test</span>
+          </div>
+        </div>
+        <div class="lesson-card" data-lesson="matematik">
+          <div class="lesson-title">Matematik</div>
+          <div class="lesson-desc">Doğal sayılar, toplama, çıkarma, problemler, kesirler, ölçme, geometri, para.</div>
+          <div class="lesson-meta">
+            <span class="pill">Tüm kazanımlar</span>
+          </div>
+        </div>
+        <div class="lesson-card" data-lesson="hayat">
+          <div class="lesson-title">Hayat Bilgisi</div>
+          <div class="lesson-desc">Okul, aile, sağlık, güvenlik, çevre, ülkem.</div>
+          <div class="lesson-meta">
+            <span class="pill">Tema bazlı konular</span>
+          </div>
+        </div>
+        <div class="lesson-card" data-lesson="ingilizce">
+          <div class="lesson-title">İngilizce</div>
+          <div class="lesson-desc">Unit 1–10: Words, Friends, Numbers, Colours, Body Parts, Animals vb.</div>
+          <div class="lesson-meta">
+            <span class="pill">Kelime + basit cümleler</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DERS EKRANLARI: TEK ŞABLON -->
+    <div id="label-lesson" class="screen-label hidden">Ekran • Ders</div>
+    <section id="screen-lesson" class="screen-card hidden">
+      <div class="screen-header">
+        <div>
+          <div id="lesson-title" class="screen-title">Ders</div>
+          <div id="lesson-subtitle" class="screen-subtitle">
+            Konuyu seç, anlatımı oku, en alttan 15 soruluk testi başlat.
+          </div>
+        </div>
+        <div class="tag" id="lesson-tag"></div>
+      </div>
+
+      <div class="topic-select-row">
+        <span class="topic-label">Konu:</span>
+        <select id="topic-select" class="topic-select"></select>
+      </div>
+
+      <div id="lesson-content" class="lesson-topic-content"></div>
+
+      <div class="buttons-row">
+        <button class="primary-btn" id="btn-start-test">Bu Konu İçin Testi Başlat</button>
+        <button class="secondary-btn" data-nav="home">Ana Sayfa</button>
+      </div>
+    </section>
+
+    <!-- TEST EKRANI -->
+    <div id="label-test" class="screen-label hidden">Ekran • Test</div>
+    <section id="screen-test" class="screen-card hidden">
+      <div class="screen-header">
+        <div>
+          <div id="test-title" class="screen-title">Test</div>
+          <div id="test-subtitle" class="screen-subtitle">
+            15 soruluk çoktan seçmeli test. Her soruyu dikkatle oku.
+          </div>
+        </div>
+        <div class="tag" id="test-tag"></div>
+      </div>
+
+      <div id="test-questions"></div>
+
+      <div class="buttons-row">
+        <button class="primary-btn" id="btn-finish-test">Testi Bitir ve Sonucu Gör</button>
+        <button class="secondary-btn" id="btn-reset-test">Testi Baştan Başlat</button>
+      </div>
+
+      <div id="test-result" class="result-card hidden">
+        <div>
+          <div id="test-score" class="result-score">0 / 15 doğru</div>
+          <div id="test-message">Sonuç için soruları cevapla.</div>
+        </div>
+        <div style="text-align:right;">
+          <div id="test-stars" class="stars-big">⭐</div>
+          <div style="font-size:13px; margin-top:4px;">
+            Rozet: <b id="test-badge">Yok</b>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TÜRKÇE SÖZLÜK -->
+    <div id="label-dictionary" class="screen-label hidden">Ekran • Türkçe Sözlük</div>
+    <section id="screen-dictionary" class="screen-card hidden">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title">Türkçe Sözlük</div>
+          <div class="screen-subtitle">
+            Basit kelimeler için mini sözlük. İstersen bunu da ayrı JSON dosyasından büyütebiliriz.
+          </div>
+        </div>
+        <div class="tag">2. Sınıf Temel Kelimeler</div>
+      </div>
+
+      <div class="dictionary-search">
+        <input
+          type="text"
+          id="dictionary-input"
+          class="dictionary-input"
+          placeholder="Örneğin: dikkat, sayı, öğretmen..."
+        />
+        <button id="dictionary-search-btn" class="dictionary-btn">Ara</button>
+      </div>
+      <div id="dictionary-status" class="dictionary-status"></div>
+      <div id="dictionary-list" class="dictionary-list"></div>
+    </section>
+  </div>
+
+  <script>
+    /* BASİT EKRAN YÖNETİMİ */
+    const screens = {
+      home: document.getElementById('screen-home'),
+      lesson: document.getElementById('screen-lesson'),
+      test: document.getElementById('screen-test'),
+      dictionary: document.getElementById('screen-dictionary')
+    };
+    const labels = {
+      home: document.getElementById('label-home'),
+      lesson: document.getElementById('label-lesson'),
+      test: document.getElementById('label-test'),
+      dictionary: document.getElementById('label-dictionary')
+    };
+
+    function hideAll() {
+      Object.values(screens).forEach(el => el.classList.add('hidden'));
+      Object.values(labels).forEach(el => el.classList.add('hidden'));
+    }
+
+    function showScreen(name) {
+      hideAll();
+      screens[name].classList.remove('hidden');
+      labels[name].classList.remove('hidden');
+    }
+
+    document.querySelectorAll('[data-nav]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-nav');
+        if (target === 'home') showScreen('home');
+        if (target === 'dictionary') showScreen('dictionary');
+      });
+    });
+
+    /* GÜNLÜK HEDEF */
+    let completedTasks = 0;
+    const dailyChip = document.getElementById('daily-chip');
+    const dailyProgressLabel = document.getElementById('daily-progress-label');
+    const dailyProgressBar = document.getElementById('daily-progress-bar');
+
+    function updateProgress() {
+      const target = 3;
+      const percent = Math.min(100, Math.round((completedTasks / target) * 100));
+      dailyChip.textContent = "Günlük hedef: " + completedTasks + " / " + target + " test";
+      dailyProgressLabel.textContent = "%" + percent;
+      dailyProgressBar.style.width = percent + "%";
+    }
+
+    /* DERS VERİ YAPISI (JSON'dan GELECEK) */
+    let lessonConfig = null;
+    let currentSubject = null;
+    let currentTopic = null;
+    let currentTest = null;
+    let currentAnswers = [];
+
+    const lessonTitleEl   = document.getElementById('lesson-title');
+    const lessonSubtitleEl= document.getElementById('lesson-subtitle');
+    const lessonTagEl     = document.getElementById('lesson-tag');
+    const topicSelectEl   = document.getElementById('topic-select');
+    const lessonContentEl = document.getElementById('lesson-content');
+
+    const testTitleEl     = document.getElementById('test-title');
+    const testTagEl       = document.getElementById('test-tag');
+    const testQuestionsEl = document.getElementById('test-questions');
+    const testResultEl    = document.getElementById('test-result');
+    const testScoreEl     = document.getElementById('test-score');
+    const testMessageEl   = document.getElementById('test-message');
+    const testStarsEl     = document.getElementById('test-stars');
+    const testBadgeEl     = document.getElementById('test-badge');
+
+    function findSubject(id) {
+      return lessonConfig.subjects.find(s => s.id === id);
+    }
+
+    function renderTopicContent(subject, topic) {
+      lessonTitleEl.textContent = subject.name + " • 2. Sınıf";
+      lessonTagEl.textContent   = subject.tag;
+      lessonContentEl.innerHTML = "";
+
+      const h = document.createElement('h4');
+      h.textContent = topic.title;
+      lessonContentEl.appendChild(h);
+
+      if (topic.description) {
+        const p = document.createElement('p');
+        p.textContent = topic.description;
+        lessonContentEl.appendChild(p);
+      }
+
+      if (Array.isArray(topic.points) && topic.points.length) {
+        const ul = document.createElement('ul');
+        topic.points.forEach(text => {
+          const li = document.createElement('li');
+          li.textContent = text;
+          ul.appendChild(li);
+        });
+        lessonContentEl.appendChild(ul);
+      }
+
+      if (topic.visualNote) {
+        const box = document.createElement('div');
+        box.className = "visual-box";
+        const title = document.createElement('div');
+        title.className = "visual-title";
+        title.textContent = topic.visualNote.title;
+        const text = document.createElement('div');
+        text.textContent = topic.visualNote.text;
+        box.appendChild(title);
+        box.appendChild(text);
+        lessonContentEl.appendChild(box);
+      }
+    }
+
+    function openLesson(subjectId) {
+      currentSubject = findSubject(subjectId);
+      if (!currentSubject) return;
+      currentTopic = null;
+
+      // konu listesi doldur
+      topicSelectEl.innerHTML = "";
+      currentSubject.topics.forEach((t, idx) => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = t.title;
+        if (idx === 0) currentTopic = t;
+        topicSelectEl.appendChild(opt);
+      });
+
+      topicSelectEl.onchange = () => {
+        const selectedId = topicSelectEl.value;
+        currentTopic = currentSubject.topics.find(t => t.id === selectedId);
+        if (currentTopic) renderTopicContent(currentSubject, currentTopic);
+      };
+
+      if (currentTopic) renderTopicContent(currentSubject, currentTopic);
+      showScreen('lesson');
+    }
+
+    // Ana ders kartları
+    document.querySelectorAll('.lesson-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const lessonId = card.getAttribute('data-lesson');
+        openLesson(lessonId);
+      });
+    });
+
+    /* TEST MOTORU */
+    function startTestForCurrentTopic() {
+      if (!currentSubject || !currentTopic) return;
+
+      // Her konu için topic.testId ile test seçiyoruz (örnek: "math_cikarma_genel")
+      const testId = currentTopic.testId;
+      const test = currentSubject.tests.find(t => t.id === testId) || currentSubject.tests[0];
+      if (!test) return;
+
+      currentTest = test;
+      currentAnswers = new Array(test.questions.length).fill(null);
+
+      testTitleEl.textContent = test.title;
+      testTagEl.textContent   = currentSubject.name + " • 15 Soru";
+      testQuestionsEl.innerHTML = "";
+      testResultEl.classList.add('hidden');
+
+      test.questions.forEach((q, qIndex) => {
+        const card = document.createElement('div');
+        card.className = "question-card";
+
+        const qEl = document.createElement('div');
+        qEl.className = "question-text";
+        qEl.textContent = (qIndex + 1) + ") " + q.text;
+        card.appendChild(qEl);
+
+        const col = document.createElement('div');
+        col.className = "options-column";
+
+        q.options.forEach((opt, optIndex) => {
+          const optEl = document.createElement('div');
+          optEl.className = "option-item";
+          optEl.setAttribute('data-q', qIndex);
+          optEl.setAttribute('data-opt', optIndex);
+
+          const badge = document.createElement('div');
+          badge.className = "option-badge";
+          badge.textContent = String.fromCharCode(65 + optIndex);
+
+          const label = document.createElement('div');
+          label.textContent = opt;
+
+          optEl.appendChild(badge);
+          optEl.appendChild(label);
+
+          optEl.addEventListener('click', () => {
+            currentAnswers[qIndex] = optIndex;
+            const siblings = testQuestionsEl.querySelectorAll('[data-q="' + qIndex + '"]');
+            siblings.forEach(el => el.classList.remove('selected','correct','wrong'));
+            optEl.classList.add('selected');
+          });
+
+          col.appendChild(optEl);
+        });
+
+        card.appendChild(col);
+        testQuestionsEl.appendChild(card);
+      });
+
+      showScreen('test');
+    }
+
+    document.getElementById('btn-start-test').addEventListener('click', startTestForCurrentTopic);
+
+    function finishTest() {
+      if (!currentTest) return;
+      let correctCount = 0;
+
+      currentTest.questions.forEach((q, qIndex) => {
+        const correctIndex = q.correctIndex;
+        const options = testQuestionsEl.querySelectorAll('[data-q="' + qIndex + '"]');
+
+        options.forEach(optEl => {
+          const optIndex = parseInt(optEl.getAttribute('data-opt'), 10);
+          optEl.classList.remove('correct', 'wrong');
+          if (optIndex === correctIndex) {
+            optEl.classList.add('correct');
+          }
+        });
+
+        const userIndex = currentAnswers[qIndex];
+        if (userIndex === correctIndex) {
+          correctCount++;
+        } else if (userIndex !== null) {
+          const wrongEl = testQuestionsEl.querySelector(
+            '[data-q="' + qIndex + '"][data-opt="' + userIndex + '"]'
+          );
+          if (wrongEl) wrongEl.classList.add('wrong');
+        }
+      });
+
+      const total = currentTest.questions.length;
+      testScoreEl.textContent = correctCount + " / " + total + " doğru";
+
+      let message = "";
+      let stars   = "⭐";
+      let badge   = "Yok";
+
+      if (correctCount >= 13) {
+        message = "Harika! Konuyu çok iyi anladın.";
+        stars   = "⭐ ⭐ ⭐";
+        badge   = "Süper Başarı";
+      } else if (correctCount >= 10) {
+        message = "Çok iyi! Küçük hatalar var, tekrar bakabilirsin.";
+        stars   = "⭐ ⭐ ⭐";
+        badge   = "Konuyu Öğrendin";
+      } else if (correctCount >= 7) {
+        message = "Fena değil, biraz daha tekrar iyi olur.";
+        stars   = "⭐ ⭐";
+        badge   = "Çalışkan Öğrenci";
+      } else {
+        message = "Önce konuyu tekrar et, sonra testi yine deneriz.";
+        stars   = "⭐";
+        badge   = "Denemeye Devam";
+      }
+
+      testMessageEl.textContent = message;
+      testStarsEl.textContent   = stars;
+      testBadgeEl.textContent   = badge;
+      testResultEl.classList.remove('hidden');
+
+      completedTasks += 1;
+      updateProgress();
+    }
+
+    function resetTest() {
+      if (!currentSubject || !currentTopic) return;
+      startTestForCurrentTopic();
+    }
+
+    document.getElementById('btn-finish-test').addEventListener('click', finishTest);
+    document.getElementById('btn-reset-test').addEventListener('click', resetTest);
+
+    /* BASİT MİNİ SÖZLÜK (JSON AYRI DOSYAYA DA TAŞINABİLİR) */
+    const miniDictionary = [
+      { word: "dikkat",   meaning: "Bir şeye zihnimizi vererek onu iyi görme ve anlama durumu." },
+      { word: "öğretmen", meaning: "Okulda öğrencilere ders anlatan kişi." },
+      { word: "sayı",     meaning: "Nesnelerin kaç tane olduğunu gösteren işaretler." },
+      { word: "arkadaş",  meaning: "Birlikte vakit geçirdiğimiz, oyun oynadığımız kişi." },
+      { word: "problem",  meaning: "Çözülmesi gereken soru ve işlem." },
+      { word: "kitap",    meaning: "Okumak için sayfaları olan yazılı eser." }
+    ];
+
+    const dictInput  = document.getElementById('dictionary-input');
+    const dictBtn    = document.getElementById('dictionary-search-btn');
+    const dictStatus = document.getElementById('dictionary-status');
+    const dictList   = document.getElementById('dictionary-list');
+
+    function renderDict(list) {
+      dictList.innerHTML = "";
+      if (!list.length) {
+        dictList.textContent = "Sonuç bulunamadı.";
+        return;
+      }
+      list.forEach(item => {
+        const card = document.createElement('div');
+        card.className = "dictionary-item";
+        const w = document.createElement('div');
+        w.className = "dictionary-word";
+        w.textContent = item.word;
+        const m = document.createElement('div');
+        m.className = "dictionary-meaning";
+        m.textContent = item.meaning;
+        card.appendChild(w);
+        card.appendChild(m);
+        dictList.appendChild(card);
+      });
+    }
+
+    function searchDict() {
+      const q = dictInput.value.trim().toLowerCase();
+      if (!q) {
+        dictStatus.textContent = "";
+        renderDict(miniDictionary);
+        return;
+      }
+      const filtered = miniDictionary.filter(item =>
+        item.word.toLowerCase().includes(q)
+      );
+      dictStatus.textContent = filtered.length ? "" : "Bu kelime için kayıt yok.";
+      renderDict(filtered);
+    }
+
+    dictBtn.addEventListener('click', searchDict);
+    dictInput.addEventListener('keyup', e => { if (e.key === "Enter") searchDict(); });
+
+    /* JSON YÜKLEME */
+    async function loadConfig() {
+      try {
+        const res = await fetch("data/2sinif_config.json");
+        if (!res.ok) throw new Error("Config yüklenemedi: " + res.status);
+        lessonConfig = await res.json();
+        updateProgress();
+      } catch (err) {
+        console.error(err);
+        alert("Ders müfredatı dosyası (2sinif_config.json) yüklenemedi. Aynı klasörde data/2sinif_config.json olduğundan emin olun.");
+      }
+    }
+
+    // Başlangıç
+    renderDict(miniDictionary);
+    updateProgress();
+    loadConfig();
+  </script>
+</body>
+</html>
