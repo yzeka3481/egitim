@@ -3,109 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yatırım Takip | Altın & KLU</title>
+    <title>Yatırım Takip v3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #05070a; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; }
-        .card { background: #111827; border: 1px solid #1f2937; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        .input-group { background: #0b0f1a; border: 1px solid #1f2937; border-radius: 12px; padding: 10px; transition: 0.3s; }
-        .input-group:focus-within { border-color: #f59e0b; box-shadow: 0 0 0 1px #f59e0b; }
-        input { background: transparent !important; border: none !important; color: white !important; width: 100%; outline: none; font-weight: bold; }
-        .label-style { font-size: 0.65rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 800; }
+        body { background: #05070a; color: #e2e8f0; font-family: sans-serif; }
+        .card { background: #111827; border: 1px solid #1f2937; border-radius: 20px; }
+        .input-group { background: #0b0f1a; border: 1px solid #1f2937; border-radius: 10px; padding: 8px; }
+        input { background: transparent; border: none; color: white; width: 100%; outline: none; font-weight: bold; font-size: 1.1rem; }
+        .label-style { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: 800; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
-    <div class="card w-full max-w-md p-6">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-black text-white tracking-tighter">VARLIKLARIM</h1>
-            <div id="update-time" class="text-[10px] text-gray-500 font-mono text-right">Veriler alınıyor...</div>
+    <div class="card w-full max-w-md p-6 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-extrabold tracking-tight">PORTFÖYÜM</h1>
+            <div id="status" class="text-[9px] px-2 py-1 rounded bg-yellow-500/10 text-yellow-500 font-mono italic">Fiyatlar Bekleniyor...</div>
         </div>
 
         <div class="space-y-4">
             <div class="grid grid-cols-2 gap-3">
                 <div class="input-group">
-                    <label class="label-style text-yellow-500">24 Ayar (Gram)</label>
+                    <label class="label-style">24K Altın (gr)</label>
                     <input type="number" id="g24" oninput="calculate()" placeholder="0">
                 </div>
                 <div class="input-group">
-                    <label class="label-style text-yellow-600">22 Ayar (Gram)</label>
+                    <label class="label-style text-orange-400">22K Altın (gr)</label>
                     <input type="number" id="g22" oninput="calculate()" placeholder="0">
                 </div>
             </div>
 
             <div class="input-group">
-                <label class="label-style text-blue-400">Amerikan Doları ($)</label>
+                <label class="label-style text-blue-400">Dolar ($)</label>
                 <input type="number" id="usd" oninput="calculate()" placeholder="0">
             </div>
 
             <div class="input-group border-l-4 border-l-emerald-500">
-                <label class="label-style text-emerald-500">KLU Fonu (Adet)</label>
-                <div class="flex items-center">
-                    <input type="number" id="klu_qty" oninput="calculate()" placeholder="0">
-                    <span class="text-[10px] text-emerald-600 font-bold ml-2">PAY</span>
-                </div>
-            </div>
-
-            <div class="flex justify-end">
-                <div class="text-[9px] text-gray-600 italic">
-                    KLU Birim Fiyat: ₺<span id="klu_price_display">...</span>
-                </div>
+                <label class="label-style text-emerald-500 text-xs">KLU Fonu (Adet)</label>
+                <input type="number" id="klu_qty" oninput="calculate()" placeholder="0">
             </div>
         </div>
 
-        <div class="mt-10 p-6 bg-gradient-to-br from-gray-900 to-black rounded-3xl border border-white/5 shadow-inner">
-            <p class="text-center text-[10px] text-gray-500 uppercase tracking-[0.2em] mb-2 font-bold">Toplam Türk Lirası</p>
-            <div id="total_val" class="text-center text-4xl font-black text-white tracking-tight">₺0,00</div>
-            
-            <div class="mt-4 grid grid-cols-2 gap-2">
-                <div class="text-[10px] bg-white/5 p-2 rounded-lg text-center">
-                    <span class="block text-gray-500">Altın/Döviz Payı</span>
-                    <span id="gold_usd_total" class="font-bold text-yellow-500">₺0</span>
-                </div>
-                <div class="text-[10px] bg-white/5 p-2 rounded-lg text-center">
-                    <span class="block text-gray-500">KLU Fon Payı</span>
-                    <span id="klu_total" class="font-bold text-emerald-500">₺0</span>
-                </div>
-            </div>
+        <div class="mt-8 p-5 bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-white/5 shadow-inner text-center">
+            <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-1 font-bold">Anlık Toplam Değer</p>
+            <div id="total_val" class="text-4xl font-black text-emerald-400">₺0,00</div>
+            <p id="klu_info" class="text-[10px] text-gray-600 mt-2 italic font-mono"></p>
         </div>
 
-        <div class="mt-6 text-center">
-            <button onclick="fetchData()" class="text-[10px] bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-full transition font-bold text-gray-300">
-                FİYATLARI GÜNCELLE
-            </button>
-        </div>
+        <button onclick="fetchData()" class="w-full mt-6 text-[10px] text-gray-500 hover:text-white transition py-2 uppercase tracking-tighter">
+            [ Fiyatları Yenilemek İçin Tıkla ]
+        </button>
     </div>
 
     <script>
-        let liveData = { g24: 0, g22: 0, usd: 0, klu: 0 };
+        let liveData = { g24: 0, g22: 0, usd: 0, klu: 4.35 }; // Varsayılan fiyatlar
 
         async function fetchData() {
-            document.getElementById('update-time').innerText = "Güncelleniyor...";
+            const statusBox = document.getElementById('status');
+            statusBox.innerText = "GÜNCELLENİYOR...";
+
             try {
-                // Harem Altın Verileri
-                const haremRes = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.haremaltin.com/ajax/teklif_veriler'));
-                const haremData = JSON.parse((await haremRes.json()).contents);
+                // AllOrigins üzerinden Harem Altın verisi (GitHub uyumlu)
+                const targetUrl = 'https://www.haremaltin.com/ajax/teklif_veriler';
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&timestamp=${new Date().getTime()}`;
 
-                liveData.g24 = parseFloat(haremData.data.GA.alis);
-                liveData.usd = parseFloat(haremData.data.USD.alis);
-                liveData.g22 = haremData.data['22K'] ? parseFloat(haremData.data['22K'].alis) : (liveData.g24 * 0.911);
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error('Proxy Hatası');
+                
+                const json = await response.json();
+                const data = JSON.parse(json.contents);
 
-                // KLU Fon Fiyatı (TEFAS verisi simülasyonu)
-                // Not: KLU gibi para piyasası fonları 2024 sonu/2025 başı itibariyle 
-                // ortalama 4.00 - 5.00 TL bandında seyredebilir. 
-                // Gerçek KLU fiyatını buraya en yakın değer olarak çekmeye çalışıyoruz.
-                // Eğer TEFAS API erişimi yoksa manuel bir baz fiyat üzerinden günlük getiri ekliyoruz.
-                liveData.klu = 4.285432; // Örnek KLU güncel pay fiyatı
-
-                document.getElementById('p-24-val')?.remove(); // Eski verileri temizle
-                document.getElementById('klu_price_display').innerText = liveData.klu.toFixed(4);
-                document.getElementById('update-time').innerText = "Harem & TEFAS: " + new Date().toLocaleTimeString('tr-TR');
+                if (data && data.data) {
+                    liveData.g24 = parseFloat(data.data.GA.alis);
+                    liveData.usd = parseFloat(data.data.USD.alis);
+                    // Harem 22K verisi yoksa has üzerinden 0.911
+                    liveData.g22 = data.data['22K'] ? parseFloat(data.data['22K'].alis) : (liveData.g24 * 0.911);
+                    
+                    statusBox.innerText = "CANLI: " + new Date().toLocaleTimeString('tr-TR');
+                    statusBox.className = "text-[9px] px-2 py-1 rounded bg-green-500/10 text-green-500 font-mono italic";
+                }
                 
                 calculate();
             } catch (error) {
-                document.getElementById('update-time').innerText = "Hata! Tekrar deneniyor...";
-                console.error(error);
+                console.error("Hata:", error);
+                statusBox.innerText = "BAĞLANTI HATASI";
+                statusBox.className = "text-[9px] px-2 py-1 rounded bg-red-500/10 text-red-500 font-mono italic";
             }
         }
 
@@ -115,19 +97,18 @@
             const vUsd = parseFloat(document.getElementById('usd').value) || 0;
             const vKlu = parseFloat(document.getElementById('klu_qty').value) || 0;
 
-            const goldUsdSum = (v24 * liveData.g24) + (v22 * liveData.g22) + (vUsd * liveData.usd);
-            const kluSum = vKlu * liveData.klu;
-            const total = goldUsdSum + kluSum;
+            // Toplam Hesaplama
+            const total = (v24 * liveData.g24) + (v22 * liveData.g22) + (vUsd * liveData.usd) + (vKlu * liveData.klu);
 
             document.getElementById('total_val').innerText = "₺" + total.toLocaleString('tr-TR', { minimumFractionDigits: 2 });
-            document.getElementById('gold_usd_total').innerText = "₺" + goldUsdSum.toLocaleString('tr-TR', { maximumFractionDigits: 0 });
-            document.getElementById('klu_total').innerText = "₺" + kluSum.toLocaleString('tr-TR', { maximumFractionDigits: 0 });
+            document.getElementById('klu_info').innerText = `Kur: USD: ${liveData.usd.toFixed(2)} | 24K: ${liveData.g24.toFixed(0)} | KLU: ${liveData.klu.toFixed(4)}`;
 
-            localStorage.setItem('klu_inv_store', JSON.stringify({v24, v22, vUsd, vKlu}));
+            // Kaydet
+            localStorage.setItem('yatirim_v3_data', JSON.stringify({v24, v22, vUsd, vKlu}));
         }
 
         function init() {
-            const saved = JSON.parse(localStorage.getItem('klu_inv_store'));
+            const saved = JSON.parse(localStorage.getItem('yatirim_v3_data'));
             if(saved) {
                 document.getElementById('g24').value = saved.v24 || '';
                 document.getElementById('g22').value = saved.v22 || '';
@@ -138,7 +119,8 @@
         }
 
         init();
-        setInterval(fetchData, 60000); // 1 dakikada bir güncelle
+        // 60 saniyede bir otomatik yenile
+        setInterval(fetchData, 60000);
     </script>
 </body>
 </html>
