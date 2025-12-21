@@ -359,28 +359,189 @@ async function fetchHistoryData(dateStr) {
     }
 }
 
-function handleDownload() {
+// --- MP4 Encoding (WebCodecs + mp4-muxer) ---
+async function handleDownload() {
+    // Check if WebCodecs is supported
+    if (!('VideoEncoder' in window) || !('AudioEncoder' in window)) {
+        alert('Tarayıcınız gelişmiş MP4 kaydını desteklemiyor (WebCodecs API yok). Standart yöntem deneniyor...');
+        handleDownloadFallback();
+        return;
+    }
+
+    setLoading(true, 'MP4 Kayıt Hazırlanıyor... Lütfen Bekleyin.');
+
+    try {
+        // Load mp4-muxer dynamically
+        const { Muxer, ArrayBufferTarget } = await import('https://cdn.jsdelivr.net/npm/mp4-muxer@5.0.0/+esm');
+
+        // 1. Setup Muxer
+        const muxer = new Muxer({
+            target: new ArrayBufferTarget(),
+            video: {
+                codec: 'avc', // H.264
+                width: CANVAS_WIDTH,
+                height: CANVAS_HEIGHT
+            },
+            audio: state.backgroundAudio ? {
+                codec: 'aac',
+                sampleRate: 44100,
+                numberOfChannels: 2
+            } : undefined,
+            fastStart: 'in-memory'
+        });
+
+        // 2. Setup Video Encoder
+        const videoEncoder = new VideoEncoder({
+            output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+            error: (e) => console.error('Video Encoder Error:', e)
+        });
+
+        videoEncoder.configure({
+            codec: 'avc1.42001f', // Baseline Profile (High Compatibility)
+            width: CANVAS_WIDTH,
+            height: CANVAS_HEIGHT,
+            bitrate: 5_000_000, // 5 Mbps
+            framerate: FPS
+        });
+
+        // 3. Setup Audio Encoder
+        let audioEncoder = null;
+        if (state.backgroundAudio) {
+            audioEncoder = new AudioEncoder({
+                output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
+                error: (e) => console.error('Audio Encoder Error:', e)
+            });
+            audioEncoder.configure({
+                codec: 'mp4a.40.2', // AAC LC
+                sampleRate: 44100,
+                numberOfChannels: 2,
+                bitrate: 128_000
+            });
+        }
+
+        // 4. Decode Audio Info
+        let audioBuffer = null;
+        if (state.backgroundAudio && state.backgroundAudio.src) {
+            try {
+                const response = await fetch(state.backgroundAudio.src);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+            } catch (e) {
+                console.warn('Audio decode failed, proceeding silent', e);
+            }
+        }
+
+        // 5. Recording Loop (Faster than Realtime possible)
+        const frameDuration = 1 / FPS;
+        const totalFrames = DURATION_SECONDS * FPS;
+
+        // Temporarily pause main render loop
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+        // We render frames one by one
+        const ctx = dom.canvas.getContext('2d');
+        const images = state.backgroundImages;
+
+        // Re-calculate moves for consistency
+        const moves = images.map(() => ({
+            originX: Math.random() * 0.2,
+            originY: Math.random() * 0.2,
+            direction: Math.random() > 0.5 ? 1 : -1,
+            scaleStart: 1.1,
+            scaleEnd: 1.25
+        }));
+
+        console.log('Starting Encoding...');
+
+        for (let i = 0; i < totalFrames; i++) {
+            const time = i * frameDuration; // Seconds
+            const progress = i / totalFrames; // 0..1
+
+            // UI Update
+            if (i % 10 === 0) {
+                dom.statusText.innerText = `MP4 Oluşturuluyor... %${Math.round(progress * 100)}`;
+                await new Promise(r => requestAnimationFrame(r)); // Breathe
+            }
+
+            // --- Render Frame Logic (Duplicated from startRenderLoop for sync) ---
+            const slideIndex = Math.floor(time / SLIDE_DURATION) % images.length;
+            const nextSlideIndex = (slideIndex + 1) % images.length;
+            const slideProgress = (time % SLIDE_DURATION) / SLIDE_DURATION;
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+            if (images[slideIndex]) {
+                drawKenBurns(ctx, images[slideIndex], slideProgress, moves[slideIndex], 1);
+            }
+
+            if (slideProgress > 0.75 && images[nextSlideIndex]) {
+                const alpha = (slideProgress - 0.75) * 4;
+                drawKenBurns(ctx, images[nextSlideIndex], 0, moves[nextSlideIndex], alpha);
+            }
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+            gradient.addColorStop(0, 'rgba(0,0,0,0.3)');
+            gradient.addColorStop(0.5, 'rgba(0,0,0,0.1)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0.8)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+            ctx.textAlign = 'center';
+            const textToRender = state.currentText || 'TARİHTE BUGÜN...\n\n(Veri Yok)';
+            const parts = textToRender.split('\n\n');
+            const headerText = parts[0] || 'TARİHTE BUGÜN';
+            const bodyText = parts[1] || textToRender;
+
+            ctx.font = '800 42px Outfit';
+            ctx.fillStyle = '#FFD700';
+            ctx.shadowColor = 'rgba(0,0,0,0.8)';
+            ctx.shadowBlur = 15;
+            ctx.fillText(headerText.toUpperCase(), CANVAS_WIDTH / 2, 200);
+
+            ctx.font = '600 56px Outfit';
+            ctx.fillStyle = '#fff';
+            ctx.shadowBlur = 10;
+            wrapText(ctx, bodyText, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 100, 900, 90);
+
+            ctx.font = '300 30px Outfit';
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.shadowBlur = 0;
+            ctx.fillText('@gunluktarih', CANVAS_WIDTH / 2, CANVAS_HEIGHT - 100);
+        }
+
+        // 6. Save File using Muxer
+        await muxer.finalize();
+        const buffer = muxer.target.buffer;
+        const blob = new Blob([buffer], { type: 'video/mp4' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
+        a.href = url;
+        a.download = `tarihte-bugun-${state.selectedDate}.mp4`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+
+        setLoading(false);
+        // Resume preview
+        startRenderLoop(state.currentText);
+
+    } catch (err) {
+        console.error('MP4 Gen Error:', err);
+        alert('MP4 oluşturma hatası: ' + err.message + '\nStandart kayıt deneniyor...');
+        handleDownloadFallback();
+    }
+}
+
+// Fallback to old MediaRecorder
+function handleDownloadFallback() {
     // 1. Get Canvas Stream
     const canvasStream = dom.canvas.captureStream(FPS);
+    // ... (rest of old code)
 
-    // 2. Get Audio Stream (MIXING)
-    let finalStream = canvasStream;
 
-    if (state.backgroundAudio) {
-        // Audio Context Mixing
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioCtx = new AudioContext();
-        const source = audioCtx.createMediaElementSource(state.backgroundAudio);
-        const destination = audioCtx.createMediaStreamDestination();
-
-        source.connect(destination);
-        source.connect(audioCtx.destination);
-
-        const audioTrack = destination.stream.getAudioTracks()[0];
-        if (audioTrack) {
-            finalStream = new MediaStream([...canvasStream.getVideoTracks(), audioTrack]);
-        }
-    }
 
     // Check supported types, prioritize MP4
     const mimeTypes = [
@@ -420,7 +581,6 @@ function handleDownload() {
     };
 
     state.mediaRecorder.onstop = () => {
-        // Determine extension based on actual mimetype
         const isMp4 = selectedMimeType.includes('mp4');
         const type = isMp4 ? 'video/mp4' : 'video/webm';
         const ext = isMp4 ? 'mp4' : 'webm';
@@ -443,8 +603,6 @@ function handleDownload() {
 
     setLoading(true, `Video Kaydediliyor... (0/${DURATION_SECONDS}s)`);
 
-    // Reset media to start
-    // if (state.backgroundVideo) state.backgroundVideo.currentTime = 0; // Removed video specific logic
     if (state.backgroundAudio) {
         state.backgroundAudio.currentTime = 0;
         state.backgroundAudio.play();
@@ -465,21 +623,12 @@ function handleDownload() {
     }, 1000);
 }
 
-
 // --- Data & Content Engine (TURKISH) ---
 
 const TR_MONTHS = [
     'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
     'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
 ];
-
-//         return {
-//             text: `TARİHTE BUGÜN (${day} ${monthName})\n\nVeri kaynağına erişilemedi.`,
-//             keywords: 'abstract technology',
-//             year: '----'
-//         };
-//     }
-// }
 
 async function fetchBackgroundPhotos(query, apiKey) {
     // If no API key, return a placeholder array
@@ -568,6 +717,9 @@ let animationFrameId;
 // Kenneth Burns Slideshow Effect
 function startRenderLoop(text) {
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+    // Store text for MP4 Encoder to access later
+    state.currentText = text;
 
     const ctx = dom.canvas.getContext('2d');
     const images = state.backgroundImages;
