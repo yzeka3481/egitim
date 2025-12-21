@@ -264,9 +264,37 @@ async function fetchHistoryData(dateStr) {
             return li.innerText.replace(/\[.*?\]/g, '').trim();
         }).filter(t => t.length > 20 && /^\d+/.test(t));
 
-        if (validEvents.length === 0) throw new Error('Olay yok');
+        if (validEvents.length === 0) throw new Error('Geçerli olay yok');
 
-        const randomEventStr = validEvents[Math.floor(Math.random() * validEvents.length)];
+        // --- Smart Selection Logic ---
+        // Prioritize interesting events (Wars, Inventions, Firsts) over boring ones (Treaties, Visits)
+        const scoreEvent = (text) => {
+            let score = 0;
+            const textLower = text.toLowerCase();
+
+            // Tier 1: High Impact / Action (Score +3)
+            const tier1 = ['savaş', 'muharebe', 'darbe', 'devrim', 'suikast', 'isyan', 'fetih', 'işgal', 'saldırı', 'patlama'];
+            // Tier 2: Science / Progress / Firsts (Score +2)
+            const tier2 = ['icat', 'keşif', 'ilk kez', 'kuruldu', 'nobel', 'uzay', 'aya ayak', 'başladı', 'ilan edildi'];
+            // Tier 3: Boring / Bureaucracy (Score -1)
+            const tier3 = ['ziyaret', 'atandı', 'görüşme', 'imzalandı', 'seçildi', 'kurul', 'toplantı'];
+
+            if (tier1.some(k => textLower.includes(k))) score += 3;
+            if (tier2.some(k => textLower.includes(k))) score += 2;
+            if (tier3.some(k => textLower.includes(k))) score -= 1;
+
+            return score;
+        };
+
+        // Sort by score descending
+        validEvents.sort((a, b) => scoreEvent(b) - scoreEvent(a));
+
+        // Pick from top 30% to ensure quality but allow randomness
+        // If list is small, pick from top 3
+        const poolSize = Math.max(3, Math.floor(validEvents.length * 0.3));
+        const topEvents = validEvents.slice(0, poolSize);
+
+        const randomEventStr = topEvents[Math.floor(Math.random() * topEvents.length)];
 
         // Extract year
         let year = 'Tarih';
@@ -308,7 +336,12 @@ async function fetchBackgroundVideo(query, apiKey) {
 
     const fetchFromPexels = async (searchQuery) => {
         try {
-            const response = await fetch(`${PEXELS_API_URL}?query=${searchQuery}&per_page=1&orientation=portrait&size=medium`, {
+            // Generate random page (1-80) to access deeper results (Approx 1200+ videos pool)
+            const randomPage = Math.floor(Math.random() * 80) + 1;
+
+            console.log(`Pexels: Query="${searchQuery}", Page=${randomPage}`);
+
+            const response = await fetch(`${PEXELS_API_URL}?query=${searchQuery}&per_page=15&page=${randomPage}&orientation=portrait&size=medium`, {
                 headers: { Authorization: apiKey }
             });
             if (response.status === 401) throw new Error('API_KEY_INVALID');
@@ -337,9 +370,12 @@ async function fetchBackgroundVideo(query, apiKey) {
         }
 
         if (videos && videos.length > 0) {
-            // Randomize selection from first result to vary it slightly if possible, 
-            // but per_page=1 limits us. Let's keep it simple for now to ensure a hit.
-            const videoFile = videos[0].video_files.find(f => f.quality === 'hd' && f.file_type === 'video/mp4') || videos[0].video_files[0];
+            // Pick a RANDOM video from the results to prevent "same video" issue
+            const randomIndex = Math.floor(Math.random() * videos.length);
+            const selectedVideo = videos[randomIndex];
+
+            const videoFile = selectedVideo.video_files.find(f => f.quality === 'hd' && f.file_type === 'video/mp4') || selectedVideo.video_files[0];
+            console.log(`Pexels: Selected video ${randomIndex + 1}/${videos.length}:`, videoFile.link);
             return videoFile.link;
         } else {
             console.warn('Pexels: All searches failed. Using local fallback.');
@@ -442,16 +478,21 @@ function startRenderLoop(text) {
         // Text
         ctx.textAlign = 'center';
 
-        ctx.font = '800 50px Outfit';
+        // Check text parts
+        const parts = text.split('\n\n');
+        const headerText = parts[0] || 'TARİHTE BUGÜN';
+        const bodyText = parts[1] || text;
+
+        ctx.font = '800 42px Outfit'; // Slightly smaller to fit long dates
         ctx.fillStyle = '#FFD700';
         ctx.shadowColor = 'rgba(0,0,0,0.8)';
         ctx.shadowBlur = 15;
-        ctx.fillText('TARİHTE BUGÜN', CANVAS_WIDTH / 2, 200);
+        ctx.fillText(headerText.toUpperCase(), CANVAS_WIDTH / 2, 200);
 
         ctx.font = '600 56px Outfit';
         ctx.fillStyle = '#fff';
         ctx.shadowBlur = 10;
-        wrapText(ctx, text.split('\n\n')[1] || text, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 100, 900, 90);
+        wrapText(ctx, bodyText, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 100, 900, 90);
 
         ctx.font = '300 30px Outfit';
         ctx.fillStyle = 'rgba(255,255,255,0.6)';
