@@ -8,7 +8,8 @@ const CANVAS_WIDTH = 1080;
 const CANVAS_HEIGHT = 1920;
 const FPS = 30;
 const DURATION_SECONDS = 15;
-const PEXELS_API_URL = 'https://api.pexels.com/videos/search';
+const PEXELS_PHOTO_API_URL = 'https://api.pexels.com/v1/search'; // Photos
+const SLIDE_DURATION = 4; // Seconds per slide
 
 // Fallback video (Abstract Ink - Serious/Neutral)
 const FALLBACK_VIDEOS = [
