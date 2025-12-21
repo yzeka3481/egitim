@@ -277,17 +277,16 @@ async function fetchHistoryData(dateStr) {
             description = match[2];
         }
 
-        // Generate keywords for video search (Optimized for Pexels)
-        // User suggestion: Use English keywords for better results.
-        // Strategy: Use the Year + Generic English History terms.
-        // Turkish words often return 0 results in Pexels.
-        let searchKeywords = 'history cinematic documentary';
+        // Generate keywords for video search (Cascading Strategy)
+        // 1. Specific: Year + History
+        // 2. Fallback in fetchBackgroundVideo will handle generic terms
+        let searchKeywords = 'history cinematic';
         if (year && year.length === 4) {
-            searchKeywords = `${year} history archive`;
+            searchKeywords = `${year} history`;
         }
 
         return {
-            text: `TARİHTE BUGÜN (${day} ${monthName})\n\n${description}`,
+            text: `TARİHTE BUGÜN (${day} ${monthName} ${year})\n\n${description}`,
             keywords: searchKeywords,
             year: year
         };
@@ -295,7 +294,7 @@ async function fetchHistoryData(dateStr) {
     } catch (err) {
         console.warn('Wiki Error', err);
         return {
-            text: `TARİHTE BUGÜN (${day} ${monthName})\n\nVeri kaynağına erişilemedi. Lütfen internet bağlantınızı kontrol edin.`,
+            text: `TARİHTE BUGÜN (${day} ${monthName})\n\nVeri kaynağına erişilemedi.`,
             keywords: 'abstract technology',
             year: '----'
         };
@@ -307,39 +306,50 @@ async function fetchBackgroundVideo(query, apiKey) {
         return SERIOUS_FALLBACK;
     }
 
-    // Helper to fetch with retry logic
     const fetchFromPexels = async (searchQuery) => {
-        const response = await fetch(`${PEXELS_API_URL}?query=${searchQuery}&per_page=1&orientation=portrait&size=medium`, {
-            headers: { Authorization: apiKey }
-        });
-        if (response.status === 401) throw new Error('API_KEY_INVALID');
-        const data = await response.json();
-        return data.videos || [];
+        try {
+            const response = await fetch(`${PEXELS_API_URL}?query=${searchQuery}&per_page=1&orientation=portrait&size=medium`, {
+                headers: { Authorization: apiKey }
+            });
+            if (response.status === 401) throw new Error('API_KEY_INVALID');
+            const data = await response.json();
+            return data.videos || [];
+        } catch (e) {
+            if (e.message === 'API_KEY_INVALID') throw e;
+            return [];
+        }
     };
 
     try {
-        console.log(`Pexels: Searching for "${query}"...`);
+        console.log(`Pexels: Searching for 1. "${query}"...`);
         let videos = await fetchFromPexels(query);
 
-        // Retry with generic terms if no results
+        // Fallback Level 2: Generic History
         if (!videos || videos.length === 0) {
-            console.warn('Pexels: No results for specific query. Trying generic terms.');
-            videos = await fetchFromPexels('history cinematic documentary abstract');
+            console.log('Pexels: Level 1 failed. Searching for 2. "history cinematic"...');
+            videos = await fetchFromPexels('history cinematic');
+        }
+
+        // Fallback Level 3: Abstract
+        if (!videos || videos.length === 0) {
+            console.log('Pexels: Level 2 failed. Searching for 3. "abstract background"...');
+            videos = await fetchFromPexels('abstract background');
         }
 
         if (videos && videos.length > 0) {
+            // Randomize selection from first result to vary it slightly if possible, 
+            // but per_page=1 limits us. Let's keep it simple for now to ensure a hit.
             const videoFile = videos[0].video_files.find(f => f.quality === 'hd' && f.file_type === 'video/mp4') || videos[0].video_files[0];
             return videoFile.link;
         } else {
-            alert('Pexels API uyarısı: Aradığınız kriterde video bulunamadı, varsayılan video kullanılıyor.');
+            console.warn('Pexels: All searches failed. Using local fallback.');
         }
 
     } catch (err) {
-        console.error('Pexels Error:', err);
         if (err.message === 'API_KEY_INVALID') {
-            alert('Pexels API Hatası: Girdiğiniz API anahtarı geçersiz. Lütfen anahtarınızı kontrol edin.');
+            alert('API Anahtarı Hatalı! Lütfen kontrol edin.');
         } else {
-            console.warn('API bağlantı hatası, varsayılan video kullanılıyor.');
+            console.error('Pexels Error:', err);
         }
     }
 
