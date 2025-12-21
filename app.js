@@ -402,7 +402,7 @@ function handleDownload() {
     setLoading(true, `Video Kaydediliyor... (0/${DURATION_SECONDS}s)`);
 
     // Reset media to start
-    if (state.backgroundVideo) state.backgroundVideo.currentTime = 0;
+    // if (state.backgroundVideo) state.backgroundVideo.currentTime = 0; // Removed video specific logic
     if (state.backgroundAudio) {
         state.backgroundAudio.currentTime = 0;
         state.backgroundAudio.play();
@@ -431,126 +431,130 @@ const TR_MONTHS = [
     'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
 ];
 
-async function fetchHistoryData(dateStr) {
-    // Local File Protocol Check
-    if (window.location.protocol === 'file:') {
-        const [year, month, day] = dateStr.split('-');
-        return {
-            text: `TARİHTE BUGÜN (${day}.${month}.1969)\n\nİnsanlık Ay'a ilk kez ayak bastı. Apollo 11 görevi başarıyla tamamlandı. "Benim için küçük, insanlık için büyük bir adım." (Demo Modu)`,
-            keywords: 'space moon cinematic',
-            year: '1969'
-        };
-    }
+// This function is now redundant as fetchHistoryData is defined above and updated.
+// Keeping it here for context but it's effectively replaced by the one above.
+// async function fetchHistoryData(dateStr) {
+//     // Local File Protocol Check
+//     if (window.location.protocol === 'file:') {
+//         const [year, month, day] = dateStr.split('-');
+//         return {
+//             text: `TARİHTE BUGÜN (${day}.${month}.1969)\n\nİnsanlık Ay'a ilk kez ayak bastı. Apollo 11 görevi başarıyla tamamlandı. "Benim için küçük, insanlık için büyük bir adım." (Demo Modu)`,
+//             keywords: 'space moon cinematic',
+//             year: '1969'
+//         };
+//     }
 
-    const dateObj = new Date(dateStr);
-    const day = dateObj.getDate();
-    const monthIndex = dateObj.getMonth();
-    const monthName = TR_MONTHS[monthIndex];
-    // Wikipedia Format: "21_Aralık"
-    const pageTitle = `${day}_${monthName}`;
+//     const dateObj = new Date(dateStr);
+//     const day = dateObj.getDate();
+//     const monthIndex = dateObj.getMonth();
+//     const monthName = TR_MONTHS[monthIndex];
+//     // Wikipedia Format: "21_Aralık"
+//     const pageTitle = `${day}_${monthName}`;
 
-    try {
-        const url = `https://tr.wikipedia.org/w/api.php?action=parse&format=json&page=${pageTitle}&prop=text&section=1&disabletoc=1&origin=*`;
-        const response = await fetch(url);
-        const data = await response.json();
+//     try {
+//         const url = `https://tr.wikipedia.org/w/api.php?action=parse&format=json&page=${pageTitle}&prop=text&section=1&disabletoc=1&origin=*`;
+//         const response = await fetch(url);
+//         const data = await response.json();
 
-        if (!data.parse || !data.parse.text) throw new Error('Veri yok');
+//         if (!data.parse || !data.parse.text) throw new Error('Veri yok');
 
-        const htmlContent = data.parse.text['*'];
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlContent, 'text/html');
-        const listItems = doc.querySelectorAll('li');
+//         const htmlContent = data.parse.text['*'];
+//         const parser = new DOMParser();
+//         const doc = parser.parseFromString(htmlContent, 'text/html');
+//         const listItems = doc.querySelectorAll('li');
 
-        const validEvents = Array.from(listItems).map(li => {
-            return li.innerText.replace(/\[.*?\]/g, '').trim();
-        }).filter(t => t.length > 20 && /^\d+/.test(t));
+//         const validEvents = Array.from(listItems).map(li => {
+//             return li.innerText.replace(/\[.*?\]/g, '').trim();
+//         }).filter(t => t.length > 20 && /^\d+/.test(t));
 
-        if (validEvents.length === 0) throw new Error('Geçerli olay yok');
+//         if (validEvents.length === 0) throw new Error('Geçerli olay yok');
 
-        // --- Smart Selection Logic (Global & Impact Focused) ---
-        // Prioritize: Wars, Revolutions, Space, Major States, Inventions
-        // Deprioritize: Local news (districts, villages), Routine visits, Minor openings
-        const scoreEvent = (text) => {
-            let score = 0;
-            const textLower = text.toLowerCase();
+//         // --- Smart Selection Logic (Global & Impact Focused) ---
+//         // Prioritize: Wars, Revolutions, Space, Major States, Inventions
+//         // Deprioritize: Local news (districts, villages), Routine visits, Minor openings
+//         const scoreEvent = (text) => {
+//             let score = 0;
+//             const textLower = text.toLowerCase();
 
-            // Tier 1: High Stakes / History Shaping (+10 Points)
-            const tier1 = ['savaş', 'devrim', 'darbe', 'işgal', 'bağımsızlık', 'ilan edildi', 'imparatorluğu', 'cumhuriyet', 'fetih', 'atom', 'nükleer', 'uzay', 'aya ayak', 'nobel', 'icat', 'keşif'];
+//             // Tier 1: High Stakes / History Shaping (+10 Points)
+//             const tier1 = ['savaş', 'devrim', 'darbe', 'işgal', 'bağımsızlık', 'ilan edildi', 'imparatorluğu', 'cumhuriyet', 'fetih', 'atom', 'nükleer', 'uzay', 'aya ayak', 'nobel', 'icat', 'keşif'];
 
-            // Tier 2: Global Context / Major Powers (+5 Points)
-            const tier2 = ['dünya', 'uluslararası', 'abd', 'sovyet', 'rusya', 'almanya', 'ingiltere', 'fransa', 'çin', 'japonya', 'birleşmiş milletler', 'nato', 'avrupa birliği'];
+//             // Tier 2: Global Context / Major Powers (+5 Points)
+//             const tier2 = ['dünya', 'uluslararası', 'abd', 'sovyet', 'rusya', 'almanya', 'ingiltere', 'fransa', 'çin', 'japonya', 'birleşmiş milletler', 'nato', 'avrupa birliği'];
 
-            // Tier 3: Local / Minor Affairs (-20 Points -> Filter Out)
-            const tier3Val = ['ilçe', 'ilçesi', 'köyü', 'beldesi', 'mahallesi', 'belediye', 'valisi', 'kaymakam', 'muhtar', 'hizmete girdi', 'temeli atıldı', 'ziyaret etti', 'heyeti'];
+//             // Tier 3: Local / Minor Affairs (-20 Points -> Filter Out)
+//             const tier3Val = ['ilçe', 'ilçesi', 'köyü', 'beldesi', 'mahallesi', 'belediye', 'valisi', 'kaymakam', 'muhtar', 'hizmete girdi', 'temeli atıldı', 'ziyaret etti', 'heyeti'];
 
-            if (tier1.some(k => textLower.includes(k))) score += 10;
-            if (tier2.some(k => textLower.includes(k))) score += 5;
-            if (tier3Val.some(k => textLower.includes(k))) score -= 20;
+//             if (tier1.some(k => textLower.includes(k))) score += 10;
+//             if (tier2.some(k => textLower.includes(k))) score += 5;
+//             if (tier3Val.some(k => textLower.includes(k))) score -= 20;
 
-            return score;
-        };
+//             return score;
+//         };
 
-        // Sort by score descending
-        validEvents.sort((a, b) => scoreEvent(b) - scoreEvent(a));
+//         // Sort by score descending
+//         validEvents.sort((a, b) => scoreEvent(b) - scoreEvent(a));
 
-        // Pick from top 30% to ensure quality but allow randomness
-        // If list is small, pick from top 3
-        const poolSize = Math.max(3, Math.floor(validEvents.length * 0.3));
-        const topEvents = validEvents.slice(0, poolSize);
+//         // Pick from top 30% to ensure quality but allow randomness
+//         // If list is small, pick from top 3
+//         const poolSize = Math.max(3, Math.floor(validEvents.length * 0.3));
+//         const topEvents = validEvents.slice(0, poolSize);
 
-        const randomEventStr = topEvents[Math.floor(Math.random() * topEvents.length)];
+//         const randomEventStr = topEvents[Math.floor(Math.random() * topEvents.length)];
 
-        // Extract year
-        let year = 'Tarih';
-        let description = randomEventStr;
-        const match = randomEventStr.match(/^(\d+)\s*[-–:]\s*(.*)/);
-        if (match) {
-            year = match[1];
-            description = match[2];
-        }
+//         // Extract year
+//         let year = 'Tarih';
+//         let description = randomEventStr;
+//         const match = randomEventStr.match(/^(\d+)\s*[-–:]\s*(.*)/);
+//         if (match) {
+//             year = match[1];
+//             description = match[2];
+//         }
 
-        // Generate keywords for video search (Cascading Strategy)
-        // 1. Specific: Year + History
-        // 2. Fallback in fetchBackgroundVideo will handle generic terms
-        let searchKeywords = 'history cinematic';
-        if (year && year.length === 4) {
-            searchKeywords = `${year} history`;
-        }
+//         // Generate keywords for video search (Cascading Strategy)
+//         // 1. Specific: Year + History
+//         // 2. Fallback in fetchBackgroundVideo will handle generic terms
+//         let searchKeywords = 'history cinematic';
+//         if (year && year.length === 4) {
+//             searchKeywords = `${year} history`;
+//         }
 
-        return {
-            text: `TARİHTE BUGÜN (${day} ${monthName} ${year})\n\n${description}`,
-            keywords: searchKeywords,
-            year: year
-        };
+//         return {
+//             text: `TARİHTE BUGÜN (${day} ${monthName} ${year})\n\n${description}`,
+//             keywords: searchKeywords,
+//             year: year
+//         };
 
-    } catch (err) {
-        console.warn('Wiki Error', err);
-        return {
-            text: `TARİHTE BUGÜN (${day} ${monthName})\n\nVeri kaynağına erişilemedi.`,
-            keywords: 'abstract technology',
-            year: '----'
-        };
-    }
-}
+//     } catch (err) {
+//         console.warn('Wiki Error', err);
+//         return {
+//             text: `TARİHTE BUGÜN (${day} ${monthName})\n\nVeri kaynağına erişilemedi.`,
+//             keywords: 'abstract technology',
+//             year: '----'
+//         };
+//     }
+// }
 
-async function fetchBackgroundVideo(query, apiKey) {
+async function fetchBackgroundPhotos(query, apiKey) {
+    // If no API key, return a placeholder array
     if (!apiKey) {
-        return SERIOUS_FALLBACK;
+        // Fallback Abstract Images
+        return [
+            'https://images.pexels.com/photos/2085998/pexels-photo-2085998.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+            'https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+            'https://images.pexels.com/photos/36006/renaissance-schallaburg-figures-facade.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
+        ];
     }
 
     const fetchFromPexels = async (searchQuery) => {
         try {
-            // Generate random page (1-80) to access deeper results (Approx 1200+ videos pool)
-            const randomPage = Math.floor(Math.random() * 80) + 1;
-
-            console.log(`Pexels: Query="${searchQuery}", Page=${randomPage}`);
-
-            const response = await fetch(`${PEXELS_API_URL}?query=${searchQuery}&per_page=15&page=${randomPage}&orientation=portrait&size=medium`, {
+            // Fetch 15 photos, pick 5 random
+            const response = await fetch(`${PEXELS_PHOTO_API_URL}?query=${searchQuery}&per_page=15&orientation=portrait`, {
                 headers: { Authorization: apiKey }
             });
             if (response.status === 401) throw new Error('API_KEY_INVALID');
             const data = await response.json();
-            return data.videos || [];
+            return data.photos || [];
         } catch (e) {
             if (e.message === 'API_KEY_INVALID') throw e;
             return [];
@@ -558,117 +562,105 @@ async function fetchBackgroundVideo(query, apiKey) {
     };
 
     try {
-        console.log(`Pexels: Searching for 1. "${query}"...`);
-        let videos = await fetchFromPexels(query);
+        console.log(`Pexels Photos: Searching for "${query}"...`);
+        let photos = await fetchFromPexels(query);
 
-        // Fallback Level 2: Generic History
-        if (!videos || videos.length === 0) {
-            console.log('Pexels: Level 1 failed. Searching for 2. "history cinematic"...');
-            videos = await fetchFromPexels('history cinematic');
-        }
+        if (photos.length === 0) photos = await fetchFromPexels('history museum'); // Fallback
 
-        // Fallback Level 3: Abstract
-        if (!videos || videos.length === 0) {
-            console.log('Pexels: Level 2 failed. Searching for 3. "abstract background"...');
-            videos = await fetchFromPexels('abstract background');
-        }
-
-        if (videos && videos.length > 0) {
-            // Pick a RANDOM video from the results to prevent "same video" issue
-            const randomIndex = Math.floor(Math.random() * videos.length);
-            const selectedVideo = videos[randomIndex];
-
-            const videoFile = selectedVideo.video_files.find(f => f.quality === 'hd' && f.file_type === 'video/mp4') || selectedVideo.video_files[0];
-            console.log(`Pexels: Selected video ${randomIndex + 1}/${videos.length}:`, videoFile.link);
-            return videoFile.link;
-        } else {
-            console.warn('Pexels: All searches failed. Using local fallback.');
+        if (photos.length > 0) {
+            // Shuffle and pick 5 unique
+            const shuffled = photos.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, 5).map(p => p.src.large2x || p.src.large);
         }
 
     } catch (err) {
-        if (err.message === 'API_KEY_INVALID') {
-            alert('API Anahtarı Hatalı! Lütfen kontrol edin.');
-        } else {
-            console.error('Pexels Error:', err);
-        }
+        if (err.message === 'API_KEY_INVALID') alert('API Anahtarı Hatalı!');
+        console.error(err);
     }
 
-    return SERIOUS_FALLBACK;
+    // Final fallback
+    return ['https://images.pexels.com/photos/2085998/pexels-photo-2085998.jpeg'];
 }
 
-async function prepareAssets(videoUrl, audioUrl) {
-    const p1 = new Promise((resolve, reject) => {
-        if (videoUrl) {
-            // Re-use or create video element
-            state.backgroundVideo = state.backgroundVideo || document.createElement('video');
-            const vid = state.backgroundVideo;
-            vid.crossOrigin = 'anonymous';
-            vid.loop = true;
-            vid.muted = true;
-            vid.setAttribute('playsinline', '');
-            vid.src = videoUrl;
-
-            const onReady = () => {
-                vid.play().catch(() => { });
-                resolve();
-            };
-
-            if (vid.readyState >= 3) onReady();
-            else vid.oncanplay = onReady;
-            vid.onerror = (e) => {
-                console.warn('Video load fail', e);
-                // Don't reject, just resolve to allow app to continue (white background)
-                resolve();
-            };
-        } else resolve();
+async function prepareAssets(imageUrls, audioUrl) {
+    // Load Images
+    const imagePromises = imageUrls.map(url => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.src = url;
+            img.onload = () => resolve(img);
+            img.onerror = () => resolve(null); // Continue even if one fails
+        });
     });
 
-    const p2 = new Promise((resolve) => {
+    const loadedImages = await Promise.all(imagePromises);
+    state.backgroundImages = loadedImages.filter(img => img !== null);
+
+    // Load Audio (Same as before)
+    const audioPromise = new Promise((resolve) => {
         if (audioUrl) {
             state.backgroundAudio = new Audio();
             const aud = state.backgroundAudio;
             aud.crossOrigin = 'anonymous';
             aud.loop = true;
             aud.src = audioUrl;
-            aud.oncanplaythrough = () => {
-                aud.play().catch(() => { });
-                resolve();
-            };
-            aud.onerror = () => {
-                console.warn('Audio load fail');
-                resolve();
-            };
+            aud.oncanplaythrough = () => { aud.play().catch(() => { }); resolve(); };
+            aud.onerror = () => resolve();
         } else {
-            if (state.backgroundAudio) {
-                state.backgroundAudio.pause();
-                state.backgroundAudio = null;
-            }
+            if (state.backgroundAudio) { state.backgroundAudio.pause(); state.backgroundAudio = null; }
             resolve();
         }
     });
 
-    return Promise.all([p1, p2]);
+    return audioPromise;
 }
 
 // --- Rendering Engine ---
 let animationFrameId;
 
+// Kenneth Burns Slideshow Effect
 function startRenderLoop(text) {
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
 
     const ctx = dom.canvas.getContext('2d');
-    const vid = state.backgroundVideo;
+    const images = state.backgroundImages;
+    let startTime = Date.now();
+
+    // Pre-calculate Ken Burns params for each image
+    const moves = images.map(() => ({
+        originX: Math.random() * 0.2, // 0% to 20%
+        originY: Math.random() * 0.2,
+        direction: Math.random() > 0.5 ? 1 : -1,
+        scaleStart: 1.1,
+        scaleEnd: 1.25
+    }));
 
     function draw() {
-        if (vid && vid.readyState >= 2) {
-            drawImageProp(ctx, vid, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-            if (vid.paused) {
-                vid.currentTime += 1 / FPS; // Manual advance
-                if (vid.currentTime >= vid.duration) vid.currentTime = 0;
-            }
-        } else {
-            ctx.fillStyle = '#111';
-            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        const now = Date.now();
+        const elapsed = (now - startTime) / 1000;
+
+        // Determine current slide indices
+        // We want a smooth transition.
+        // Cycle duration = SLIDE_DURATION
+        const totalDuration = elapsed;
+        const slideIndex = Math.floor(totalDuration / SLIDE_DURATION) % images.length;
+        const nextSlideIndex = (slideIndex + 1) % images.length;
+
+        const slideProgress = (totalDuration % SLIDE_DURATION) / SLIDE_DURATION; // 0.0 to 1.0
+
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        // Draw Current Slide
+        if (images[slideIndex]) {
+            drawKenBurns(ctx, images[slideIndex], slideProgress, moves[slideIndex], 1);
+        }
+
+        // Crossfade to Next Slide (last 1 second)
+        if (slideProgress > 0.75 && images[nextSlideIndex]) {
+            const alpha = (slideProgress - 0.75) * 4; // 0 to 1
+            drawKenBurns(ctx, images[nextSlideIndex], 0, moves[nextSlideIndex], alpha);
         }
 
         // Vignette
@@ -679,15 +671,14 @@ function startRenderLoop(text) {
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-        // Text
+        // Text Overlay
         ctx.textAlign = 'center';
 
-        // Check text parts
         const parts = text.split('\n\n');
         const headerText = parts[0] || 'TARİHTE BUGÜN';
         const bodyText = parts[1] || text;
 
-        ctx.font = '800 42px Outfit'; // Slightly smaller to fit long dates
+        ctx.font = '800 42px Outfit';
         ctx.fillStyle = '#FFD700';
         ctx.shadowColor = 'rgba(0,0,0,0.8)';
         ctx.shadowBlur = 15;
@@ -707,6 +698,63 @@ function startRenderLoop(text) {
     }
 
     draw();
+}
+
+function drawKenBurns(ctx, img, progress, move, globalAlpha) {
+    if (!img) return;
+
+    ctx.save();
+    ctx.globalAlpha = globalAlpha;
+
+    // Calculate scale and position based on progress
+    const scale = move.scaleStart + (move.scaleEnd - move.scaleStart) * progress;
+
+    // Pan calculation
+    // We want to move from (OriginX, OriginY) slightly
+    const panRange = 0.05; // 5% movement
+    const panX = move.originX + (panRange * progress * move.direction);
+    const panY = move.originY;
+
+    // Draw parameters
+    const iw = img.width;
+    const ih = img.height;
+
+    // We render a slice of the image
+    // Source rect
+    const sw = iw / scale;
+    const sh = ih / scale;
+    const sx = panX * iw;
+    const sy = panY * ih;
+
+    // Destination rect is full canvas
+    // But we need to maintain aspect ratio cover logic roughly?
+    // Actually simpler: Draw Image scaled up, then center.
+    // Let's use standard drawImageProp but with virtual scaling.
+
+    // Better simplified Ken Burns:
+    // Scale canvas context? No, expensive.
+    // Calculate source rectangle (crop) that moves over time.
+
+    // Center crop logic:
+    // We need to fill CANVAS_WIDTH x CANVAS_HEIGHT
+    // Basic scaling to Cover
+    const ratio = Math.max(CANVAS_WIDTH / iw, CANVAS_HEIGHT / ih);
+    const centerW = iw * ratio;
+    const centerH = ih * ratio;
+
+    // Apply zoom
+    const zoomW = centerW * scale;
+    const zoomH = centerH * scale;
+
+    // Offsets
+    let dx = (CANVAS_WIDTH - zoomW) / 2;
+    let dy = (CANVAS_HEIGHT - zoomH) / 2;
+
+    // Apply Pan
+    dx += (move.direction * 50 * progress); // Move 50px horizontally over time
+
+    ctx.drawImage(img, dx, dy, zoomW, zoomH);
+    ctx.restore();
 }
 
 // Helpers
