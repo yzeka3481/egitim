@@ -149,16 +149,17 @@ async function handleGenerate(e) {
         const fact = await fetchHistoryData(state.selectedDate);
         if (!fact) throw new Error('Tarih verisi bulunamadı.');
 
-        // 2. Determine Video Source
+        // 2. Determine Asset Source (Photos)
         const localInput = document.getElementById('local-video');
-        let videoUrl = null;
+        let imageUrls = [];
 
+        // Note: New engine supports Photos (Array). Local video upload temporarily ignored or treated as fallback.
         if (localInput.files.length > 0) {
-            console.log('Using local video');
-        } else {
-            setLoading(true, 'Video hazırlanıyor...');
-            videoUrl = await fetchBackgroundVideo(fact.keywords, state.apiKey);
+            console.warn('Local video ignored in Photo Mode. Fetching photos instead.');
         }
+
+        setLoading(true, 'Fotoğraflar hazırlanıyor...');
+        imageUrls = await fetchBackgroundPhotos(fact.keywords, state.apiKey);
 
         // 3. Determine Audio Source
         let audioUrl = null;
@@ -171,7 +172,7 @@ async function handleGenerate(e) {
         }
 
         // 4. Prepare All Assets
-        await prepareAssets(videoUrl, audioUrl);
+        await prepareAssets(imageUrls, audioUrl);
 
         // 5. Start Loop
         startRenderLoop(fact.text);
