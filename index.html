@@ -32,8 +32,23 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="local-video">Veya Kendi Videonu Yükle</label>
+                    <label for="local-video">Yerel Video Yükle</label>
                     <input type="file" id="local-video" accept="video/*">
+                </div>
+
+                <div class="form-group">
+                    <label for="bg-music">Arka Plan Müziği</label>
+                    <select id="music-select">
+                        <option value="none" selected>Müzik Yok</option>
+                        <option
+                            value="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/ccCommunity/Kai_Engel/Satin/Kai_Engel_-_04_-_Sentinel.mp3">
+                            Dramatik / Tarihi (Sentinel)</option>
+                        <option
+                            value="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Kevin_MacLeod/Impact/Kevin_MacLeod_-_03_-_Impact_Prelude.mp3">
+                            Epik / Gerilim (Impact)</option>
+                        <option value="custom">Kendi Müziğini Yükle...</option>
+                    </select>
+                    <input type="file" id="local-music" accept="audio/*" class="hidden" style="margin-top: 5px;">
                 </div>
 
                 <div class="form-group">
