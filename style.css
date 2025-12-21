@@ -212,6 +212,34 @@ canvas {
     display: none;
 }
 
+/* Caption Box */
+.caption-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background: var(--bg-dark);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.caption-box textarea {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    border-radius: 6px;
+    padding: 0.5rem;
+    font-family: inherit;
+    font-size: 0.85rem;
+    resize: vertical;
+    min-height: 100px;
+}
+
+.btn-small {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+}
+
 /* Loader */
 .loader {
     width: 16px;

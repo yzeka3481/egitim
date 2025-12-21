@@ -51,15 +51,60 @@ const dom = {
 };
 
 // --- Initialization ---
-function init() {
-    // Set default date to today
-    dom.datePicker.value = state.selectedDate;
+// --- Helpers ---
 
-    // Set Canvas Resolution
+async function fetchWikiSummary(title) {
+    if (!title) return null;
+    try {
+        const url = `https://tr.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${title}&origin=*`;
+        const response = await fetch(url);
+        const data = await response.json();
+        const pages = data.query.pages;
+        const pageId = Object.keys(pages)[0];
+        if (pageId === '-1') return null;
+
+        let extract = pages[pageId].extract;
+        // Limit to 2-3 sentences
+        const sentences = extract.split('. ');
+        return sentences.slice(0, 3).join('. ') + '.';
+    } catch (e) {
+        console.warn('Summary fetch failed', e);
+        return null;
+    }
+}
+
+function generateCaption(dateStr, year, description, detail) {
+    const hashtags = `#tarih #tarihtebugun #${year} #belgesel #bilgi`;
+    let detailSection = '';
+    if (detail) {
+        detailSection = `\n\n🔍 DETAY:\n${detail}`;
+    }
+
+    return `📅 TARİHTE BUGÜN: ${dateStr}\n\n${description}${detailSection}\n\n${hashtags}`;
+}
+
+// --- DOM Elements Update ---
+// (Already defined at top, but ensure we access new ones)
+// In init():
+function init() {
+    // ... existing init code ...
+    dom.captionBox = document.getElementById('caption-box');
+    dom.captionText = document.getElementById('caption-text');
+    dom.btnCopy = document.getElementById('btn-copy-caption');
+
+    dom.btnCopy.addEventListener('click', () => {
+        dom.captionText.select();
+        document.execCommand('copy');
+        dom.btnCopy.innerText = 'Kopyalandı!';
+        setTimeout(() => dom.btnCopy.innerHTML = '<span class="material-symbols-rounded">content_copy</span> Kopyala', 2000);
+    });
+
+    // ... rest of init ...
+    dom.datePicker.value = state.selectedDate;
     dom.canvas.width = CANVAS_WIDTH;
     dom.canvas.height = CANVAS_HEIGHT;
 
-    // Draw initial empty state
+    // Draw initial
     const ctx = dom.canvas.getContext('2d');
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -68,34 +113,26 @@ function init() {
     ctx.textAlign = 'center';
     ctx.fillText('Video Oluştur\'a Basın', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
 
-    // Event Listeners
     dom.form.addEventListener('submit', handleGenerate);
     dom.btnDownload.addEventListener('click', handleDownload);
 
-    // Local Video Helper
     document.getElementById('local-video').addEventListener('change', function (e) {
         const file = e.target.files[0];
         if (file) {
             const url = URL.createObjectURL(file);
-            prepareAssets(url, null).then(() => {
-                console.log('Local video loaded');
-            });
+            prepareAssets(url, null).then(() => console.log('Local video loaded'));
         }
     });
 
-    // Music Select Helper
     if (dom.musicSelect) {
         dom.musicSelect.addEventListener('change', (e) => {
-            if (e.target.value === 'custom') {
-                dom.localMusicInput.classList.remove('hidden');
-            } else {
-                dom.localMusicInput.classList.add('hidden');
-            }
+            if (e.target.value === 'custom') dom.localMusicInput.classList.remove('hidden');
+            else dom.localMusicInput.classList.add('hidden');
         });
     }
 }
 
-// --- Handlers ---
+// --- Handlers Update ---
 
 async function handleGenerate(e) {
     e.preventDefault();
@@ -105,6 +142,7 @@ async function handleGenerate(e) {
     state.apiKey = dom.apiKeyInput.value.trim();
 
     setLoading(true, 'Veriler çekiliyor...');
+    if (dom.captionBox) dom.captionBox.classList.add('hidden');
 
     try {
         // 1. Fetch History Data (TURKISH)
@@ -138,6 +176,19 @@ async function handleGenerate(e) {
         // 5. Start Loop
         startRenderLoop(fact.text);
 
+        // 6. Generate Caption & Details
+        setLoading(true, 'Detaylar oluşturuluyor...');
+        let wikiDetail = null;
+        if (fact.topicTitle) {
+            wikiDetail = await fetchWikiSummary(fact.topicTitle);
+        }
+
+        const caption = generateCaption(state.selectedDate, fact.year, fact.rawDescription, wikiDetail);
+        if (dom.captionText) {
+            dom.captionText.value = caption;
+            dom.captionBox.classList.remove('hidden');
+        }
+
         setLoading(false);
         enableActions();
 
@@ -145,6 +196,112 @@ async function handleGenerate(e) {
         console.error(error);
         alert('Hata: ' + error.message);
         setLoading(false);
+    }
+}
+
+// ... (Rest of existing functions like handleDownload, scoreEvent etc) ...
+
+// Updated fetchHistoryData to return raw description and topic link
+async function fetchHistoryData(dateStr) {
+    if (window.location.protocol === 'file:') {
+        // ... demo logic ...
+        return {
+            text: `TARİHTE BUGÜN (...)\n\nDemo...`,
+            keywords: 'space',
+            year: '1969',
+            rawDescription: 'İnsanlık Ay\'a çıktı.',
+            topicTitle: 'Apollo_11'
+        };
+    }
+
+    const dateObj = new Date(dateStr);
+    const day = dateObj.getDate();
+    const monthIndex = dateObj.getMonth();
+    const monthName = TR_MONTHS[monthIndex];
+    const pageTitle = `${day}_${monthName}`;
+
+    try {
+        const url = `https://tr.wikipedia.org/w/api.php?action=parse&format=json&page=${pageTitle}&prop=text&section=1&disabletoc=1&origin=*`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!data.parse || !data.parse.text) throw new Error('Veri yok');
+
+        const htmlContent = data.parse.text['*'];
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlContent, 'text/html');
+        const listItems = doc.querySelectorAll('li');
+
+        const validEvents = Array.from(listItems).map(li => {
+            // Store original HTML element to extract links later
+            const text = li.innerText.replace(/\[.*?\]/g, '').trim();
+            return { element: li, text: text };
+        }).filter(item => item.text.length > 20 && /^\d+/.test(item.text));
+
+        if (validEvents.length === 0) throw new Error('Geçerli olay yok');
+
+        // Scoring Logic 
+        // We reuse the scoring logic but apply it to the object
+        const scoreEvent = (text) => {
+            let score = 0;
+            const textLower = text.toLowerCase();
+            const tier1 = ['savaş', 'devrim', 'darbe', 'işgal', 'bağımsızlık', 'ilan edildi', 'imparatorluğu', 'cumhuriyet', 'fetih', 'atom', 'nükleer', 'uzay', 'aya ayak', 'nobel', 'icat', 'keşif'];
+            const tier2 = ['dünya', 'uluslararası', 'abd', 'sovyet', 'rusya', 'almanya', 'ingiltere', 'fransa', 'çin', 'japonya', 'birleşmiş milletler', 'nato', 'avrupa birliği'];
+            const tier3Val = ['ilçe', 'ilçesi', 'köyü', 'beldesi', 'mahallesi', 'belediye', 'valisi', 'kaymakam', 'muhtar', 'hizmete girdi', 'temeli atıldı', 'ziyaret etti', 'heyeti'];
+
+            if (tier1.some(k => textLower.includes(k))) score += 10;
+            if (tier2.some(k => textLower.includes(k))) score += 5;
+            if (tier3Val.some(k => textLower.includes(k))) score -= 20;
+            return score;
+        };
+
+        validEvents.sort((a, b) => scoreEvent(b.text) - scoreEvent(a.text));
+
+        const poolSize = Math.max(3, Math.floor(validEvents.length * 0.3));
+        const topEvents = validEvents.slice(0, poolSize);
+        const selectedItem = topEvents[Math.floor(Math.random() * topEvents.length)];
+
+        // Extract Topic Title from Links
+        let topicTitle = null;
+        const links = selectedItem.element.querySelectorAll('a');
+        for (let link of links) {
+            const href = link.getAttribute('href');
+            // Skip year links (usually starts with digit) or internal irrelevant ones
+            if (href && href.startsWith('/wiki/') && !/^\/wiki\/\d+$/.test(href)) {
+                topicTitle = href.replace('/wiki/', '');
+                break; // Take the first relevant link
+            }
+        }
+
+        const randomEventStr = selectedItem.text;
+        let year = 'Tarih';
+        let description = randomEventStr;
+        const match = randomEventStr.match(/^(\d+)\s*[-–:]\s*(.*)/);
+        if (match) {
+            year = match[1];
+            description = match[2];
+        }
+
+        let searchKeywords = 'history cinematic';
+        if (year && year.length === 4) searchKeywords = `${year} history`;
+
+        return {
+            text: `TARİHTE BUGÜN (${day} ${monthName} ${year})\n\n${description}`,
+            keywords: searchKeywords,
+            year: year,
+            rawDescription: description,
+            topicTitle: topicTitle
+        };
+
+    } catch (err) {
+        console.warn('Wiki Error', err);
+        return {
+            text: `TARİHTE BUGÜN (${day} ${monthName})\n\nVeri kaynağına erişilemedi.`,
+            keywords: 'abstract technology',
+            year: '----',
+            rawDescription: 'Hata',
+            topicTitle: null
+        };
     }
 }
 
@@ -298,22 +455,25 @@ async function fetchHistoryData(dateStr) {
 
         if (validEvents.length === 0) throw new Error('Geçerli olay yok');
 
-        // --- Smart Selection Logic ---
-        // Prioritize interesting events (Wars, Inventions, Firsts) over boring ones (Treaties, Visits)
+        // --- Smart Selection Logic (Global & Impact Focused) ---
+        // Prioritize: Wars, Revolutions, Space, Major States, Inventions
+        // Deprioritize: Local news (districts, villages), Routine visits, Minor openings
         const scoreEvent = (text) => {
             let score = 0;
             const textLower = text.toLowerCase();
 
-            // Tier 1: High Impact / Action (Score +3)
-            const tier1 = ['savaş', 'muharebe', 'darbe', 'devrim', 'suikast', 'isyan', 'fetih', 'işgal', 'saldırı', 'patlama'];
-            // Tier 2: Science / Progress / Firsts (Score +2)
-            const tier2 = ['icat', 'keşif', 'ilk kez', 'kuruldu', 'nobel', 'uzay', 'aya ayak', 'başladı', 'ilan edildi'];
-            // Tier 3: Boring / Bureaucracy (Score -1)
-            const tier3 = ['ziyaret', 'atandı', 'görüşme', 'imzalandı', 'seçildi', 'kurul', 'toplantı'];
+            // Tier 1: High Stakes / History Shaping (+10 Points)
+            const tier1 = ['savaş', 'devrim', 'darbe', 'işgal', 'bağımsızlık', 'ilan edildi', 'imparatorluğu', 'cumhuriyet', 'fetih', 'atom', 'nükleer', 'uzay', 'aya ayak', 'nobel', 'icat', 'keşif'];
 
-            if (tier1.some(k => textLower.includes(k))) score += 3;
-            if (tier2.some(k => textLower.includes(k))) score += 2;
-            if (tier3.some(k => textLower.includes(k))) score -= 1;
+            // Tier 2: Global Context / Major Powers (+5 Points)
+            const tier2 = ['dünya', 'uluslararası', 'abd', 'sovyet', 'rusya', 'almanya', 'ingiltere', 'fransa', 'çin', 'japonya', 'birleşmiş milletler', 'nato', 'avrupa birliği'];
+
+            // Tier 3: Local / Minor Affairs (-20 Points -> Filter Out)
+            const tier3Val = ['ilçe', 'ilçesi', 'köyü', 'beldesi', 'mahallesi', 'belediye', 'valisi', 'kaymakam', 'muhtar', 'hizmete girdi', 'temeli atıldı', 'ziyaret etti', 'heyeti'];
+
+            if (tier1.some(k => textLower.includes(k))) score += 10;
+            if (tier2.some(k => textLower.includes(k))) score += 5;
+            if (tier3Val.some(k => textLower.includes(k))) score -= 20;
 
             return score;
         };
