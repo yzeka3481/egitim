@@ -196,10 +196,15 @@ async function handleGenerate(e) {
         };
         const musicRec = getMusicRecommendation(fact.keywords);
 
-        const caption = generateCaption(state.selectedDate, fact.year, fact.rawDescription || '', wikiDetail || '', musicRec);
+        const caption = generateCaption(state.selectedDate, fact.year, fact.rawDescription || '', wikiDetail || '', ''); // Removed music from caption text
 
         if (dom.captionText) {
             dom.captionText.value = caption;
+
+            // Update dedicated music suggestion box
+            const musicDisplay = document.getElementById('music-suggestion-text');
+            if (musicDisplay) musicDisplay.innerText = musicRec;
+
             dom.captionBox.classList.remove('hidden');
         }
 
@@ -296,8 +301,43 @@ async function fetchHistoryData(dateStr) {
             description = match[2];
         }
 
-        let searchKeywords = 'history cinematic';
-        if (year && year.length === 4) searchKeywords = `${year} history`;
+        // Generate keywords for visual search (Contextual Translation)
+        const getEnglishContext = (txt) => {
+            const t = txt.toLowerCase();
+            let keys = [];
+
+            // War / Conflict
+            if (t.includes('savaş') || t.includes('cephe') || t.includes('muharebe')) keys.push('war battle army soldier');
+            if (t.includes('işgal') || t.includes('fetih')) keys.push('invader historical-map army');
+            if (t.includes('darbe') || t.includes('isyan') || t.includes('devrim')) keys.push('protest crowd revolution riot');
+            if (t.includes('suikast') || t.includes('öldürüldü')) keys.push('crime cemetery pistol');
+            if (t.includes('antlaşma') || t.includes('imzalandı')) keys.push('document signing pen writing');
+
+            // Science / Tech
+            if (t.includes('uzay') || t.includes('ay\'a') || t.includes('nasa') || t.includes('uydu')) keys.push('space moon astronaut rocket galaxy');
+            if (t.includes('icat') || t.includes('keşif') || t.includes('bilim')) keys.push('science laboratory invention physics old-tech');
+            if (t.includes('uçak') || t.includes('havacılık')) keys.push('airplane vintage-plane flight');
+            if (t.includes('tren') || t.includes('demiryolu')) keys.push('steam-train railway');
+
+            // Daily / Culture
+            if (t.includes('film') || t.includes('sinema')) keys.push('cinema old-movie hollywood');
+            if (t.includes('kitap') || t.includes('yazar') || t.includes('roman')) keys.push('library old-books writing typewriter');
+            if (t.includes('spor') || t.includes('futbol') || t.includes('olimpiyat')) keys.push('sports olympics stadium');
+            if (t.includes('kral') || t.includes('kraliçe') || t.includes('prens')) keys.push('royalty crown palace');
+
+            // Default
+            if (keys.length === 0) return 'history vintage antique cinematic';
+
+            return keys.join(' ');
+        };
+
+        const contextKeywords = getEnglishContext(randomEventStr);
+        let searchKeywords = contextKeywords;
+
+        // Append Year if available for styling (e.g. "1969 space")
+        if (year && year.length === 4) {
+            searchKeywords = `${year} ${contextKeywords}`;
+        }
 
         return {
             text: `TARİHTE BUGÜN (${day} ${monthName} ${year})\n\n${description}`,
