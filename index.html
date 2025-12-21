@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily History Reels Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Controls -->
+        <aside class="controls-panel">
+            <header class="app-header">
+                <span class="material-symbols-rounded icon-logo">history_edu</span>
+                <div>
+                    <h1>History Reel</h1>
+                    <p>Günlük Video Üretici</p>
+                </div>
+            </header>
+
+            <form id="generator-form">
+                <div class="form-group">
+                    <label for="date-picker">Tarih Seçin</label>
+                    <input type="date" id="date-picker" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="local-video">Yerel Video Yükle</label>
+                    <input type="file" id="local-video" accept="video/*">
+                </div>
+
+                <div class="form-group">
+                    <label for="bg-music">Arka Plan Müziği</label>
+                    <select id="music-select">
+                        <option value="none" selected>Müzik Yok</option>
+                        <option
+                            value="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/ccCommunity/Kai_Engel/Satin/Kai_Engel_-_04_-_Sentinel.mp3">
+                            Dramatik / Tarihi (Sentinel)</option>
+                        <option
+                            value="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Kevin_MacLeod/Impact/Kevin_MacLeod_-_03_-_Impact_Prelude.mp3">
+                            Epik / Gerilim (Impact)</option>
+                        <option value="custom">Kendi Müziğini Yükle...</option>
+                    </select>
+                    <input type="file" id="local-music" accept="audio/*" class="hidden" style="margin-top: 5px;">
+                </div>
+
+                <div class="form-group">
+                    <label for="api-key-pexels">Pexels API Key (Opsiyonel)</label>
+                    <input type="password" id="api-key-pexels" placeholder="Varsayılan videolar kullanılır">
+                    <small>Stok video servisi için gereklidir.</small>
+                </div>
+
+                <button type="submit" id="btn-generate" class="btn-primary">
+                    <span class="material-symbols-rounded">movie_filter</span>
+                    Video Oluştur
+                </button>
+            </form>
+
+            <div class="status-box hidden" id="status-box">
+                <span class="loader"></span>
+                <span id="status-text">İşleniyor...</span>
+            </div>
+
+            <div class="action-buttons disabled" id="action-buttons">
+                <button id="btn-download" class="btn-secondary">
+                    <span class="material-symbols-rounded">download</span>
+                    İndir (.webm)
+                </button>
+                <button id="btn-preview-play" class="btn-text">
+                    <span class="material-symbols-rounded">play_circle</span>
+                    Önizlemeyi Oynat
+                </button>
+            </div>
+        </aside>
+
+        <!-- Preview Area -->
+        <main class="preview-stage">
+            <div class="canvas-wrapper">
+                <canvas id="reel-canvas" width="1080" height="1920"></canvas>
+                <div class="overlay-controls">
+                    <!-- Play/Pause overlay could go here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
