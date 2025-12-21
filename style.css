@@ -168,7 +168,7 @@ button {
 /* Preview Area */
 .preview-stage {
     flex: 1;
-    background-image: 
+    background-image:
         radial-gradient(circle at 50% 50%, #1a1d24 1px, transparent 1px);
     background-size: 24px 24px;
     background-color: #050505;
@@ -207,7 +207,8 @@ canvas {
     font-size: 0.875rem;
 }
 
-.status-box.hidden, .hidden {
+.status-box.hidden,
+.hidden {
     display: none;
 }
 
@@ -224,8 +225,13 @@ canvas {
 }
 
 @keyframes rotation {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 @media (max-width: 900px) {
@@ -233,7 +239,7 @@ canvas {
         flex-direction: column;
         overflow-y: auto;
     }
-    
+
     .controls-panel {
         width: 100%;
         height: auto;
@@ -246,6 +252,41 @@ canvas {
     }
 
     .canvas-wrapper {
-        height: 70vh;
+        height: 60vh;
+        /* Reduced from 70vh to fit better */
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .controls-panel {
+        padding: 1rem;
+    }
+
+    .preview-stage {
+        padding: 1rem;
+    }
+
+    .app-header h1 {
+        font-size: 1.1rem;
+    }
+
+    /* Better touch targets for buttons */
+    button {
+        padding: 1rem;
+        font-size: 1rem;
+    }
+
+    input,
+    select {
+        padding: 0.875rem;
+        /* Larger touch area */
+    }
+
+    /* ensure canvas doesn't break layout */
+    .canvas-wrapper {
+        height: 50vh;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
     }
 }

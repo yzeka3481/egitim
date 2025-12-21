@@ -171,31 +171,63 @@ function handleDownload() {
         }
     }
 
-    const options = { mimeType: 'video/webm; codecs=vp9' };
-    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-        if (MediaRecorder.isTypeSupported('video/webm')) options.mimeType = 'video/webm';
-        else if (MediaRecorder.isTypeSupported('video/mp4')) options.mimeType = 'video/mp4';
-        else delete options.mimeType;
+    // Check supported types, prioritize MP4
+    const mimeTypes = [
+        'video/mp4; codecs=h264,aac',
+        'video/mp4',
+        'video/webm; codecs=vp9',
+        'video/webm'
+    ];
+
+    const options = {};
+    let selectedMimeType = '';
+
+    for (const type of mimeTypes) {
+        if (MediaRecorder.isTypeSupported(type)) {
+            selectedMimeType = type;
+            options.mimeType = type;
+            console.log('Using MIME type:', type);
+            break;
+        }
+    }
+
+    if (!selectedMimeType) {
+        console.warn('No preferred MIME type supported, letting browser decide.');
     }
 
     state.recordedChunks = [];
-    state.mediaRecorder = new MediaRecorder(finalStream, options);
+    try {
+        state.mediaRecorder = new MediaRecorder(finalStream, options);
+    } catch (e) {
+        console.error('MediaRecorder create failed:', e);
+        // Fallback without options
+        state.mediaRecorder = new MediaRecorder(finalStream);
+    }
 
     state.mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) state.recordedChunks.push(event.data);
     };
 
     state.mediaRecorder.onstop = () => {
-        const blob = new Blob(state.recordedChunks, { type: 'video/webm' });
+        // Determine extension based on actual mimetype
+        const isMp4 = selectedMimeType.includes('mp4');
+        const type = isMp4 ? 'video/mp4' : 'video/webm';
+        const ext = isMp4 ? 'mp4' : 'webm';
+
+        const blob = new Blob(state.recordedChunks, { type: type });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         document.body.appendChild(a);
         a.style = 'display: none';
         a.href = url;
-        a.download = `tarihte-bugun-${state.selectedDate}.webm`;
+        a.download = `tarihte-bugun-${state.selectedDate}.${ext}`;
         a.click();
         window.URL.revokeObjectURL(url);
+
         setLoading(false);
+        if (!isMp4) {
+            alert('Tarayıcınız MP4 kaydını desteklemiyor olabilir, bu yüzden .webm olarak indirildi. MP4 için VLC player ile dönüştürebilirsiniz.');
+        }
     };
 
     setLoading(true, `Video Kaydediliyor... (0/${DURATION_SECONDS}s)`);
