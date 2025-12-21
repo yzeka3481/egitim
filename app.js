@@ -772,8 +772,8 @@ async function prepareAssets(imageUrls, audioUrl) {
             aud.crossOrigin = 'anonymous';
             aud.loop = true;
             aud.src = audioUrl;
-            aud.oncanplaythrough = () => { aud.play().catch(() => { }); resolve(); };
-            aud.onerror = () => resolve();
+            // No event listeners, audio will be played manually later
+            resolve(); // Resolve immediately as we don't wait for canplaythrough here
         } else {
             if (state.backgroundAudio) { state.backgroundAudio.pause(); state.backgroundAudio = null; }
             resolve();
