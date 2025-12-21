@@ -374,7 +374,23 @@ async function handleDownload() {
         // Load mp4-muxer dynamically
         const { Muxer, ArrayBufferTarget } = await import('https://cdn.jsdelivr.net/npm/mp4-muxer@5.0.0/+esm');
 
-        // 1. Setup Muxer
+        // 1. Prepare Audio (Decode First)
+        let audioBuffer = null;
+        if (state.backgroundAudio && state.backgroundAudio.src) {
+            try {
+                // Use OfflineAudioContext for decoding without playing
+                const response = await fetch(state.backgroundAudio.src);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                console.log('Audio decoded:', audioBuffer.duration, 's');
+            } catch (e) {
+                console.warn('Audio decode failed:', e);
+            }
+        }
+
+        // 2. Setup Muxer
+        const hasAudio = !!audioBuffer;
         const muxer = new Muxer({
             target: new ArrayBufferTarget(),
             video: {
@@ -382,31 +398,33 @@ async function handleDownload() {
                 width: CANVAS_WIDTH,
                 height: CANVAS_HEIGHT
             },
-            audio: state.backgroundAudio ? {
+            audio: hasAudio ? {
                 codec: 'aac',
-                sampleRate: 44100,
+                sampleRate: 44100, // Standard
                 numberOfChannels: 2
             } : undefined,
             fastStart: 'in-memory'
         });
 
-        // 2. Setup Video Encoder
+        // 3. Setup Video Encoder
+        // Use Main Profile Level 4.1 for better mobile compatibility than Baseline/High generic
+        // avc1.4d0029 (Main Profile Level 4.1)
         const videoEncoder = new VideoEncoder({
             output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
             error: (e) => console.error('Video Encoder Error:', e)
         });
 
         videoEncoder.configure({
-            codec: 'avc1.42001f', // Baseline Profile (High Compatibility)
+            codec: 'avc1.4d0029',
             width: CANVAS_WIDTH,
             height: CANVAS_HEIGHT,
-            bitrate: 5_000_000, // 5 Mbps
+            bitrate: 5_000_000,
             framerate: FPS
         });
 
-        // 3. Setup Audio Encoder
+        // 4. Setup Audio Encoder
         let audioEncoder = null;
-        if (state.backgroundAudio) {
+        if (hasAudio) {
             audioEncoder = new AudioEncoder({
                 output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
                 error: (e) => console.error('Audio Encoder Error:', e)
@@ -419,31 +437,15 @@ async function handleDownload() {
             });
         }
 
-        // 4. Decode Audio Info
-        let audioBuffer = null;
-        if (state.backgroundAudio && state.backgroundAudio.src) {
-            try {
-                const response = await fetch(state.backgroundAudio.src);
-                const arrayBuffer = await response.arrayBuffer();
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-            } catch (e) {
-                console.warn('Audio decode failed, proceeding silent', e);
-            }
-        }
-
-        // 5. Recording Loop (Faster than Realtime possible)
+        // 5. Video Encoding Loop
         const frameDuration = 1 / FPS;
         const totalFrames = DURATION_SECONDS * FPS;
 
-        // Temporarily pause main render loop
         if (animationFrameId) cancelAnimationFrame(animationFrameId);
 
-        // We render frames one by one
         const ctx = dom.canvas.getContext('2d');
         const images = state.backgroundImages;
 
-        // Re-calculate moves for consistency
         const moves = images.map(() => ({
             originX: Math.random() * 0.2,
             originY: Math.random() * 0.2,
@@ -452,19 +454,18 @@ async function handleDownload() {
             scaleEnd: 1.25
         }));
 
-        console.log('Starting Encoding...');
+        console.log('Encoding Video...');
 
         for (let i = 0; i < totalFrames; i++) {
-            const time = i * frameDuration; // Seconds
-            const progress = i / totalFrames; // 0..1
+            const time = i * frameDuration;
+            const progress = i / totalFrames;
 
-            // UI Update
-            if (i % 10 === 0) {
-                dom.statusText.innerText = `MP4 Oluşturuluyor... %${Math.round(progress * 100)}`;
-                await new Promise(r => requestAnimationFrame(r)); // Breathe
+            if (i % 30 === 0) {
+                dom.statusText.innerText = `Görüntü İşleniyor... %${Math.round(progress * 100)}`;
+                await new Promise(r => requestAnimationFrame(r));
             }
 
-            // --- Render Frame Logic (Duplicated from startRenderLoop for sync) ---
+            // Render
             const slideIndex = Math.floor(time / SLIDE_DURATION) % images.length;
             const nextSlideIndex = (slideIndex + 1) % images.length;
             const slideProgress = (time % SLIDE_DURATION) / SLIDE_DURATION;
@@ -481,6 +482,7 @@ async function handleDownload() {
                 drawKenBurns(ctx, images[nextSlideIndex], 0, moves[nextSlideIndex], alpha);
             }
 
+            // Overlay (Vignette + Text)
             const gradient = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
             gradient.addColorStop(0, 'rgba(0,0,0,0.3)');
             gradient.addColorStop(0.5, 'rgba(0,0,0,0.1)');
@@ -509,11 +511,82 @@ async function handleDownload() {
             ctx.fillStyle = 'rgba(255,255,255,0.6)';
             ctx.shadowBlur = 0;
             ctx.fillText('@gunluktarih', CANVAS_WIDTH / 2, CANVAS_HEIGHT - 100);
+
+            // Create Bitmap and Encode
+            const bitmap = await createImageBitmap(dom.canvas);
+            // Keyframe every 2 seconds roughly (60 frames)
+            const keyFrame = i % 60 === 0;
+            videoEncoder.encode(new VideoFrame(bitmap, { timestamp: time * 1_000_000 }), { keyFrame });
+            bitmap.close();
         }
 
-        // 6. Save File using Muxer
+        await videoEncoder.flush();
+
+        // 6. Audio Encoding Loop (If Audio Exists)
+        if (hasAudio && audioEncoder) {
+            console.log('Encoding Audio...');
+            dom.statusText.innerText = `Ses İşleniyor...`;
+
+            // We need to chunk the AudioBuffer into AudioData objects
+            // AudioBuffer is planar (separate arrays per channel)
+            // AudioData expects interleaved or planar. Let's use interleaved for simplicity if needed, but planar is fine.
+            // Actually Video/AudioEncoder works best with defaults.
+
+            // Limit audio to video duration
+            const totalSamples = Math.min(audioBuffer.length, DURATION_SECONDS * audioBuffer.sampleRate);
+
+            // We'll process in chunks of ~1 second (44100 frames)
+            const chunkSize = 44100;
+            const numberOfChannels = audioBuffer.numberOfChannels;
+
+            for (let offset = 0; offset < totalSamples; offset += chunkSize) {
+                const size = Math.min(chunkSize, totalSamples - offset);
+                // timestamp in microseconds
+                const timestamp = (offset / audioBuffer.sampleRate) * 1_000_000;
+
+                // Prepare planar data
+                const dest = new Float32Array(size * numberOfChannels);
+
+                // Interleave or keep planar? 
+                // Format 'f32-planar' implies: [LLLL...RRRR...]
+                // Let's create `AudioData`
+                // https://developer.mozilla.org/en-US/docs/Web/API/AudioData/AudioData
+
+                // We need to copy channel data. 
+                // AudioData accepts 'buffer' which holds the data.
+                // If format is 'f32-planar', data is all Ch0 then all Ch1.
+
+                // Construct planar buffer
+                const planarBuffer = new Float32Array(size * numberOfChannels);
+                for (let ch = 0; ch < numberOfChannels; ch++) {
+                    const chData = audioBuffer.getChannelData(ch);
+                    // Copy sub-array
+                    const subarray = chData.subarray(offset, offset + size);
+                    planarBuffer.set(subarray, ch * size);
+                }
+
+                const audioData = new AudioData({
+                    format: 'f32-planar',
+                    sampleRate: audioBuffer.sampleRate,
+                    numberOfFrames: size,
+                    numberOfChannels: numberOfChannels,
+                    timestamp: timestamp,
+                    data: planarBuffer
+                });
+
+                audioEncoder.encode(audioData);
+                audioData.close();
+            }
+
+            await audioEncoder.flush();
+        }
+
+        // 7. Finalize
         await muxer.finalize();
         const buffer = muxer.target.buffer;
+
+        console.log('MP4 Finalized. Size:', buffer.byteLength);
+
         const blob = new Blob([buffer], { type: 'video/mp4' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -525,13 +598,12 @@ async function handleDownload() {
         window.URL.revokeObjectURL(url);
 
         setLoading(false);
-        // Resume preview
         startRenderLoop(state.currentText);
 
     } catch (err) {
         console.error('MP4 Gen Error:', err);
-        alert('MP4 oluşturma hatası: ' + err.message + '\nStandart kayıt deneniyor...');
-        handleDownloadFallback();
+        alert('Hata: ' + err.message + '\nLütfen sayfayı yenileyip tekrar deneyin.');
+        setLoading(false);
     }
 }
 
