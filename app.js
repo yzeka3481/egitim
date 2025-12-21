@@ -516,9 +516,43 @@ const TR_MONTHS = [
 //         // Generate keywords for video search (Cascading Strategy)
 //         // 1. Specific: Year + History
 //         // 2. Fallback in fetchBackgroundVideo will handle generic terms
-//         let searchKeywords = 'history cinematic';
-//         if (year && year.length === 4) {
-//             searchKeywords = `${year} history`;
+//         // Generate keywords for visual search (Contextual Translation)
+const getEnglishContext = (txt) => {
+    const t = txt.toLowerCase();
+    let keys = [];
+
+    // War / Conflict
+    if (t.includes('savaş') || t.includes('cephe') || t.includes('muharebe')) keys.push('war battle army soldier');
+    if (t.includes('işgal') || t.includes('fetih')) keys.push('invader historical-map army');
+    if (t.includes('darbe') || t.includes('isyan') || t.includes('devrim')) keys.push('protest crowd revolution riot');
+    if (t.includes('suikast') || t.includes('öldürüldü')) keys.push('crime cemetery pistol');
+    if (t.includes('antlaşma') || t.includes('imzalandı')) keys.push('document signing pen writing');
+
+    // Science / Tech
+    if (t.includes('uzay') || t.includes('ay\'a') || t.includes('nasa') || t.includes('uydu')) keys.push('space moon astronaut rocket galaxy');
+    if (t.includes('icat') || t.includes('keşif') || t.includes('bilim')) keys.push('science laboratory invention physics old-tech');
+    if (t.includes('uçak') || t.includes('havacılık')) keys.push('airplane vintage-plane flight');
+    if (t.includes('tren') || t.includes('demiryolu')) keys.push('steam-train railway');
+
+    // Daily / Culture
+    if (t.includes('film') || t.includes('sinema')) keys.push('cinema old-movie hollywood');
+    if (t.includes('kitap') || t.includes('yazar') || t.includes('roman')) keys.push('library old-books writing typewriter');
+    if (t.includes('spor') || t.includes('futbol') || t.includes('olimpiyat')) keys.push('sports olympics stadium');
+    if (t.includes('kral') || t.includes('kraliçe') || t.includes('prens')) keys.push('royalty crown palace');
+
+    // Default
+    if (keys.length === 0) return 'history vintage antique cinematic';
+
+    return keys.join(' ');
+};
+
+const contextKeywords = getEnglishContext(randomEventStr);
+let searchKeywords = contextKeywords;
+
+// Append Year if available for styling (e.g. "1969 space")
+if (year && year.length === 4) {
+    searchKeywords = `${year} ${contextKeywords}`;
+}
 //         }
 
 //         return {
