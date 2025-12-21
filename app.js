@@ -183,7 +183,19 @@ async function handleGenerate(e) {
             wikiDetail = await fetchWikiSummary(fact.topicTitle);
         }
 
-        const caption = generateCaption(state.selectedDate, fact.year, fact.rawDescription, wikiDetail);
+        // Music Recommendation Logic (Instagram Reels Friendly)
+        const getMusicRecommendation = (keywords) => {
+            const k = keywords.toLowerCase();
+            if (k.includes('war') || k.includes('battle') || k.includes('army')) return "⚔️ Öneri: 'Two Steps From Hell - Victory' veya 'Hans Zimmer - Mombasa'";
+            if (k.includes('space') || k.includes('moon') || k.includes('galaxy')) return "🌌 Öneri: 'Hans Zimmer - Cornfield Chase' veya 'M83 - Outro'";
+            if (k.includes('science') || k.includes('tech')) return "🔬 Öneri: 'Oppenheimer - Can You Hear The Music' veya 'Tron Legacy - The Grid'";
+            if (k.includes('sad') || k.includes('death')) return "🥀 Öneri: 'Ludovico Einaudi - Experience' veya 'Schindler\'s List Theme'";
+            return "🎵 Öneri: 'Hans Zimmer - Time' veya 'Audiomachine - Breath and Life'";
+        };
+        const musicRec = getMusicRecommendation(fact.keywords);
+
+        const caption = generateCaption(state.selectedDate, fact.year, fact.rawDescription || '', wikiDetail || '', musicRec);
+
         if (dom.captionText) {
             dom.captionText.value = caption;
             dom.captionBox.classList.remove('hidden');
