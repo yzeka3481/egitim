@@ -277,16 +277,18 @@ async function fetchHistoryData(dateStr) {
             description = match[2];
         }
 
-        // Keywords for serious/cinematic video
-        const keywords = description.replace(/[^\w\sğüşıöçĞÜŞİÖÇ]/g, '')
-            .split(' ')
-            .filter(w => w.length > 4)
-            .slice(0, 3)
-            .join(' ');
+        // Generate keywords for video search (Optimized for Pexels)
+        // User suggestion: Use English keywords for better results.
+        // Strategy: Use the Year + Generic English History terms.
+        // Turkish words often return 0 results in Pexels.
+        let searchKeywords = 'history cinematic documentary';
+        if (year && year.length === 4) {
+            searchKeywords = `${year} history archive`;
+        }
 
         return {
             text: `TARİHTE BUGÜN (${day} ${monthName})\n\n${description}`,
-            keywords: keywords + ' cinematic documentary history',
+            keywords: searchKeywords,
             year: year
         };
 
