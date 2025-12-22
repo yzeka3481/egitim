@@ -390,7 +390,9 @@ async function handleDownload() {
         }
 
         // 2. Setup Muxer
-        const hasAudio = !!audioBuffer;
+        // Force Audio to false since UI is removed
+        const hasAudio = false;
+
         const muxer = new Muxer({
             target: new ArrayBufferTarget(),
             video: {
@@ -398,27 +400,23 @@ async function handleDownload() {
                 width: CANVAS_WIDTH,
                 height: CANVAS_HEIGHT
             },
-            audio: hasAudio ? {
-                codec: 'aac',
-                sampleRate: 44100, // Standard
-                numberOfChannels: 2
-            } : undefined,
             fastStart: 'in-memory'
         });
 
         // 3. Setup Video Encoder
-        // Switching to High Profile Level 4.2 to ensure 1080x1920 fits comfortably
-        // avc1.64002a (High Profile = 0x64 (100), Level 4.2 = 0x2a (42))
+        // Reverting to Baseline Profile Level 4.0 for maximum compatibility
+        // avc1.420028 (Baseline = 0x42, Level 4.0 = 0x28)
+        // This is much safer than High Profile for generic playback
         const videoEncoder = new VideoEncoder({
             output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
             error: (e) => console.error('Video Encoder Error:', e)
         });
 
         videoEncoder.configure({
-            codec: 'avc1.64002a',
+            codec: 'avc1.420028',
             width: CANVAS_WIDTH,
             height: CANVAS_HEIGHT,
-            bitrate: 6_000_000, // 6 Mbps
+            bitrate: 4_500_000, // 4.5 Mbps is plenty for Baseline
             framerate: FPS
         });
 
@@ -586,6 +584,10 @@ async function handleDownload() {
         const buffer = muxer.target.buffer;
 
         console.log('MP4 Finalized. Size:', buffer.byteLength);
+
+        if (buffer.byteLength < 100 * 1024) { // < 100KB is definitely wrong for a video
+            throw new Error('Dosya boyutu çok küçük, video Kodlanamadı.');
+        }
 
         const blob = new Blob([buffer], { type: 'video/mp4' });
         const url = URL.createObjectURL(blob);
