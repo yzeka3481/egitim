@@ -407,18 +407,18 @@ async function handleDownload() {
         });
 
         // 3. Setup Video Encoder
-        // Use Main Profile Level 4.1 for better mobile compatibility than Baseline/High generic
-        // avc1.4d0029 (Main Profile Level 4.1)
+        // Switching to High Profile Level 4.2 to ensure 1080x1920 fits comfortably
+        // avc1.64002a (High Profile = 0x64 (100), Level 4.2 = 0x2a (42))
         const videoEncoder = new VideoEncoder({
             output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
             error: (e) => console.error('Video Encoder Error:', e)
         });
 
         videoEncoder.configure({
-            codec: 'avc1.4d0029',
+            codec: 'avc1.64002a',
             width: CANVAS_WIDTH,
             height: CANVAS_HEIGHT,
-            bitrate: 5_000_000,
+            bitrate: 6_000_000, // 6 Mbps
             framerate: FPS
         });
 
