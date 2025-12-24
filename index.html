@@ -1075,22 +1075,23 @@
       expResults.innerHTML = "";
 
       try {
-        // 1. Nominatim Geocoding
-        const searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+        // 1. Geocoding via Photon Komoot (More permissive than Nominatim)
+        const searchUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`;
         const res = await fetch(searchUrl);
-        const data = await res.json();
+        if (!res.ok) throw new Error("Sunucu hatası: " + res.status);
 
-        if (!data || !data.length) throw new Error("Şehir bulunamadı.");
+        const data = await res.json(); // Photon returns GeoJSON
 
-        const city = data[0];
-        const lat = parseFloat(city.lat);
-        const lon = parseFloat(city.lon);
-        const displayName = city.display_name.split(',')[0];
+        if (!data || !data.features || !data.features.length) throw new Error("Şehir bulunamadı.");
+
+        const feat = data.features[0];
+        const [lon, lat] = feat.geometry.coordinates; // GeoJSON is [lon, lat]
+        const displayName = feat.properties.name + ", " + (feat.properties.country || "");
 
         expStatus.textContent = `Bulundu: ${displayName}. Popüler yerler taranıyor...`;
 
         // 2. Overpass API (Attractions)
-        // Radius: 5km (5000m) around center
+        // Radius: 5000m around center
         const overpassQuery = `
                 [out:json][timeout:25];
                 (
@@ -1102,7 +1103,18 @@
             `;
         const opUrl = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
         const opRes = await fetch(opUrl);
-        const opData = await opRes.json();
+
+        if (!opRes.ok) throw new Error("Overpass API Hatası: " + opRes.status);
+
+        const opText = await opRes.text();
+        let opData;
+        try {
+          opData = JSON.parse(opText);
+        } catch (e) {
+          // If text is HTML (error page), show it
+          if (opText.trim().startsWith("<")) throw new Error("Overpass API yoğun veya hata döndürdü.");
+          throw new Error("Veri hatası (JSON parse).");
+        }
 
         if (!opData.elements || !opData.elements.length) {
           throw new Error("Bu bölgede turistik nokta verisi bulunamadı.");
@@ -1110,15 +1122,11 @@
 
         // Filter and Format
         const points = [];
-        // Basic popularity filter: try to prioritize items with 'name' and maybe english name if available
-        // Note: Overpass returns nodes and ways. For 'way', we used 'out center' so we get 'center' prop.
-
         opData.elements.forEach(el => {
-          if (el.tags && el.tags.name) { // Must have a name
+          if (el.tags && el.tags.name) {
             const pLat = el.lat || (el.center && el.center.lat);
             const pLng = el.lon || (el.center && el.center.lon);
             if (pLat && pLng) {
-              // Deduplicate by name roughly
               if (!points.find(p => p.name === el.tags.name)) {
                 let folder = "Genel";
                 if (el.tags.tourism === 'museum') folder = "Müze";
@@ -1141,7 +1149,7 @@
 
         if (!points.length) throw new Error("İsimli nokta bulunamadı.");
 
-        // Success - Add City
+        // Success
         addCity(displayName + " (Keşfet)", points, 'new');
         closeExploreModal();
         alert(`${displayName} için ${points.length} popüler nokta eklendi!`);
