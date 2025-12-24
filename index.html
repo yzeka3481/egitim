@@ -88,6 +88,7 @@
     .btn.primary{ border-color: rgba(124,241,214,.45); background: rgba(124,241,214,.12); }
     .btn.danger{ border-color: rgba(255,106,122,.45); background: rgba(255,106,122,.12); }
     .btn:disabled{ opacity:.45; cursor:not-allowed; }
+    .btn[aria-disabled="true"]{ opacity:.45; cursor:not-allowed; pointer-events:none; }
     .dropzone{
       flex: 1 1 360px; min-width: 280px;
       padding: 12px;
@@ -348,10 +349,10 @@
           <select id="citySelect" style="flex:0 0 260px; min-width:220px"></select>
 
           <input id="fileNew" type="file" accept=".kml,.kmz" multiple class="fileInput" />
-          <button class="btn primary" id="btnNewCity">Yeni şehir (çoklu KML/KMZ)</button>
+          <label class="btn primary" id="btnNewCity" for="fileNew">Yeni şehir (çoklu KML/KMZ)</label>
 
           <input id="fileAppend" type="file" accept=".kml,.kmz" multiple class="fileInput" />
-          <button class="btn" id="btnAppendCity">Aktif şehre ekle (çoklu)</button>
+          <label class="btn" id="btnAppendCity" for="fileAppend">Aktif şehre ekle (çoklu)</label>
 
           <button class="btn primary" id="btnPasteKml" type="button">KML yapıştır / URL</button>
 
@@ -675,7 +676,7 @@
         setStatus(`Eklendi: ${res.name} (${res.count}) — ${ok}/${arr.length}`);
       }catch(e){
         fail++;
-        setStatus(`Hata: ${e?.message || e} — ${ok} başarılı, ${fail} hatalı`);
+        setStatus(`Hata: ${(e && e.message) || e} — ${ok} başarılı, ${fail} hatalı`);
       }
     }
     search.value = "";
@@ -697,7 +698,7 @@
         setStatus(`Eklendi: ${f.name} (${res.count}) — ${ok}/${arr.length}`);
       }catch(e){
         fail++;
-        setStatus(`Hata: ${e?.message || e} — ${ok} başarılı, ${fail} hatalı`);
+        setStatus(`Hata: ${(e && e.message) || e} — ${ok} başarılı, ${fail} hatalı`);
       }
     }
     renderAll();
@@ -1169,7 +1170,7 @@
 
     const c = activeCity();
     const hasCity = !!c;
-    btnAppendCity.disabled = !hasCity;
+    if(btnAppendCity){ btnAppendCity.setAttribute("aria-disabled", hasCity ? "false" : "true"); }
     btnRenameCity.disabled = !hasCity;
     btnDeleteCity.disabled = !hasCity;
     search.disabled = !hasCity;
@@ -1178,21 +1179,23 @@
   function stripHtml(s){ return (s||"").replace(/<[^>]+>/g,""); }
   function escapeHtml(s){
     return (s||"")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
   }
 
-  btnNewCity.addEventListener("click", () => fileNew.click());
+  // Label(for=fileNew) triggers picker reliably on mobile.
+  if(btnNewCity){ btnNewCity.addEventListener("click", function(){ /* no-op */ }); }
   fileNew.addEventListener("change", async (e) => {
     const files = e.target.files;
     e.target.value = "";
     await handleMultiNew(files);
   });
 
-  btnAppendCity.addEventListener("click", () => { if(!btnAppendCity.disabled) fileAppend.click(); });
+  // Label(for=fileAppend) already triggers picker reliably on mobile; keep JS fallback for desktop.
+  if(btnAppendCity){ btnAppendCity.addEventListener("click", function(){ /* no-op */ }); }
   fileAppend.addEventListener("change", async (e) => {
     const files = e.target.files;
     e.target.value = "";
@@ -1225,13 +1228,13 @@
 
 
   // Paste/URL modal events
-  btnPasteKml?.addEventListener("click", () => showModal());
-  btnModalClose?.addEventListener("click", () => hideModal());
-  modalOverlay?.addEventListener("click", (e) => {
+  btnPasteKml && btnPasteKml.addEventListener("click", () => showModal());
+  btnModalClose && btnModalClose.addEventListener("click", () => hideModal());
+  modalOverlay && modalOverlay.addEventListener("click", (e) => {
     if(e.target === modalOverlay) hideModal();
   });
 
-  btnPasteSample?.addEventListener("click", () => {
+  btnPasteSample && btnPasteSample.addEventListener("click", () => {
     const sample = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
@@ -1243,7 +1246,7 @@
     setModalStatus("Örnek KML eklendi.");
   });
 
-  btnFetchUrl?.addEventListener("click", async () => {
+  btnFetchUrl && btnFetchUrl.addEventListener("click", async () => {
     const url = (kmlUrlEl.value || "").trim();
     if(!url){ setModalStatus("Lütfen bir URL girin."); return; }
     setModalStatus("URL’den getiriliyor...");
@@ -1259,9 +1262,9 @@
     }
   });
 
-  btnImportText?.addEventListener("click", async () => {
-    const target = kmlTargetEl?.value || "new";
-    const name = (kmlCityNameEl?.value || "").trim();
+  btnImportText && btnImportText.addEventListener("click", async () => {
+    const target = (kmlTargetEl && kmlTargetEl.value) || "new";
+    const name = ((kmlCityNameEl && kmlCityNameEl.value) || "").trim();
     setModalStatus("İçe aktarılıyor...");
     btnImportText.disabled = true;
     try{
@@ -1271,7 +1274,7 @@
       renderAll();
       setStatus(res.mode === "append" ? `Aktif şehre eklendi (${res.count}).` : `Yeni şehir eklendi: ${res.name} (${res.count}).`);
     }catch(err){
-      setModalStatus(err?.message || String(err));
+      setModalStatus((err && err.message) || String(err));
     }finally{
       btnImportText.disabled = false;
     }
@@ -1283,7 +1286,7 @@
   dropzone.addEventListener("drop", async (e) => {
     e.preventDefault();
     dropzone.style.borderColor = "rgba(255,255,255,.22)";
-    await handleMultiNew(e.dataTransfer?.files);
+    await handleMultiNew((e.dataTransfer && e.dataTransfer.files));
   });
 
 
@@ -1298,13 +1301,13 @@
     if(mode === "right"){
       document.body.classList.remove("show-left");
       document.body.classList.add("show-right");
-      segLeft?.classList.remove("active");
-      segRight?.classList.add("active");
+      segLeft && segLeft.classList.remove("active");
+      segRight && segRight.classList.add("active");
     }else{
       document.body.classList.remove("show-right");
       document.body.classList.add("show-left");
-      segRight?.classList.remove("active");
-      segLeft?.classList.add("active");
+      segRight && segRight.classList.remove("active");
+      segLeft && segLeft.classList.add("active");
     }
     // Ensure map doesn't cause tall layout when in compact mode
     if(window.matchMedia("(max-width: 980px)").matches){
@@ -1337,17 +1340,17 @@
     }
   }
 
-  segLeft?.addEventListener("click", () => setView("left"));
-  segRight?.addEventListener("click", () => setView("right"));
+  segLeft && segLeft.addEventListener("click", () => setView("left"));
+  segRight && segRight.addEventListener("click", () => setView("right"));
 
-  btnToggleMap?.addEventListener("click", () => {
+  (btnToggleMap && btnToggleMap.addEventListener)("click", () => {
     if(!mapWrap) return;
     const collapsed = mapWrap.classList.contains("collapsed");
     if(collapsed){
       mapWrap.classList.remove("collapsed");
       mapWrap.classList.add("expanded");
       // Leaflet map needs invalidateSize after becoming visible
-      setTimeout(() => { try{ map?.invalidateSize?.(); }catch{} }, 60);
+      setTimeout(function(){ try{ if(map && map.invalidateSize) map.invalidateSize(); }catch(e){} }, 60);
     }else{
       mapWrap.classList.add("collapsed");
       mapWrap.classList.remove("expanded");
