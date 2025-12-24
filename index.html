@@ -1075,25 +1075,24 @@
       expResults.innerHTML = "";
 
       try {
-        // 1. Geocoding via Photon Komoot (More permissive than Nominatim)
+        // 1. Geocoding via Photon Komoot
         const searchUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`;
         const res = await fetch(searchUrl);
-        if (!res.ok) throw new Error("Sunucu hatası: " + res.status);
-
-        const data = await res.json(); // Photon returns GeoJSON
+        if (!res.ok) throw new Error("Geocoding sunucu hatası.");
+        const data = await res.json();
 
         if (!data || !data.features || !data.features.length) throw new Error("Şehir bulunamadı.");
 
         const feat = data.features[0];
-        const [lon, lat] = feat.geometry.coordinates; // GeoJSON is [lon, lat]
+        const [lon, lat] = feat.geometry.coordinates; // GeoJSON [lon, lat]
         const displayName = feat.properties.name + ", " + (feat.properties.country || "");
 
-        expStatus.textContent = `Bulundu: ${displayName}. Popüler yerler taranıyor...`;
+        expStatus.textContent = `Bulundu: ${displayName}. Popüler yerler taranıyor (biraz sürebilir)...`;
 
-        // 2. Overpass API (Attractions)
-        // Radius: 5000m around center
+        // 2. Overpass API (Attractions) with Multi-Server Fallback
+        // Increased timeout to 45s, radius 5km
         const overpassQuery = `
-                [out:json][timeout:25];
+                [out:json][timeout:45];
                 (
                   node["tourism"~"attraction|museum|viewpoint|monument"](around:5000,${lat},${lon});
                   way["tourism"~"attraction|museum|viewpoint|monument"](around:5000,${lat},${lon});
@@ -1101,22 +1100,43 @@
                 );
                 out center 30;
             `;
-        const opUrl = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
-        const opRes = await fetch(opUrl);
 
-        if (!opRes.ok) throw new Error("Overpass API Hatası: " + opRes.status);
+        const servers = [
+          "https://overpass-api.de/api/interpreter",
+          "https://overpass.kumi.systems/api/interpreter",
+          "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
+        ];
 
-        const opText = await opRes.text();
-        let opData;
-        try {
-          opData = JSON.parse(opText);
-        } catch (e) {
-          // If text is HTML (error page), show it
-          if (opText.trim().startsWith("<")) throw new Error("Overpass API yoğun veya hata döndürdü.");
-          throw new Error("Veri hatası (JSON parse).");
+        let opData = null;
+        let lastError = null;
+
+        for (const server of servers) {
+          try {
+            // Determine raw fetch or via corsproxy if needed (try direct first)
+            const opUrl = server + "?data=" + encodeURIComponent(overpassQuery);
+            const opRes = await fetch(opUrl);
+
+            if (!opRes.ok) throw new Error(`HTTP ${opRes.status}`);
+
+            const opText = await opRes.text();
+            // Check if HTML error page
+            if (opText.trim().startsWith("<")) throw new Error("HTML error page");
+
+            opData = JSON.parse(opText);
+            if (opData) break; // Success
+
+          } catch (e) {
+            console.warn(`Server ${server} failed: ${e.message}`);
+            lastError = e;
+            continue; // Try next server
+          }
         }
 
-        if (!opData.elements || !opData.elements.length) {
+        if (!opData || !opData.elements) {
+          throw new Error("Tüm sunucular meşgul veya hata verdi. Lütfen 1 dakika sonra tekrar deneyin.");
+        }
+
+        if (!opData.elements.length) {
           throw new Error("Bu bölgede turistik nokta verisi bulunamadı.");
         }
 
