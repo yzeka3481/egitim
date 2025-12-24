@@ -1,0 +1,1229 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gezi Planlayıcı - Tek HTML (Çok Şehirli KML/KMZ + KM/DK)</title>
+
+  <!-- Leaflet (CDN) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- JSZip (CDN) - KMZ için -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#0b1220; --muted:#9fb0d0; --text:#eef2ff;
+      --border:rgba(255,255,255,.12); --accent:#6aa5ff; --accent2:#7cf1d6; --danger:#ff6a7a;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 800px at 15% 10%, rgba(106,165,255,.18), transparent 60%),
+                  radial-gradient(900px 700px at 80% 30%, rgba(124,241,214,.14), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .container{ max-width:1280px; margin:0 auto; padding:20px; }
+    .topbar{
+      display:flex; gap:14px; align-items:flex-start; justify-content:space-between;
+      padding:16px 18px; background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow);
+    }
+    h1{ font-size:18px; margin:0 0 6px 0; letter-spacing:.2px; }
+    .sub{ margin:0; color:var(--muted); font-size:12.5px; line-height:1.4; }
+    .badge{
+      display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;
+      font-size:12px; color:var(--muted);
+      border:1px solid var(--border); background:rgba(0,0,0,.16); padding:10px 12px; border-radius:14px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap:16px;
+      margin-top:16px;
+    }
+    @media (max-width: 980px){ .grid{ grid-template-columns: 1fr; } }
+    .panel{
+      background: rgba(255,255,255,.03);
+      border:1px solid var(--border);
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+    .panelHeader{
+      padding:14px 14px 10px 14px;
+      border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0));
+    }
+    .panelHeader h2{ margin:0; font-size:14px; letter-spacing:.2px; }
+    .controls{
+      padding:12px 14px 14px 14px;
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+      border-bottom:1px solid var(--border);
+    }
+    .input, select{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      color:var(--text);
+      outline:none;
+    }
+    .input{ flex:1 1 260px; min-width:220px; }
+    .btn{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding:9px 10px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .btn.primary{ border-color: rgba(124,241,214,.45); background: rgba(124,241,214,.12); }
+    .btn.danger{ border-color: rgba(255,106,122,.45); background: rgba(255,106,122,.12); }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; }
+    .dropzone{
+      flex: 1 1 360px; min-width: 280px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,.22);
+      background: rgba(0,0,0,.12);
+    }
+    .dropzone strong{ font-size: 12px; }
+    .muted{ color:var(--muted); font-size:12px; line-height:1.4; }
+    .list{ padding:12px; display:grid; gap:10px; }
+    .card{
+      background: rgba(255,255,255,.03);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
+    }
+    .cardLeft{ display:flex; gap:12px; }
+    .check{ margin-top:2px; width:18px; height:18px; accent-color: var(--accent); }
+    .card h3{ margin:0; font-size:14px; }
+    .meta{ margin-top:6px; color:var(--muted); font-size:12px; display:flex; gap:10px; flex-wrap:wrap; }
+    .tag{
+      display:inline-block;
+      font-size:11px;
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+      margin-top:8px;
+    }
+    .small{ font-size:11px; color:var(--muted); margin-top:6px; line-height:1.35; }
+    #map{ height: 380px; border-top:1px solid var(--border); }
+    .noteBox{
+      padding:10px 14px 14px 14px;
+      border-top:1px solid var(--border);
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+    }
+    .itinerary{ padding:12px; display:grid; gap:10px; }
+    .itItem{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius:14px;
+      padding:10px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .itItem strong{ font-size:13px; }
+    .itControls{ display:flex; gap:6px; }
+    .iconBtn{
+      width:34px; height:32px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      cursor:pointer;
+    }
+    .statsBox{
+      margin:12px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.14);
+      border-radius:14px;
+      padding:12px;
+    }
+    .statsTop{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .kpi{
+      display:flex; gap:14px; flex-wrap:wrap;
+      color:var(--muted); font-size:12px;
+    }
+    .kpi strong{ color:var(--text); }
+    .legs{
+      display:grid; gap:8px;
+      margin-top:10px;
+    }
+    .leg{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius:12px;
+      padding:10px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .leg .t{ color:var(--text); font-weight:700; margin-bottom:4px; }
+  
+    /* --- Mobile compact UI (single-panel view + collapsible map) --- */
+    .mobileSwitcher{
+      display:none;
+      margin-top:12px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.16);
+      border-radius: 14px;
+      overflow:hidden;
+      box-shadow: var(--shadow);
+    }
+    .segBtn{
+      flex:1 1 0;
+      border:0;
+      padding:12px 10px;
+      background: transparent;
+      color: var(--muted);
+      cursor:pointer;
+      font-size:12.5px;
+    }
+    .segBtn.active{
+      background: rgba(124,241,214,.12);
+      color: var(--text);
+      font-weight: 700;
+    }
+    .mapWrap{ transition: max-height .25s ease, opacity .2s ease; }
+    .mapWrap.collapsed{ max-height: 0; opacity: 0; overflow:hidden; }
+    .mapWrap.expanded{ max-height: 520px; opacity: 1; }
+
+    @media (max-width: 980px){
+      .container{ padding: 12px; }
+      .topbar{ padding: 12px; border-radius: 14px; }
+      h1{ font-size: 16px; }
+      .sub{ font-size: 12px; }
+      .badge{ padding: 8px 10px; border-radius: 12px; }
+      .mobileSwitcher{ display:flex; }
+      .grid{ margin-top: 12px; }
+
+      /* show only one panel at a time to avoid long scrolling */
+      body.show-left #rightPanel{ display:none; }
+      body.show-right #leftPanel{ display:none; }
+
+      .panel{ border-radius: 14px; }
+      .panelHeader{ padding: 12px; }
+      .controls{ padding: 10px 12px 12px 12px; gap: 8px; }
+      .input, select{ padding: 9px 10px; border-radius: 12px; }
+      .btn{ padding: 9px 10px; border-radius: 12px; }
+
+      .list{ padding: 10px; gap: 8px; }
+      .card{ padding: 10px; border-radius: 14px; }
+      .card h3{ font-size: 13px; }
+      .meta{ font-size: 11.5px; gap: 8px; }
+      .tag{ font-size: 10.5px; padding: 4px 7px; }
+      .small{ font-size: 10.8px; }
+
+      #map{ height: 280px; }
+      .itinerary{ padding: 10px; gap: 8px; }
+      .itItem{ padding: 9px; border-radius: 14px; }
+      .iconBtn{ width: 34px; height: 34px; border-radius: 12px; }
+
+      .statsBox{ margin: 10px; padding: 10px; border-radius: 14px; }
+      .kpi{ gap: 10px; font-size: 11.8px; }
+      .legs{ gap: 8px; }
+      .leg{ padding: 9px; }
+      .noteBox{ padding: 10px 12px 12px 12px; }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div>
+        <h1>Gezi Planlayıcı (Tek HTML) — Çok Şehirli KML/KMZ + KM/DK</h1>
+        <p class="sub">
+          Her KML/KMZ içe aktarma işlemi <strong>yeni bir şehir kaydı</strong> oluşturur (veriler birleşmez).
+          “Km/Dk Hesapla” gerçek yol için OSRM kullanır (internet gerekir); olmazsa offline yaklaşık hesap devreye girer.
+          Hesaplamada başlangıç noktası: <strong>en kuzeydeki (en üstteki) seçili nokta</strong>.
+        </p>
+      </div>
+      <div class="badge">
+        <span>Şehir: <strong id="badgeCity" style="color:var(--text)">-</strong></span>
+        <span style="opacity:.6">|</span>
+        <span>Seçili: <strong id="badgeSel" style="color:var(--text)">0</strong></span>
+      </div>
+    </div>
+
+    <div class="mobileSwitcher" id="mobileSwitcher" aria-label="Mobil görünüm seçici">
+      <button class="segBtn active" id="segLeft" type="button">Liste</button>
+      <button class="segBtn" id="segRight" type="button">Rota</button>
+    </div>
+
+    <div class="grid">
+      <div class="panel" id="leftPanel">
+        <div class="panelHeader">
+          <h2>Şehirler, İçe Aktarım ve Liste</h2>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; align-items:center;">
+            <button class="btn" id="btnToggleMap" type="button">Harita</button>
+            <button class="btn danger" id="btnResetAll" type="button">Tümünü sıfırla</button>
+          </div>
+        </div>
+
+        <div class="controls">
+          <select id="citySelect" style="flex:0 0 260px; min-width:220px"></select>
+
+          <input id="fileNew" type="file" accept=".kml,.kmz" multiple style="display:none" />
+          <button class="btn primary" id="btnNewCity">Yeni şehir (çoklu KML/KMZ)</button>
+
+          <input id="fileAppend" type="file" accept=".kml,.kmz" multiple style="display:none" />
+          <button class="btn" id="btnAppendCity">Aktif şehre ekle (çoklu)</button>
+
+          <button class="btn" id="btnRenameCity">Yeniden adlandır</button>
+          <button class="btn danger" id="btnDeleteCity">Şehri sil</button>
+
+          <input class="input" id="search" placeholder="Ara: isim veya açıklama..." />
+        </div>
+
+        <div class="controls" style="border-top:1px solid var(--border)">
+          <div class="dropzone" id="dropzone">
+            <strong>Dosyaları buraya sürükleyip bırakın</strong>
+            <div class="muted">Varsayılan: Her dosya ayrı şehir olarak kaydedilir</div>
+            <div class="muted" style="margin-top:8px" id="status">Hazır.</div>
+          </div>
+        </div>
+
+        <div class="list" id="list"></div>
+
+        <div class="mapWrap expanded" id="mapWrap"><div id="map"></div></div>
+
+        <div class="noteBox">
+          Not: Polygon/LineString içeren öğelerde ilk koordinat “temsili nokta” olarak alınır. Point kullanıyorsanız birebir doğru çalışır.
+        </div>
+      </div>
+
+      <div class="panel" id="rightPanel">
+        <div class="panelHeader">
+          <h2>Rotam</h2>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <span class="muted">Ulaşım:</span>
+            <select id="travelMode" style="min-width:200px">
+              <option value="walking">Yürüyüş</option>
+              <option value="driving">Araba</option>
+              <option value="transit">Toplu taşıma</option>
+              <option value="bicycling">Bisiklet</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="itinerary" id="itinerary"></div>
+
+        <div class="statsBox">
+          <div class="statsTop">
+            <div class="kpi">
+              <span>Toplam: <strong id="kpiKm">-</strong> km</span>
+              <span>Süre: <strong id="kpiMin">-</strong> dk</span>
+              <span>Kaynak: <strong id="kpiSrc">-</strong></span>
+              <span>Başlangıç: <strong id="kpiStart">-</strong></span>
+            </div>
+            <button class="btn primary" id="btnCompute">Km/Dk Hesapla</button>
+          </div>
+          <div class="muted" id="statsMsg">Km/Dk hesabı için en az 2 nokta seçin.</div>
+          <div class="legs" id="legs"></div>
+        </div>
+
+        <div class="controls" style="border-top:1px solid var(--border)">
+          <button class="btn danger" id="btnClearRoute">Rotayı temizle</button>
+          <button class="btn" id="btnExportJson">JSON dışa aktar</button>
+          <button class="btn primary" id="btnOpenMaps">Google Maps’te rotayı aç</button>
+          <div class="muted" style="flex:1 1 240px">
+            Google Maps rotası için en az 2 nokta seçin. Sıralama çıktıyı doğrudan etkiler.
+          </div>
+        </div>
+
+        <div class="noteBox">
+          İpucu: My Maps’te sadece nokta ekliyorsanız, “Km/Dk Hesapla” yol üzerinden süre/mesafe bulmak için internet kullanır.
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const STORAGE_KEY = "tripPlanner.singleHTML.multiCity.v3";
+
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+    iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
+  });
+
+  const citySelect = document.getElementById("citySelect");
+  const fileNew = document.getElementById("fileNew");
+  const fileAppend = document.getElementById("fileAppend");
+  const btnNewCity = document.getElementById("btnNewCity");
+  const btnAppendCity = document.getElementById("btnAppendCity");
+  const btnRenameCity = document.getElementById("btnRenameCity");
+  const btnDeleteCity = document.getElementById("btnDeleteCity");
+  const btnResetAll = document.getElementById("btnResetAll");
+  const search = document.getElementById("search");
+  const statusEl = document.getElementById("status");
+  const listEl = document.getElementById("list");
+  const itineraryEl = document.getElementById("itinerary");
+  const travelModeEl = document.getElementById("travelMode");
+  const btnClearRoute = document.getElementById("btnClearRoute");
+  const btnExportJson = document.getElementById("btnExportJson");
+  const btnOpenMaps = document.getElementById("btnOpenMaps");
+  const badgeCity = document.getElementById("badgeCity");
+  const badgeSel = document.getElementById("badgeSel");
+  const dropzone = document.getElementById("dropzone");
+
+  const btnCompute = document.getElementById("btnCompute");
+  const kpiKm = document.getElementById("kpiKm");
+  const kpiMin = document.getElementById("kpiMin");
+  const kpiSrc = document.getElementById("kpiSrc");
+  const kpiStart = document.getElementById("kpiStart");
+  const statsMsg = document.getElementById("statsMsg");
+  const legsEl = document.getElementById("legs");
+
+  let state = { cities: [], activeCityId: null };
+
+  let map = null;
+  let markersLayer = null;
+
+  function setStatus(msg){ statusEl.textContent = msg; }
+  function nowIso(){ return new Date().toISOString(); }
+  function uid(){ return (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now(); }
+  function baseName(fileName){
+    const n = (fileName || "").split(/[\\/]/).pop() || "";
+    return n.replace(/\.(kmz|kml)$/i, "") || "Yeni Şehir";
+  }
+
+  function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      const parsed = JSON.parse(raw);
+      if(parsed && Array.isArray(parsed.cities)) state.cities = parsed.cities;
+      if(typeof parsed.activeCityId === "string") state.activeCityId = parsed.activeCityId;
+    }catch{}
+  }
+
+  function activeCity(){ return state.cities.find(c => c.id === state.activeCityId) || null; }
+
+  function updateActiveCity(patchFn){
+    state.cities = state.cities.map(c => c.id === state.activeCityId ? patchFn(c) : c);
+    save();
+  }
+
+  function safeText(node){ return (node && node.textContent ? node.textContent : "").trim(); }
+
+  function firstCoordinateText(coordText){
+    const t = (coordText || "").trim();
+    if(!t) return null;
+    const first = t.split(/\s+/)[0];
+    const parts = first.split(",");
+    if(parts.length < 2) return null;
+    const lng = Number(parts[0]);
+    const lat = Number(parts[1]);
+    if(!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return { lat, lng };
+  }
+
+  function folderPathForPlacemark(pm){
+    const names = [];
+    let cur = pm.parentNode;
+    while(cur){
+      const local = (cur.localName || "").toLowerCase();
+      if(local === "folder"){
+        const nameEl = Array.from(cur.childNodes || []).find(n => (n.localName||"").toLowerCase()==="name");
+        const nm = safeText(nameEl);
+        if(nm) names.push(nm);
+      }
+      cur = cur.parentNode;
+    }
+    return names.reverse().join(" / ");
+  }
+
+  function parseKmlText(kmlText){
+    const xml = new DOMParser().parseFromString(kmlText, "application/xml");
+    if(xml.querySelector("parsererror")) throw new Error("KML parse edilemedi (XML hatası).");
+    const placemarks = Array.from(xml.getElementsByTagName("Placemark"));
+    const points = [];
+
+    for(const pm of placemarks){
+      const name = safeText(pm.getElementsByTagName("name")[0]) || "İsimsiz nokta";
+      const description = safeText(pm.getElementsByTagName("description")[0]) || "";
+
+      let geomType = "Unknown";
+      let coord = null;
+
+      const pointEl = pm.getElementsByTagName("Point")[0];
+      const lineEl  = pm.getElementsByTagName("LineString")[0];
+      const polyEl  = pm.getElementsByTagName("Polygon")[0];
+
+      if(pointEl){
+        geomType = "Point";
+        coord = firstCoordinateText(safeText(pointEl.getElementsByTagName("coordinates")[0]));
+      } else if(lineEl){
+        geomType = "LineString";
+        coord = firstCoordinateText(safeText(lineEl.getElementsByTagName("coordinates")[0]));
+      } else if(polyEl){
+        geomType = "Polygon";
+        coord = firstCoordinateText(safeText(polyEl.getElementsByTagName("coordinates")[0]));
+      }
+
+      if(!coord) continue;
+
+      points.push({
+        id: uid(),
+        name,
+        description,
+        lat: coord.lat,
+        lng: coord.lng,
+        geomType,
+        folderPath: folderPathForPlacemark(pm)
+      });
+    }
+
+    return points;
+  }
+
+  function readFileAsText(file){
+    return new Promise((resolve,reject)=>{
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result || ""));
+      r.onerror = () => reject(new Error("Dosya okunamadı."));
+      r.readAsText(file);
+    });
+  }
+
+  function readFileAsArrayBuffer(file){
+    return new Promise((resolve,reject)=>{
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = () => reject(new Error("Dosya okunamadı."));
+      r.readAsArrayBuffer(file);
+    });
+  }
+
+  async function extractKmlFromKmz(file){
+    const buf = await readFileAsArrayBuffer(file);
+    const zip = await JSZip.loadAsync(buf);
+    const kmlCandidates = [];
+    zip.forEach((path, entry) => {
+      if(!entry.dir && path.toLowerCase().endsWith(".kml")) kmlCandidates.push(path);
+    });
+    if(!kmlCandidates.length) throw new Error("KMZ içinde .kml bulunamadı.");
+    const preferred = kmlCandidates.find(p => p.toLowerCase().endsWith("doc.kml")) || kmlCandidates[0];
+    const kmlText = await zip.file(preferred).async("text");
+    return kmlText;
+  }
+
+  async function fileToPoints(file){
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    let kmlText = "";
+    if(ext === "kmz") kmlText = await extractKmlFromKmz(file);
+    else if(ext === "kml") kmlText = await readFileAsText(file);
+    else throw new Error("Lütfen .kml veya .kmz seçin.");
+    return parseKmlText(kmlText);
+  }
+
+  async function importNewCity(file, askName=true){
+    if(!file) return;
+    const points = await fileToPoints(file);
+    if(!points.length) throw new Error(`"${file.name}" içinde koordinatlı öğe bulunamadı.`);
+
+    const defName = baseName(file.name);
+    const name = askName ? (prompt("Şehir adı (kayıt ismi):", defName) || defName) : defName;
+
+    const city = {
+      id: uid(),
+      name,
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      points,
+      selectedIds: points.map(p=>p.id),
+      order: points.map(p=>p.id),
+      travelMode: "walking",
+      lastStats: null
+    };
+
+    state.cities.unshift(city);
+    state.activeCityId = city.id;
+    save();
+    return { name, count: points.length };
+  }
+
+  async function importAppendToActive(file){
+    const c = activeCity();
+    if(!file || !c) return;
+    const pointsNew = await fileToPoints(file);
+    if(!pointsNew.length) throw new Error(`"${file.name}" içinde koordinatlı öğe bulunamadı.`);
+
+    updateActiveCity(city => {
+      const points = (city.points || []).concat(pointsNew);
+      const selectedIds = (city.selectedIds || []).concat(pointsNew.map(p=>p.id));
+      const order = (city.order || []).concat(pointsNew.map(p=>p.id));
+      return { ...city, points, selectedIds, order, updatedAt: nowIso(), lastStats: null };
+    });
+
+    return { count: pointsNew.length };
+  }
+
+  async function handleMultiNew(files){
+    const arr = Array.from(files || []).filter(Boolean);
+    if(!arr.length) return;
+    setStatus(`Dosyalar işleniyor... (${arr.length})`);
+    const askName = (arr.length === 1);
+    let ok = 0, fail = 0;
+    for(const f of arr){
+      try{
+        const res = await importNewCity(f, askName);
+        ok++;
+        setStatus(`Eklendi: ${res.name} (${res.count}) — ${ok}/${arr.length}`);
+      }catch(e){
+        fail++;
+        setStatus(`Hata: ${e?.message || e} — ${ok} başarılı, ${fail} hatalı`);
+      }
+    }
+    search.value = "";
+    renderAll();
+    setStatus(`Tamamlandı. ${ok} başarılı, ${fail} hatalı.`);
+  }
+
+  async function handleMultiAppend(files){
+    const c = activeCity();
+    if(!c) return;
+    const arr = Array.from(files || []).filter(Boolean);
+    if(!arr.length) return;
+    setStatus(`Aktif şehre ekleniyor... (${arr.length})`);
+    let ok = 0, fail = 0, total = 0;
+    for(const f of arr){
+      try{
+        const res = await importAppendToActive(f);
+        ok++; total += res.count;
+        setStatus(`Eklendi: ${f.name} (${res.count}) — ${ok}/${arr.length}`);
+      }catch(e){
+        fail++;
+        setStatus(`Hata: ${e?.message || e} — ${ok} başarılı, ${fail} hatalı`);
+      }
+    }
+    renderAll();
+    setStatus(`Tamamlandı. ${ok} dosya eklendi (toplam ${total} öğe). Hatalı: ${fail}.`);
+  }
+
+  function renameActiveCity(){
+    const c = activeCity();
+    if(!c) return;
+    const name = prompt("Şehir adını güncelle:", c.name);
+    if(!name) return;
+    updateActiveCity(city => ({...city, name, updatedAt: nowIso()}));
+    renderAll();
+  }
+
+  function deleteActiveCity(){
+    const c = activeCity();
+    if(!c) return;
+    if(!confirm(`"${c.name}" kaydını silmek istiyor musunuz?`)) return;
+    state.cities = state.cities.filter(x => x.id !== c.id);
+    state.activeCityId = state.cities.length ? state.cities[0].id : null;
+    save();
+    renderAll();
+  }
+
+  function resetAll(){
+    if(!confirm("Tüm şehir kayıtlarını silmek istiyor musunuz?")) return;
+    state = { cities: [], activeCityId: null };
+    localStorage.removeItem(STORAGE_KEY);
+    renderAll();
+    setStatus("Tüm kayıtlar silindi.");
+  }
+
+  function toggleSelect(pointId){
+    const c = activeCity(); if(!c) return;
+    updateActiveCity(city => {
+      const sel = new Set(city.selectedIds || []);
+      if(sel.has(pointId)) sel.delete(pointId); else sel.add(pointId);
+      const selectedIds = Array.from(sel);
+
+      const prevOrder = city.order || [];
+      const nextOrder = [];
+      for(const id of prevOrder) if(sel.has(id)) nextOrder.push(id);
+      for(const id of selectedIds) if(!nextOrder.includes(id)) nextOrder.push(id);
+
+      return { ...city, selectedIds, order: nextOrder, updatedAt: nowIso(), lastStats: null };
+    });
+    renderAll();
+  }
+
+  function move(pointId, dir){
+    const c = activeCity(); if(!c) return;
+    updateActiveCity(city => {
+      const ord = (city.order || []).slice();
+      const i = ord.indexOf(pointId);
+      const j = i + dir;
+      if(i < 0 || j < 0 || j >= ord.length) return city;
+      [ord[i], ord[j]] = [ord[j], ord[i]];
+      return { ...city, order: ord, updatedAt: nowIso(), lastStats: null };
+    });
+    renderAll();
+  }
+
+  function clearRoute(){
+    const c = activeCity(); if(!c) return;
+    updateActiveCity(city => ({...city, selectedIds: [], order: [], updatedAt: nowIso(), lastStats: null}));
+    renderAll();
+  }
+
+  function startFromNorthmost(points){
+    if(!points || points.length < 2) return points || [];
+    let idx = 0;
+    for(let i=1;i<points.length;i++){
+      if(points[i].lat > points[idx].lat) idx = i;
+    }
+    const start = points[idx];
+    const rest = points.filter((_, i) => i !== idx);
+    return [start, ...rest];
+  }
+
+  function buildGoogleMapsUrl(orderedPoints, travelMode){
+    if(!orderedPoints.length) return null;
+    const origin = `${orderedPoints[0].lat},${orderedPoints[0].lng}`;
+    const destination = `${orderedPoints[orderedPoints.length-1].lat},${orderedPoints[orderedPoints.length-1].lng}`;
+    const waypoints = orderedPoints.slice(1,-1).map(p => `${p.lat},${p.lng}`);
+    const params = new URLSearchParams();
+    params.set("api","1");
+    params.set("origin", origin);
+    params.set("destination", destination);
+    if(waypoints.length) params.set("waypoints", waypoints.join("|"));
+    params.set("travelmode", travelMode || "walking");
+    return `https://www.google.com/maps/dir/?${params.toString()}`;
+  }
+
+  function selectedOrderedPoints(city){
+    const pts = city.points || [];
+    const sel = new Set(city.selectedIds || []);
+    const map = new Map(pts.map(p=>[p.id,p]));
+    const ordered = (city.order || []).map(id => map.get(id)).filter(Boolean);
+    return ordered.filter(p => sel.has(p.id));
+  }
+
+  function openMaps(){
+    const c = activeCity(); if(!c) return;
+    const ordered = startFromNorthmost(selectedOrderedPoints(c));
+    const url = buildGoogleMapsUrl(ordered, c.travelMode);
+    if(!url) { alert("Google Maps rotası için en az 2 nokta seçin."); return; }
+    window.open(url, "_blank");
+  }
+
+  function exportJson(){
+    const c = activeCity(); if(!c) return;
+    const ordered = selectedOrderedPoints(c);
+
+    const out = ordered.map(p => ({
+      id: p.id,
+      name: p.name,
+      category: p.folderPath ? [p.folderPath] : [c.name],
+      duration: "",
+      lat: p.lat,
+      lng: p.lng,
+      note: (p.description || "").replace(/<[^>]+>/g,"").slice(0,600)
+    }));
+
+    const blob = new Blob([JSON.stringify(out, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${c.name}-places.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function mapModeToOsrmProfile(mode){
+    if(mode === "walking") return "walking";
+    if(mode === "bicycling") return "cycling";
+    if(mode === "driving") return "driving";
+    if(mode === "transit") return "driving";
+    return "walking";
+  }
+
+  function modeSpeedKmh(mode){
+    if(mode === "walking") return 5;
+    if(mode === "bicycling") return 15;
+    if(mode === "driving") return 40;
+    if(mode === "transit") return 25;
+    return 5;
+  }
+
+  function haversineKm(lat1, lon1, lat2, lon2){
+    const R = 6371;
+    const toRad = (x) => x * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2)**2 +
+              Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  }
+
+  async function osrmLeg(a, b, profile){
+    const url = `https://router.project-osrm.org/route/v1/${profile}/${a.lng},${a.lat};${b.lng},${b.lat}?overview=false`;
+    const r = await fetch(url, { cache: "no-store" });
+    if(!r.ok) throw new Error("OSRM yanıt hatası");
+    const j = await r.json();
+    if(!j.routes || !j.routes.length) throw new Error("OSRM rota bulamadı");
+    return { distance_m: j.routes[0].distance, duration_s: j.routes[0].duration };
+  }
+
+  async function computeRouteStats(){
+    const c = activeCity();
+    if(!c) return;
+
+    const ptsRaw = selectedOrderedPoints(c);
+    const pts = startFromNorthmost(ptsRaw);
+    if(pts.length < 2){
+      statsMsg.textContent = "Km/Dk hesabı için en az 2 nokta seçin.";
+      return;
+    }
+
+    btnCompute.disabled = true;
+    statsMsg.textContent = "Hesaplanıyor...";
+    legsEl.innerHTML = "";
+
+    const startName = pts[0]?.name || "-";
+    const mode = c.travelMode || "walking";
+    const profile = mapModeToOsrmProfile(mode);
+
+    let totalKm = 0;
+    let totalMin = 0;
+    let legs = [];
+    let source = "OSRM";
+
+    try{
+      for(let i=0;i<pts.length-1;i++){
+        const a = pts[i], b = pts[i+1];
+        const leg = await osrmLeg(a, b, profile);
+        const km = leg.distance_m / 1000;
+        const min = leg.duration_s / 60;
+
+        legs.push({ from: a.name, to: b.name, km, min, src: "OSRM" });
+        totalKm += km;
+        totalMin += min;
+
+        await new Promise(res => setTimeout(res, 120));
+      }
+      if(mode === "transit") source = "OSRM (driving approx)";
+      statsMsg.textContent = "Hesaplandı. Başlangıç en kuzey nokta olarak alındı.";
+    }catch(e){
+      source = "Offline approx";
+      const spd = modeSpeedKmh(mode);
+      legs = [];
+      totalKm = 0;
+      totalMin = 0;
+
+      for(let i=0;i<pts.length-1;i++){
+        const a = pts[i], b = pts[i+1];
+        const km = haversineKm(a.lat, a.lng, b.lat, b.lng);
+        const min = (km / spd) * 60;
+        legs.push({ from: a.name, to: b.name, km, min, src: "Haversine+speed" });
+        totalKm += km;
+        totalMin += min;
+      }
+      statsMsg.textContent = "OSRM erişilemedi. Offline yaklaşık hesap kullanıldı (kuş uçuşu + hız varsayımı). Başlangıç en kuzey nokta.";
+    }
+
+    updateActiveCity(city => ({
+      ...city,
+      lastStats: { computedAt: nowIso(), mode, source, startName, totalKm, totalMin, legs }
+    }));
+
+    btnCompute.disabled = false;
+    renderStats();
+  }
+
+  function ensureMap(){
+    if(map) return;
+    map = L.map("map", { scrollWheelZoom: false }).setView([41.0082, 28.9784], 11);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap katkıda bulunanlar'
+    }).addTo(map);
+    markersLayer = L.layerGroup().addTo(map);
+  }
+
+  function renderCitySelect(){
+    citySelect.innerHTML = "";
+    if(!state.cities.length){
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "Henüz şehir yok";
+      citySelect.appendChild(opt);
+      citySelect.disabled = true;
+      return;
+    }
+    citySelect.disabled = false;
+    for(const c of state.cities){
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = `${c.name} (${(c.points||[]).length})`;
+      citySelect.appendChild(opt);
+    }
+    citySelect.value = state.activeCityId || state.cities[0].id;
+  }
+
+  function renderList(){
+    const c = activeCity();
+    listEl.innerHTML = "";
+    if(!c){
+      listEl.innerHTML = `<div class="muted" style="padding:10px">Henüz şehir yok. “Yeni şehir (çoklu KML/KMZ)” ile başlayın.</div>`;
+      return;
+    }
+
+    const q = (search.value || "").trim().toLowerCase();
+    const pts = c.points || [];
+    const selectedSet = new Set(c.selectedIds || []);
+    const filtered = pts.filter(p => !q || (p.name||"").toLowerCase().includes(q) || (p.description||"").toLowerCase().includes(q));
+
+    for(const p of filtered){
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const left = document.createElement("div");
+      left.className = "cardLeft";
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.className = "check";
+      cb.checked = selectedSet.has(p.id);
+      cb.addEventListener("change", () => toggleSelect(p.id));
+
+      const body = document.createElement("div");
+      body.innerHTML = `
+        <h3>${escapeHtml(p.name)}</h3>
+        <div class="meta">
+          <span>📍 ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</span>
+          <span>🧭 ${escapeHtml(p.geomType || "Unknown")}</span>
+        </div>
+        <div class="tag">${escapeHtml(p.folderPath || c.name)}</div>
+        ${p.description ? `<div class="small">${escapeHtml(stripHtml(p.description)).slice(0,160)}${stripHtml(p.description).length>160?"…":""}</div>` : ""}
+      `;
+
+      left.appendChild(cb);
+      left.appendChild(body);
+
+      const right = document.createElement("div");
+      right.style.display = "flex";
+      right.style.gap = "8px";
+      right.style.flexWrap = "wrap";
+      right.innerHTML = `<button class="btn">Google’da göster</button>`;
+      right.querySelector("button").addEventListener("click", () => {
+        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}`, "_blank");
+      });
+
+      card.appendChild(left);
+      card.appendChild(right);
+      listEl.appendChild(card);
+    }
+
+    if(pts.length && !filtered.length){
+      listEl.innerHTML = `<div class="muted" style="padding:10px">Arama kriterine uygun kayıt yok.</div>`;
+    }
+  }
+
+  function renderItinerary(){
+    const c = activeCity();
+    itineraryEl.innerHTML = "";
+    if(!c){
+      itineraryEl.innerHTML = `<div class="muted">Önce bir şehir içe aktarın.</div>`;
+      return;
+    }
+
+    travelModeEl.value = c.travelMode || "walking";
+    const selectedOrdered = selectedOrderedPoints(c);
+
+    for(const p of selectedOrdered){
+      const row = document.createElement("div");
+      row.className = "itItem";
+      row.innerHTML = `
+        <div>
+          <strong>${escapeHtml(p.name)}</strong>
+          <div class="muted">${escapeHtml(p.folderPath || c.name)}</div>
+        </div>
+        <div class="itControls">
+          <button class="iconBtn" title="Yukarı">↑</button>
+          <button class="iconBtn" title="Aşağı">↓</button>
+          <button class="iconBtn" title="Çıkar">✕</button>
+        </div>
+      `;
+      const [up, down, del] = row.querySelectorAll("button");
+      up.addEventListener("click", () => move(p.id, -1));
+      down.addEventListener("click", () => move(p.id, +1));
+      del.addEventListener("click", () => toggleSelect(p.id));
+      itineraryEl.appendChild(row);
+    }
+
+    const canOpen = selectedOrdered.length >= 2;
+    btnOpenMaps.disabled = !canOpen;
+    btnClearRoute.disabled = selectedOrdered.length === 0;
+    btnExportJson.disabled = selectedOrdered.length === 0;
+  }
+
+  function renderMap(){
+    ensureMap();
+    markersLayer.clearLayers();
+    const c = activeCity();
+    if(!c || !(c.points||[]).length){
+      map.setView([41.0082, 28.9784], 11);
+      return;
+    }
+
+    const selectedSet = new Set(c.selectedIds || []);
+    const pts = c.points || [];
+    const bounds = [];
+
+    for(const p of pts){
+      const m = L.marker([p.lat, p.lng]);
+      m.bindPopup(`
+        <div style="min-width:190px">
+          <div style="font-weight:700; margin-bottom:6px">${escapeHtml(p.name || "İsimsiz")}</div>
+          <div style="font-size:12px; opacity:.85">Katman: ${escapeHtml(p.folderPath || c.name)}</div>
+          <div style="font-size:12px; opacity:.85">Tip: ${escapeHtml(p.geomType || "Unknown")}</div>
+          <div style="margin-top:6px; font-size:12px; opacity:.85">Rotada: ${selectedSet.has(p.id) ? "Evet" : "Hayır"}</div>
+        </div>
+      `);
+      m.addTo(markersLayer);
+      bounds.push([p.lat, p.lng]);
+    }
+
+    if(bounds.length){
+      const b = L.latLngBounds(bounds);
+      map.fitBounds(b.pad(0.25));
+    }
+  }
+
+  function renderBadge(){
+    const c = activeCity();
+    badgeCity.textContent = c ? c.name : "-";
+    badgeSel.textContent = c ? (c.selectedIds || []).length : 0;
+  }
+
+  function renderStats(){
+    const c = activeCity();
+    if(!c){
+      kpiKm.textContent = "-";
+      kpiMin.textContent = "-";
+      kpiSrc.textContent = "-";
+      kpiStart.textContent = "-";
+      statsMsg.textContent = "Km/Dk hesabı için en az 2 nokta seçin.";
+      legsEl.innerHTML = "";
+      btnCompute.disabled = true;
+      return;
+    }
+
+    const pts = selectedOrderedPoints(c);
+    const canCompute = pts.length >= 2;
+    btnCompute.disabled = !canCompute;
+
+    if(!canCompute){
+      kpiKm.textContent = "-";
+      kpiMin.textContent = "-";
+      kpiSrc.textContent = "-";
+      kpiStart.textContent = "-";
+      statsMsg.textContent = "Km/Dk hesabı için en az 2 nokta seçin.";
+      legsEl.innerHTML = "";
+      return;
+    }
+
+    const s = c.lastStats;
+    if(!s){
+      kpiKm.textContent = "-";
+      kpiMin.textContent = "-";
+      kpiSrc.textContent = "-";
+      kpiStart.textContent = "-";
+      statsMsg.textContent = "Hazır. “Km/Dk Hesapla” butonuna basın.";
+      legsEl.innerHTML = "";
+      return;
+    }
+
+    kpiKm.textContent = (s.totalKm ?? 0).toFixed(1);
+    kpiMin.textContent = Math.round(s.totalMin ?? 0);
+    kpiSrc.textContent = s.source || "-";
+    kpiStart.textContent = s.startName || "-";
+
+    statsMsg.textContent = `Son hesap: ${new Date(s.computedAt).toLocaleString("tr-TR")} — Mod: ${s.mode}`;
+    legsEl.innerHTML = "";
+
+    for(const lg of (s.legs || [])){
+      const div = document.createElement("div");
+      div.className = "leg";
+      div.innerHTML = `
+        <div class="t">${escapeHtml(lg.from)} → ${escapeHtml(lg.to)}</div>
+        <div>${lg.km.toFixed(1)} km • ${Math.round(lg.min)} dk • <span style="opacity:.85">${escapeHtml(lg.src)}</span></div>
+      `;
+      legsEl.appendChild(div);
+    }
+  }
+
+  function renderAll(){
+    if(!state.activeCityId && state.cities.length) state.activeCityId = state.cities[0].id;
+    save();
+
+    renderCitySelect();
+    renderBadge();
+    renderList();
+    renderItinerary();
+    renderMap();
+    renderStats();
+
+    const c = activeCity();
+    const hasCity = !!c;
+    btnAppendCity.disabled = !hasCity;
+    btnRenameCity.disabled = !hasCity;
+    btnDeleteCity.disabled = !hasCity;
+    search.disabled = !hasCity;
+  }
+
+  function stripHtml(s){ return (s||"").replace(/<[^>]+>/g,""); }
+  function escapeHtml(s){
+    return (s||"")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  btnNewCity.addEventListener("click", () => fileNew.click());
+  fileNew.addEventListener("change", async (e) => {
+    const files = e.target.files;
+    e.target.value = "";
+    await handleMultiNew(files);
+  });
+
+  btnAppendCity.addEventListener("click", () => { if(!btnAppendCity.disabled) fileAppend.click(); });
+  fileAppend.addEventListener("change", async (e) => {
+    const files = e.target.files;
+    e.target.value = "";
+    await handleMultiAppend(files);
+  });
+
+  btnRenameCity.addEventListener("click", renameActiveCity);
+  btnDeleteCity.addEventListener("click", deleteActiveCity);
+  btnResetAll.addEventListener("click", resetAll);
+
+  citySelect.addEventListener("change", () => {
+    state.activeCityId = citySelect.value || null;
+    save();
+    search.value = "";
+    renderAll();
+  });
+
+  search.addEventListener("input", () => renderAll());
+
+  travelModeEl.addEventListener("change", () => {
+    const c = activeCity(); if(!c) return;
+    updateActiveCity(city => ({...city, travelMode: travelModeEl.value, updatedAt: nowIso(), lastStats: null}));
+    renderAll();
+  });
+
+  btnClearRoute.addEventListener("click", clearRoute);
+  btnExportJson.addEventListener("click", exportJson);
+  btnOpenMaps.addEventListener("click", openMaps);
+  btnCompute.addEventListener("click", computeRouteStats);
+
+  dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.style.borderColor = "rgba(124,241,214,.55)"; });
+  dropzone.addEventListener("dragleave", () => { dropzone.style.borderColor = "rgba(255,255,255,.22)"; });
+  dropzone.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    dropzone.style.borderColor = "rgba(255,255,255,.22)";
+    await handleMultiNew(e.dataTransfer?.files);
+  });
+
+
+  // --- Mobile: single-panel switcher (Liste/Rota) + map collapse toggle
+  const segLeft = document.getElementById("segLeft");
+  const segRight = document.getElementById("segRight");
+  const mobileSwitcher = document.getElementById("mobileSwitcher");
+  const btnToggleMap = document.getElementById("btnToggleMap");
+  const mapWrap = document.getElementById("mapWrap");
+
+  function setView(mode){
+    if(mode === "right"){
+      document.body.classList.remove("show-left");
+      document.body.classList.add("show-right");
+      segLeft?.classList.remove("active");
+      segRight?.classList.add("active");
+    }else{
+      document.body.classList.remove("show-right");
+      document.body.classList.add("show-left");
+      segRight?.classList.remove("active");
+      segLeft?.classList.add("active");
+    }
+    // Ensure map doesn't cause tall layout when in compact mode
+    if(window.matchMedia("(max-width: 980px)").matches){
+      if(mapWrap){
+        if(mode === "right"){
+          mapWrap.classList.add("collapsed");
+          mapWrap.classList.remove("expanded");
+        }
+      }
+    }
+  }
+
+  function initMobileDefaults(){
+    if(window.matchMedia("(max-width: 980px)").matches){
+      if(!document.body.classList.contains("show-left") && !document.body.classList.contains("show-right")){
+        document.body.classList.add("show-left");
+      }
+      // collapse map by default on mobile
+      if(mapWrap){
+        mapWrap.classList.add("collapsed");
+        mapWrap.classList.remove("expanded");
+      }
+    }else{
+      // desktop: show both panels; expand map
+      document.body.classList.remove("show-left","show-right");
+      if(mapWrap){
+        mapWrap.classList.remove("collapsed");
+        mapWrap.classList.add("expanded");
+      }
+    }
+  }
+
+  segLeft?.addEventListener("click", () => setView("left"));
+  segRight?.addEventListener("click", () => setView("right"));
+
+  btnToggleMap?.addEventListener("click", () => {
+    if(!mapWrap) return;
+    const collapsed = mapWrap.classList.contains("collapsed");
+    if(collapsed){
+      mapWrap.classList.remove("collapsed");
+      mapWrap.classList.add("expanded");
+      // Leaflet map needs invalidateSize after becoming visible
+      setTimeout(() => { try{ map?.invalidateSize?.(); }catch{} }, 60);
+    }else{
+      mapWrap.classList.add("collapsed");
+      mapWrap.classList.remove("expanded");
+    }
+  });
+
+  window.addEventListener("resize", initMobileDefaults);
+  initMobileDefaults();
+
+
+    load();
+  renderAll();
+  setStatus("Hazır.");
+})();
+</script>
+</body>
+</html>
