@@ -874,50 +874,56 @@
       let totalKm = 0;
       let totalMin = 0;
       let source = "Kuş Uçuşu (Offline)";
+      let allLatLngs = [];
 
       // Try OSRM
       try {
-        // Break into chunks if necessary, generic OSRM demo server has limits but for small routes ok
-        // Using a simplistic approach: sum legs
-        // mode mapping: walking, driving (car), cycling (bicycle)
         let profile = "walking";
         if (c.travelMode === 'driving') profile = "driving";
         if (c.travelMode === 'bicycling') profile = "cycling";
-        if (c.travelMode === 'transit') profile = "driving"; // OSRM default no public transit
+        if (c.travelMode === 'transit') profile = "driving";
 
         source = "OSRM (" + profile + ")";
 
         for (let i = 0; i < pts.length - 1; i++) {
           const p1 = pts[i];
           const p2 = pts[i + 1];
-          const url = `https://router.project-osrm.org/route/v1/${profile}/${p1.lng},${p1.lat};${p2.lng},${p2.lat}?overview=false`;
+          // Get full geometry
+          const url = `https://router.project-osrm.org/route/v1/${profile}/${p1.lng},${p1.lat};${p2.lng},${p2.lat}?overview=full&geometries=geojson`;
 
           const res = await fetch(url);
           const j = await res.json();
           if (j.routes && j.routes.length) {
             totalKm += j.routes[0].distance / 1000;
             totalMin += j.routes[0].duration / 60;
+            // OSRM geojson: [lng, lat] -> Leaflet: [lat, lng]
+            const coords = j.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+            allLatLngs = allLatLngs.concat(coords);
           } else {
             throw new Error("No route");
           }
-          await new Promise(r => setTimeout(r, 100)); // Rate limit polite
+          await new Promise(r => setTimeout(r, 100));
         }
       } catch (e) {
-        // Fallback Haversine
+        // Fallback Haversine - straight lines
         source = "Kuş Uçuşu (Hata/Offline)";
         totalKm = 0; totalMin = 0;
+        allLatLngs = [];
         const speed = c.travelMode === 'walking' ? 5 : (c.travelMode === 'driving' ? 50 : 20);
 
         for (let i = 0; i < pts.length - 1; i++) {
-          const d = haversine(pts[i], pts[i + 1]);
+          const p1 = pts[i], p2 = pts[i + 1];
+          const d = haversine(p1, p2);
           totalKm += d;
           totalMin += (d / speed) * 60;
+          allLatLngs.push([p1.lat, p1.lng]);
+          allLatLngs.push([p2.lat, p2.lng]);
         }
       }
 
-      c.lastStats = { totalKm, totalMin, source };
+      c.lastStats = { totalKm, totalMin, source, latLngs: allLatLngs };
       saveState();
-      renderAll(); // updates UI
+      renderAll();
       btn.innerText = "Hesapla";
       btn.disabled = false;
     }
