@@ -1,1324 +1,1084 @@
 <!doctype html>
 <html lang="tr">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Gezi Planlayıcı (Mobil / Offline Lite)</title>
-
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#0b1220">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Gezi Planlayıcı</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <style>
-    :root{
-      --bg:#0b1220; --muted:#9fb0d0; --text:#eef2ff;
-      --border:rgba(255,255,255,.12); --accent:#6aa5ff; --accent2:#7cf1d6; --danger:#ff6a7a;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-    }
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: radial-gradient(1200px 800px at 15% 10%, rgba(106,165,255,.18), transparent 60%),
-                  radial-gradient(900px 700px at 80% 30%, rgba(124,241,214,.14), transparent 55%),
-                  var(--bg);
-      color:var(--text);
-    }
-    .container{ max-width:1100px; margin:0 auto; padding:12px; }
-    .topbar{
-      padding:12px 14px;
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow);
-      display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
-    }
-    h1{ font-size:16px; margin:0 0 4px 0; letter-spacing:.2px; }
-    .sub{ margin:0; color:var(--muted); font-size:12px; line-height:1.4; max-width: 760px; }
-    .badge{
-      display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;
-      font-size:12px; color:var(--muted);
-      border:1px solid var(--border); background:rgba(0,0,0,.16); padding:8px 10px; border-radius:12px;
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --border: rgba(255, 255, 255, .1);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, .2);
+      --danger: #ef4444;
+      --success: #10b981;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif
     }
 
-    .mobileSwitcher{
-      margin-top:10px;
-      border:1px solid var(--border);
-      background: rgba(0,0,0,.16);
-      border-radius: 14px;
-      overflow:hidden;
-      box-shadow: var(--shadow);
-      display:flex;
+    * {
+      box-sizing: border-box
     }
-    .segBtn{
-      flex:1 1 0;
-      border:0;
-      padding:12px 10px;
-      background: transparent;
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100%;
+      max-width: 1400px;
+      margin: 0 auto
+    }
+
+    .header {
+      padding: 12px 16px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center
+    }
+
+    .header h1 {
+      font-size: 16px;
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: -.5px
+    }
+
+    .badge {
+      font-size: 11px;
+      background: rgba(255, 255, 255, .05);
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border)
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 350px 1fr 300px;
+      height: 100%;
+      overflow: hidden
+    }
+
+    @media(max-width:1024px) {
+      .main {
+        grid-template-columns: 300px 1fr 0;
+        transform: translateX(0);
+        transition: transform .3s
+      }
+    }
+
+    @media(max-width:768px) {
+      .header h1 {
+        font-size: 14px
+      }
+
+      .main {
+        display: block;
+        overflow: auto
+      }
+
+      .col {
+        height: auto !important;
+        border-right: 0 !important
+      }
+    }
+
+    .col {
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      position: relative
+    }
+
+    .col-head {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, .02);
+      display: flex;
+      justify-content: space-between;
+      align-items: center
+    }
+
+    .col-head h2 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0;
       color: var(--muted);
-      cursor:pointer;
-      font-size:12.5px;
+      text-transform: uppercase;
+      letter-spacing: .5px
     }
-    .segBtn.active{
-      background: rgba(124,241,214,.12);
+
+    .col-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .btn {
+      background: var(--panel);
+      border: 1px solid var(--border);
       color: var(--text);
-      font-weight: 800;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px
     }
 
-    .panel{
-      margin-top:10px;
-      background: rgba(255,255,255,.03);
-      border:1px solid var(--border);
-      border-radius:14px;
-      overflow:hidden;
-      box-shadow:var(--shadow);
+    .btn:hover {
+      background: rgba(255, 255, 255, .05);
+      border-color: rgba(255, 255, 255, .2)
     }
-    .panelHeader{
-      padding:12px;
-      border-bottom:1px solid var(--border);
-      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0));
+
+    .btn.primary {
+      background: rgba(56, 189, 248, .15);
+      border-color: rgba(56, 189, 248, .3);
+      color: #7dd3fc
     }
-    .panelHeader h2{ margin:0; font-size:13.5px; letter-spacing:.2px; }
-    .controls{
-      padding:10px 12px 12px 12px;
-      display:flex; gap:8px; flex-wrap:wrap; align-items:center;
-      border-bottom:1px solid var(--border);
+
+    .btn.primary:hover {
+      background: rgba(56, 189, 248, .25);
+      box-shadow: 0 0 10px var(--accent-glow)
     }
-    .input, select, textarea{
-      padding:9px 10px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background: rgba(0,0,0,.18);
-      color:var(--text);
-      outline:none;
+
+    .btn.danger {
+      background: rgba(239, 68, 68, .15);
+      border-color: rgba(239, 68, 68, .3);
+      color: #fca5a5
     }
-    .input{ flex:1 1 220px; min-width:200px; }
-    select{ flex:0 0 240px; min-width:210px; }
-    .btn{
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.04);
+
+    .icon-btn {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border-radius: 6px
+    }
+
+    .input {
+      background: rgba(0, 0, 0, .2);
+      border: 1px solid var(--border);
       color: var(--text);
-      padding:9px 10px;
-      border-radius:12px;
-      cursor:pointer;
-      font-size:12px;
-      white-space:nowrap;
-      user-select:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-    }
-    .btn.primary{ border-color: rgba(124,241,214,.45); background: rgba(124,241,214,.12); }
-    .btn.danger{ border-color: rgba(255,106,122,.45); background: rgba(255,106,122,.12); }
-    .btn[aria-disabled="true"]{ opacity:.45; cursor:not-allowed; pointer-events:none; }
-
-    /* File input: keep in DOM for iOS */
-    .fileInput{
-      position:absolute;
-      width:1px;height:1px;
-      padding:0;margin:-1px;
-      overflow:hidden;
-      clip: rect(0,0,0,0);
-      white-space:nowrap;
-      border:0;
-      opacity:0;
+      padding: 8px;
+      border-radius: 8px;
+      width: 100%;
+      font-size: 12px
     }
 
-    .list{ padding:10px; display:grid; gap:8px; }
-    .card{
-      background: rgba(255,255,255,.03);
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:10px;
-      display:flex; gap:10px; align-items:flex-start; justify-content:space-between;
+    .input:focus {
+      outline: none;
+      border-color: var(--accent)
     }
-    .cardLeft{ display:flex; gap:10px; }
-    .check{ margin-top:2px; width:18px; height:18px; accent-color: var(--accent); }
-    .card h3{ margin:0; font-size:13px; }
-    .meta{ margin-top:6px; color:var(--muted); font-size:11.5px; display:flex; gap:8px; flex-wrap:wrap; }
-    .tag{
-      display:inline-block;
-      font-size:10.5px;
-      padding:4px 7px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.02);
+
+    .select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-size: 16px
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      gap: 10px;
+      transition: border-color .2s
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, .2)
+    }
+
+    .card h3 {
+      margin: 0 0 4px 0;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .card .meta {
+      font-size: 11px;
       color: var(--muted);
-      margin-top:7px;
-    }
-    .small{ font-size:10.8px; color:var(--muted); margin-top:6px; line-height:1.35; }
-
-    .itinerary{ padding:10px; display:grid; gap:8px; }
-    .itItem{
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.03);
-      border-radius:14px;
-      padding:9px;
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-    }
-    .itItem strong{ font-size:12.8px; }
-    .itControls{ display:flex; gap:6px; }
-    .iconBtn{
-      width:34px; height:34px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background: rgba(0,0,0,.18);
-      color: var(--text);
-      cursor:pointer;
+      display: flex;
+      gap: 8px
     }
 
-    .statsBox{
-      margin:10px;
-      border:1px solid var(--border);
-      background: rgba(0,0,0,.14);
-      border-radius:14px;
-      padding:10px;
+    .check {
+      width: 16px;
+      height: 16px;
+      margin: 2px 0 0 0;
+      accent-color: var(--accent);
+      cursor: pointer
     }
-    .statsTop{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
-      margin-bottom:10px;
-    }
-    .kpi{
-      display:flex; gap:10px; flex-wrap:wrap;
-      color:var(--muted); font-size:11.8px;
-    }
-    .kpi strong{ color:var(--text); }
-    .legs{ display:grid; gap:8px; margin-top:10px; }
-    .leg{
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.03);
-      border-radius:12px;
-      padding:9px;
-      font-size:12px;
-      color:var(--muted);
-    }
-    .leg .t{ color:var(--text); font-weight:800; margin-bottom:4px; }
 
-    .noteBox{
-      padding:10px 12px 12px 12px;
-      border-top:1px solid var(--border);
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.4;
+    .tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, .05);
+      color: var(--muted)
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      background: #0f172a
+    }
+
+    /* Upload Zone */
+    .dropzone {
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      background: rgba(0, 0, 0, .1);
+      transition: all .2s;
+      cursor: pointer
+    }
+
+    .dropzone:hover {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, .05)
+    }
+
+    .dropzone p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    /* Itinerary */
+    .it-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 6px
+    }
+
+    .it-item strong {
+      font-size: 12px;
+      display: block
+    }
+
+    .sort-controls {
+      display: flex;
+      gap: 2px
+    }
+
+    /* Stats */
+    .stats {
+      padding: 12px;
+      background: var(--panel);
+      border-top: 1px solid var(--border)
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px
+    }
+
+    .kpi {
+      background: rgba(0, 0, 0, .2);
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center
+    }
+
+    .kpi b {
+      display: block;
+      font-size: 16px;
+      color: var(--accent);
+      margin-bottom: 2px
     }
 
     /* Modal */
-    .modalOverlay{
+    .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,.55);
+      background: rgba(0, 0, 0, .7);
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 14px;
       z-index: 9999;
+      backdrop-filter: blur(2px)
     }
-    .modalOverlay.show{ display:flex; }
-    .modal{
-      width: min(920px, 100%);
-      max-height: 90vh;
-      overflow: auto;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.22));
-      box-shadow: var(--shadow);
+
+    .modal-overlay.open {
+      display: flex
     }
-    .modalHeader{
-      padding: 12px 12px 10px 12px;
-      border-bottom: 1px solid var(--border);
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap: 10px;
-    }
-    .modalTitle{ font-size: 13.5px; font-weight: 900; letter-spacing:.2px; }
-    .modalSub{ margin-top: 4px; font-size: 12px; color: var(--muted); line-height:1.4; }
-    .modalBody{ padding: 10px 12px 12px 12px; display:grid; gap: 10px; }
-    .row{ display:flex; gap:8px; flex-wrap:wrap; }
-    .textArea{
-      width: 100%;
-      min-height: 180px;
-      resize: vertical;
-      padding: 10px 10px;
+
+    .modal {
+      background: #1e293b;
+      width: 90%;
+      max-width: 600px;
       border-radius: 12px;
       border: 1px solid var(--border);
-      background: rgba(0,0,0,.18);
-      color: var(--text);
-      outline: none;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 12px;
-      line-height: 1.45;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, .5);
+      overflow: hidden;
+      animation: slideUp .2s ease-out
     }
 
-    /* Views */
-    body.show-left #rightPanel{ display:none; }
-    body.show-right #leftPanel{ display:none; }
+    .modal-head {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center
+    }
+
+    .modal-head h3 {
+      margin: 0;
+      font-size: 15px;
+      color: var(--text)
+    }
+
+    .modal-body {
+      padding: 16px;
+      display: grid;
+      gap: 12px
+    }
+
+    .textarea {
+      background: rgba(0, 0, 0, .2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 100%;
+      min-height: 150px;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 10px;
+      resize: vertical;
+      border-radius: 8px
+    }
+
+    /* Mobile Nav */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1e293b;
+      border-top: 1px solid var(--border);
+      padding: 10px;
+      justify-content: space-around;
+      z-index: 1000
+    }
+
+    @media(max-width:768px) {
+      .mobile-nav {
+        display: flex
+      }
+
+      .col {
+        padding-bottom: 70px
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    /* Utility */
+    .d-none {
+      display: none !important
+    }
   </style>
 </head>
-<body class="show-left">
-  <div class="container">
-    <div class="topbar">
-      <div>
-        <h1>Gezi Planlayıcı (Mobil / Offline Lite)</h1>
-        <p class="sub">
-          Bu sürüm <strong>harita kütüphanesi kullanmaz</strong> (daha stabil). KML dosyalarını çoklu ekleyin, her dosya ayrı şehir olur.
-          “Km/Dk” için internet varsa OSRM, yoksa offline yaklaşık hesap kullanır. Başlangıç: <strong>en kuzeydeki</strong> seçili nokta.
-        </p>
+
+<body>
+
+  <div class="app">
+    <div class="header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <h1>🌍 Gezi Planlayıcı</h1>
+        <span class="badge" id="cityBadge">Şehir Seçilmedi</span>
       </div>
-      <div class="badge">
-        <span>Şehir: <strong id="badgeCity" style="color:var(--text)">-</strong></span>
-        <span style="opacity:.6">|</span>
-        <span>Seçili: <strong id="badgeSel" style="color:var(--text)">0</strong></span>
+      <div style="display:flex;gap:8px">
+        <button class="btn primary" onclick="document.getElementById('fileNew').click()">+ Yeni Yükle</button>
+        <input type="file" id="fileNew" accept=".kml,.kmz" multiple hidden
+          onchange="handleFileSelect(this.files, true)">
+        <button class="btn" onclick="openImportModal()">🔗 Link/KML</button>
       </div>
     </div>
 
-    <div class="mobileSwitcher" aria-label="Mobil görünüm seçici">
-      <button class="segBtn active" id="segLeft" type="button">Liste</button>
-      <button class="segBtn" id="segRight" type="button">Rota</button>
-    </div>
-
-    <!-- LEFT -->
-    <div class="panel" id="leftPanel">
-      <div class="panelHeader">
-        <h2>Şehirler, İçe Aktarım ve Liste</h2>
-        <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; align-items:center;">
-          <button class="btn primary" id="btnPasteKml" type="button">KML yapıştır / URL</button>
-          <button class="btn danger" id="btnResetAll" type="button">Tümünü sıfırla</button>
+    <div class="main" id="mainContainer">
+      <!-- Panel 1: List -->
+      <div class="col" id="colList">
+        <div class="col-head">
+          <h2>Yerler</h2>
+          <div style="display:flex;gap:6px">
+            <input class="input" id="search" placeholder="Ara..." style="width:120px">
+            <button class="btn icon-btn danger" onclick="deleteActiveCity()" title="Şehri Sil">🗑</button>
+          </div>
+        </div>
+        <div class="col-body">
+          <select id="citySelect" class="input select" onchange="changeCity()"></select>
+          <div id="list" style="display:grid;gap:8px"></div>
+          <div class="dropzone" id="dropzone" onclick="document.getElementById('fileNew').click()">
+            <p>KML/KMZ Dosyalarını Sürükleyin<br>veya Tıklayın</p>
+          </div>
         </div>
       </div>
 
-      <div class="controls">
-        <select id="citySelect"></select>
-
-        <input id="fileNew" class="fileInput" type="file" accept="*/*" multiple />
-        <label class="btn primary" id="btnNewCity" for="fileNew">Yeni şehir (çoklu KML)</label>
-
-        <input id="fileAppend" class="fileInput" type="file" accept="*/*" multiple />
-        <label class="btn" id="btnAppendCity" for="fileAppend" aria-disabled="true">Aktif şehre ekle</label>
-
-        <button class="btn" id="btnRenameCity" type="button">Yeniden adlandır</button>
-        <button class="btn danger" id="btnDeleteCity" type="button">Şehri sil</button>
-
-        <input class="input" id="search" placeholder="Ara: isim veya açıklama..." />
+      <!-- Panel 2: Map -->
+      <div class="col" id="colMap" style="padding:0">
+        <div id="map"></div>
       </div>
 
-      <div class="list" id="list"></div>
-
-      <div class="noteBox">
-        Not: Bu “lite” sürüm sadece <strong>.kml</strong> destekler (KMZ yok). En stabil kullanım için yeterlidir.
-      </div>
-    </div>
-
-    <!-- RIGHT -->
-    <div class="panel" id="rightPanel">
-      <div class="panelHeader">
-        <h2>Rotam</h2>
-        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
-          <span style="color:var(--muted); font-size:12px;">Ulaşım:</span>
-          <select id="travelMode" style="min-width:200px">
-            <option value="walking">Yürüyüş</option>
-            <option value="driving">Araba</option>
-            <option value="transit">Toplu taşıma</option>
-            <option value="bicycling">Bisiklet</option>
+      <!-- Panel 3: Itinerary -->
+      <div class="col" id="colRoute">
+        <div class="col-head">
+          <h2>Rota</h2>
+          <select id="travelMode" class="input select" style="width:auto;height:24px;padding:2px 6px"
+            onchange="updateRouteMode()">
+            <option value="walking">🚶 Yürüyüş</option>
+            <option value="driving">🚗 Araba</option>
+            <option value="transit">🚌 Toplu Taşıma</option>
+            <option value="bicycling">🚲 Bisiklet</option>
           </select>
         </div>
-      </div>
-
-      <div class="itinerary" id="itinerary"></div>
-
-      <div class="statsBox">
-        <div class="statsTop">
-          <div class="kpi">
-            <span>Toplam: <strong id="kpiKm">-</strong> km</span>
-            <span>Süre: <strong id="kpiMin">-</strong> dk</span>
-            <span>Kaynak: <strong id="kpiSrc">-</strong></span>
-            <span>Başlangıç: <strong id="kpiStart">-</strong></span>
+        <div class="col-body" id="itinerary"></div>
+        <div class="stats">
+          <div class="kpi-grid">
+            <div class="kpi"><b id="kpiKm">-</b>km</div>
+            <div class="kpi"><b id="kpiMin">-</b>dk</div>
           </div>
-          <button class="btn primary" id="btnCompute" type="button">Km/Dk Hesapla</button>
+          <button class="btn primary" style="width:100%" onclick="computeRoute()" id="btnCompute">Hesapla</button>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn" style="flex:1" onclick="openGoogleMaps()">Maps'te Aç</button>
+            <button class="btn danger" onclick="clearRoute()">Temizle</button>
+          </div>
+          <p id="statsMsg" style="font-size:10px;color:var(--muted);text-align:center;margin:8px 0 0 0"></p>
         </div>
-        <div style="color:var(--muted); font-size:12px;" id="statsMsg">Km/Dk hesabı için en az 2 nokta seçin.</div>
-        <div class="legs" id="legs"></div>
       </div>
+    </div>
 
-      <div class="controls" style="border-top:1px solid var(--border)">
-        <button class="btn danger" id="btnClearRoute" type="button">Rotayı temizle</button>
-        <button class="btn" id="btnExportJson" type="button">JSON dışa aktar</button>
-        <button class="btn primary" id="btnOpenMaps" type="button">Google Maps’te aç</button>
-      </div>
-
-      <div class="noteBox">
-        İpucu: “Google Maps’te aç”, seçili noktalarla rota linki üretir. Km/Dk hesabında başlangıç en kuzey nokta alınır.
-      </div>
+    <div class="mobile-nav">
+      <button class="btn" onclick="showTab('colList')">Liste</button>
+      <button class="btn" onclick="showTab('colMap')">Harita</button>
+      <button class="btn" onclick="showTab('colRoute')">Rota</button>
     </div>
   </div>
 
   <!-- Modal -->
-  <div class="modalOverlay" id="modalOverlay" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <div class="modalHeader">
-        <div>
-          <div class="modalTitle" id="modalTitle">KML İçe Aktar (Dosya kaydetmeden)</div>
-          <div class="modalSub">KML içeriğini yapıştırın veya KML bağlantısı girin. Bazı URL’ler CORS nedeniyle engellenebilir.</div>
-        </div>
-        <button class="iconBtn" id="btnModalClose" type="button" title="Kapat">✕</button>
+  <div class="modal-overlay" id="importModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>KML / MyMaps Ekle</h3>
+        <button class="btn icon-btn" onclick="closeImportModal()">✕</button>
       </div>
-      <div class="modalBody">
-        <div class="row">
-          <input class="input" id="kmlUrl" placeholder="KML URL (opsiyonel, .kml)" />
-          <button class="btn" id="btnFetchUrl" type="button">URL’den getir</button>
+      <div class="modal-body">
+        <div style="display:flex;gap:8px">
+          <input class="input" id="urlInput" placeholder="Google My Maps Paylaşım Linki veya KML URL">
+          <button class="btn primary" onclick="fetchFromUrl()" id="btnFetch">Getir</button>
         </div>
-        <textarea id="kmlText" class="textArea" placeholder="KML içeriğini buraya yapıştırın (<?xml ...> ile başlayan)"></textarea>
-        <div class="row">
-          <input class="input" id="kmlCityName" placeholder="Şehir adı (boşsa otomatik)" />
-          <select id="kmlTarget" class="input" style="flex:0 0 220px; min-width:200px">
-            <option value="new">Yeni şehir olarak ekle</option>
-            <option value="append">Aktif şehre ekle</option>
+        <p style="font-size:11px;color:var(--muted);margin:0">
+          Google My Maps için: Harita > Paylaş > "Bağlantısı olan herkes" > Linki kopyala yapıştır.
+        </p>
+        <div style="text-align:center;font-size:10px;color:var(--muted)">— VEYA —</div>
+        <textarea id="kmlText" class="textarea"
+          placeholder="<?xml version='1.0'... KML içeriğini buraya yapıştırın"></textarea>
+
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <select id="importTarget" class="input select" style="width:auto">
+            <option value="new">Yeni Şehir</option>
+            <option value="append">Seçili Şehre Ekle</option>
           </select>
+          <button class="btn primary" onclick="processImportText()">İçe Aktar</button>
         </div>
-        <div class="row" style="justify-content:space-between; align-items:center">
-          <div style="color:var(--muted); font-size:12px;" id="modalStatus">Hazır.</div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end">
-            <button class="btn" id="btnPasteSample" type="button">Örnek KML</button>
-            <button class="btn primary" id="btnImportText" type="button">İçe aktar</button>
-          </div>
-        </div>
+        <p id="modalStatus" style="font-size:12px;color:var(--accent);margin:0;min-height:16px"></p>
       </div>
     </div>
   </div>
 
-<script>
-(function(){
-  var STORAGE_KEY = "tripPlanner.offlineLite.v1";
+  <script>
+    // --- State & Config ---
+    const STORAGE_KEY = "trip_planner_v4";
+    let state = { cities: [], activeCityId: null };
+    let map, markersLayer, mapPoints = [];
 
-  // UI
-  var citySelect = document.getElementById("citySelect");
-  var fileNew = document.getElementById("fileNew");
-  var fileAppend = document.getElementById("fileAppend");
-  var btnAppendCity = document.getElementById("btnAppendCity");
-  var btnRenameCity = document.getElementById("btnRenameCity");
-  var btnDeleteCity = document.getElementById("btnDeleteCity");
-  var btnResetAll = document.getElementById("btnResetAll");
-  var search = document.getElementById("search");
-  var listEl = document.getElementById("list");
-  var itineraryEl = document.getElementById("itinerary");
-  var travelModeEl = document.getElementById("travelMode");
-  var btnClearRoute = document.getElementById("btnClearRoute");
-  var btnExportJson = document.getElementById("btnExportJson");
-  var btnOpenMaps = document.getElementById("btnOpenMaps");
-  var badgeCity = document.getElementById("badgeCity");
-  var badgeSel = document.getElementById("badgeSel");
+    // --- Lifecycle ---
+    window.onload = () => {
+      loadState();
+      initMap();
+      renderAll();
 
-  var segLeft = document.getElementById("segLeft");
-  var segRight = document.getElementById("segRight");
-
-  // Modal
-  var btnPasteKml = document.getElementById("btnPasteKml");
-  var modalOverlay = document.getElementById("modalOverlay");
-  var btnModalClose = document.getElementById("btnModalClose");
-  var btnFetchUrl = document.getElementById("btnFetchUrl");
-  var btnImportText = document.getElementById("btnImportText");
-  var btnPasteSample = document.getElementById("btnPasteSample");
-  var kmlUrlEl = document.getElementById("kmlUrl");
-  var kmlTextEl = document.getElementById("kmlText");
-  var kmlCityNameEl = document.getElementById("kmlCityName");
-  var kmlTargetEl = document.getElementById("kmlTarget");
-  var modalStatus = document.getElementById("modalStatus");
-
-  // Stats UI
-  var btnCompute = document.getElementById("btnCompute");
-  var kpiKm = document.getElementById("kpiKm");
-  var kpiMin = document.getElementById("kpiMin");
-  var kpiSrc = document.getElementById("kpiSrc");
-  var kpiStart = document.getElementById("kpiStart");
-  var statsMsg = document.getElementById("statsMsg");
-  var legsEl = document.getElementById("legs");
-
-  var state = { cities: [], activeCityId: null };
-
-  function nowIso(){ return new Date().toISOString(); }
-  function uid(){
-    try{ if(window.crypto && crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
-    return String(Math.random()).slice(2) + String(Date.now());
-  }
-  function baseName(fileName){
-    var n = (fileName || "").split(/[\\/]/).pop() || "";
-    return n.replace(/\.(kml)$/i, "") || "Yeni Şehir";
-  }
-  function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
-  function load(){
-    try{
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return;
-      var parsed = JSON.parse(raw);
-      if(parsed && parsed.cities && parsed.cities.length >= 0) state.cities = parsed.cities;
-      if(typeof parsed.activeCityId === "string") state.activeCityId = parsed.activeCityId;
-    }catch(e){}
-  }
-  function activeCity(){
-    for(var i=0;i<state.cities.length;i++){
-      if(state.cities[i].id === state.activeCityId) return state.cities[i];
-    }
-    return null;
-  }
-  function updateActiveCity(patchFn){
-    for(var i=0;i<state.cities.length;i++){
-      if(state.cities[i].id === state.activeCityId){
-        state.cities[i] = patchFn(state.cities[i]);
-        break;
-      }
-    }
-    save();
-  }
-
-  function escapeHtml(s){
-    return String(s || "")
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;")
-      .replace(/"/g,"&quot;")
-      .replace(/'/g,"&#039;");
-  }
-  function stripHtml(s){ return String(s||"").replace(/<[^>]+>/g,""); }
-
-  // KML parse (Point/LineString/Polygon first coordinate)
-  function safeText(node){ return (node && node.textContent ? node.textContent : "").trim(); }
-  function firstCoordinateText(coordText){
-    var t = String(coordText || "").trim();
-    if(!t) return null;
-    var first = t.split(/\s+/)[0];
-    var parts = first.split(",");
-    if(parts.length < 2) return null;
-    var lng = Number(parts[0]);
-    var lat = Number(parts[1]);
-    if(!isFinite(lat) || !isFinite(lng)) return null;
-    return { lat: lat, lng: lng };
-  }
-  function folderPathForPlacemark(pm){
-    var names = [];
-    var cur = pm.parentNode;
-    while(cur){
-      var local = (cur.localName || "").toLowerCase();
-      if(local === "folder"){
-        var kids = cur.childNodes || [];
-        var nameEl = null;
-        for(var i=0;i<kids.length;i++){
-          var ln = (kids[i].localName || "").toLowerCase();
-          if(ln === "name"){ nameEl = kids[i]; break; }
-        }
-        var nm = safeText(nameEl);
-        if(nm) names.push(nm);
-      }
-      cur = cur.parentNode;
-    }
-    names.reverse();
-    return names.join(" / ");
-  }
-  function parseKmlText(kmlText){
-    var xml = new DOMParser().parseFromString(kmlText, "application/xml");
-    if(xml.querySelector("parsererror")){ throw new Error("KML parse edilemedi (XML hatası)."); }
-    var placemarks = xml.getElementsByTagName("Placemark");
-    var points = [];
-    for(var i=0;i<placemarks.length;i++){
-      var pm = placemarks[i];
-      var nameEl = pm.getElementsByTagName("name")[0];
-      var descEl = pm.getElementsByTagName("description")[0];
-      var name = safeText(nameEl) || "İsimsiz nokta";
-      var description = safeText(descEl) || "";
-
-      var geomType = "Unknown";
-      var coord = null;
-
-      var pointEl = pm.getElementsByTagName("Point")[0];
-      var lineEl = pm.getElementsByTagName("LineString")[0];
-      var polyEl = pm.getElementsByTagName("Polygon")[0];
-
-      if(pointEl){
-        geomType = "Point";
-        coord = firstCoordinateText(safeText(pointEl.getElementsByTagName("coordinates")[0]));
-      }else if(lineEl){
-        geomType = "LineString";
-        coord = firstCoordinateText(safeText(lineEl.getElementsByTagName("coordinates")[0]));
-      }else if(polyEl){
-        geomType = "Polygon";
-        coord = firstCoordinateText(safeText(polyEl.getElementsByTagName("coordinates")[0]));
-      }
-      if(!coord) continue;
-
-      points.push({
-        id: uid(),
-        name: name,
-        description: description,
-        lat: coord.lat,
-        lng: coord.lng,
-        geomType: geomType,
-        folderPath: folderPathForPlacemark(pm)
-      });
-    }
-    return points;
-  }
-
-  function readFileAsText(file){
-    return new Promise(function(resolve,reject){
-      var r = new FileReader();
-      r.onload = function(){ resolve(String(r.result || "")); };
-      r.onerror = function(){ reject(new Error("Dosya okunamadı.")); };
-      r.readAsText(file);
-    });
-  }
-  function fileToPoints(file){
-    return readFileAsText(file).then(function(kmlText){
-      return parseKmlText(kmlText);
-    });
-  }
-
-  function importNewCityFromPoints(points, name){
-    if(!points || !points.length) throw new Error("KML içinde koordinatlı öğe bulunamadı.");
-    var city = {
-      id: uid(),
-      name: name || "Yeni Şehir",
-      createdAt: nowIso(),
-      updatedAt: nowIso(),
-      points: points,
-      selectedIds: points.map(function(p){ return p.id; }),
-      order: points.map(function(p){ return p.id; }),
-      travelMode: "walking",
-      lastStats: null
+      // Drag & Drop
+      const dz = document.getElementById('dropzone');
+      dz.ondragover = e => { e.preventDefault(); dz.style.borderColor = 'var(--accent)'; };
+      dz.ondragleave = () => dz.style.borderColor = 'var(--border)';
+      dz.ondrop = e => { e.preventDefault(); handleFileSelect(e.dataTransfer.files, true); };
     };
-    state.cities.unshift(city);
-    state.activeCityId = city.id;
-    save();
-    return city;
-  }
 
-  function appendPointsToActive(points){
-    var c = activeCity();
-    if(!c) throw new Error("Aktif şehir yok.");
-    updateActiveCity(function(city){
-      var pointsAll = (city.points || []).concat(points);
-      var selectedIds = (city.selectedIds || []).concat(points.map(function(p){ return p.id; }));
-      var order = (city.order || []).concat(points.map(function(p){ return p.id; }));
-      city.points = pointsAll;
-      city.selectedIds = selectedIds;
-      city.order = order;
-      city.updatedAt = nowIso();
-      city.lastStats = null;
-      return city;
-    });
-  }
+    // --- App Logic ---
+    function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
 
-  function handleMultiNew(files){
-    var arr = [];
-    for(var i=0;i<files.length;i++) arr.push(files[i]);
-    if(!arr.length) return;
-    var askName = (arr.length === 1);
-    var p = Promise.resolve();
-    for(var k=0;k<arr.length;k++){
-      (function(f){
-        p = p.then(function(){
-          return fileToPoints(f).then(function(points){
-            var name = baseName(f.name);
-            if(askName){
-              var n2 = prompt("Şehir adı (kayıt ismi):", name);
-              if(n2) name = n2;
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) state = JSON.parse(raw);
+      } catch (e) { console.error(e); }
+    }
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function activeCity() { return state.cities.find(c => c.id === state.activeCityId) || null; }
+
+    function renderAll() {
+      renderCitySelect();
+      renderList();
+      renderRoute();
+      renderMapMarkers();
+      updateBadge();
+    }
+
+    function renderCitySelect() {
+      const s = document.getElementById('citySelect');
+      s.innerHTML = "";
+      if (!state.cities.length) {
+        s.innerHTML = "<option>Şehir Yok</option>";
+        s.disabled = true;
+        return;
+      }
+      s.disabled = false;
+      state.cities.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = `${c.name} (${c.points.length})`;
+        opt.selected = c.id === state.activeCityId;
+        s.appendChild(opt);
+      });
+    }
+
+    function changeCity() {
+      const val = document.getElementById('citySelect').value;
+      if (val) { state.activeCityId = val; saveState(); renderAll(); }
+    }
+
+    function renderList() {
+      const c = activeCity();
+      const list = document.getElementById('list');
+      list.innerHTML = "";
+      if (!c) return;
+
+      const filter = document.getElementById('search').value.toLowerCase();
+      const points = c.points.filter(p => !filter || p.name.toLowerCase().includes(filter));
+
+      points.forEach(p => {
+        const sel = c.selectedIds.includes(p.id);
+        const div = document.createElement('div');
+        div.className = "card";
+        div.style.borderColor = sel ? "var(--accent)" : "";
+        div.innerHTML = `
+      <input type="checkbox" class="check" ${sel ? 'checked' : ''} onchange="togglePoint('${p.id}')">
+      <div style="flex:1;overflow:hidden">
+        <h3>${p.name}</h3>
+        <div class="meta">
+          <span class="tag">${p.folder || 'Genel'}</span>
+        </div>
+      </div>
+      <button class="btn icon-btn" onclick="map.flyTo([${p.lat}, ${p.lng}], 15)">📍</button>
+    `;
+        list.appendChild(div);
+      });
+    }
+
+    function renderRoute() {
+      const c = activeCity();
+      const div = document.getElementById('itinerary');
+      div.innerHTML = "";
+      if (!c) return;
+
+      const ordered = getOrderedPoints(c);
+      ordered.forEach((p, idx) => {
+        const row = document.createElement('div');
+        row.className = 'it-item';
+        row.innerHTML = `
+      <div style="flex:1"><strong>${idx + 1}. ${p.name}</strong></div>
+      <div class="sort-controls">
+        <button class="btn icon-btn" onclick="movePoint('${p.id}', -1)" ${idx === 0 ? 'disabled' : ''}>↑</button>
+        <button class="btn icon-btn" onclick="movePoint('${p.id}', 1)" ${idx === ordered.length - 1 ? 'disabled' : ''}>↓</button>
+        <button class="btn icon-btn danger" onclick="togglePoint('${p.id}')">✕</button>
+      </div>
+    `;
+        div.appendChild(row);
+      });
+
+      // Update stats display if available
+      const stats = c.lastStats;
+      document.getElementById('kpiKm').textContent = stats ? stats.totalKm.toFixed(1) : '-';
+      document.getElementById('kpiMin').textContent = stats ? Math.round(stats.totalMin) : '-';
+      document.getElementById('statsMsg').textContent = stats ? `Son hesap: ${stats.source}` : '';
+
+      // Selection mode
+      const modeSel = document.getElementById('travelMode');
+      if (c.travelMode) modeSel.value = c.travelMode;
+    }
+
+    function updateBadge() {
+      const c = activeCity();
+      document.getElementById('cityBadge').textContent = c ? c.name : "Şehir Seçilmedi";
+    }
+
+    function initMap() {
+      map = L.map('map', { zoomControl: false }).setView([41.0082, 28.9784], 11);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OSM & CartoDB'
+      }).addTo(map);
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+      markersLayer = L.layerGroup().addTo(map);
+    }
+
+    function renderMapMarkers() {
+      markersLayer.clearLayers();
+      const c = activeCity();
+      if (!c) return;
+
+      const bounds = [];
+      c.points.forEach(p => {
+        const isSel = c.selectedIds.includes(p.id);
+        const color = isSel ? '#38bdf8' : '#94a3b8';
+
+        const icon = L.divIcon({
+          className: 'custom-pin',
+          html: `<div style="background:${color};width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.5)"></div>`,
+          iconSize: [12, 12]
+        });
+
+        const m = L.marker([p.lat, p.lng], { icon }).bindPopup(`<b>${p.name}</b><br>${p.folder || ''}`);
+        m.addTo(markersLayer);
+        bounds.push([p.lat, p.lng]);
+      });
+
+      if (bounds.length && !state.mapMoved) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+        state.mapMoved = true;
+      }
+    }
+
+    // --- Data Operations ---
+
+    async function handleFileSelect(files, isNew) {
+      if (!files || !files.length) return;
+
+      let points = [];
+      let name = files[0].name.replace(/\.(kml|kmz)$/i, "");
+
+      for (let f of files) {
+        try {
+          let txt = "";
+          if (f.name.toLowerCase().endsWith('.kmz')) {
+            const buf = await readFileBuf(f);
+            const zip = await JSZip.loadAsync(buf);
+            const kmlFile = Object.keys(zip.files).find(n => n.endsWith('.kml'));
+            if (kmlFile) txt = await zip.file(kmlFile).async("text");
+          } else {
+            txt = await readFileTxt(f);
+          }
+          if (txt) points = points.concat(parseKml(txt));
+        } catch (e) { alert("Hata: " + f.name); }
+      }
+
+      if (!points.length) return alert("Nokta bulunamadı (Point/LineString/Polygon parse edilemedi).");
+
+      addCity(name, points, isNew ? 'new' : 'append');
+    }
+
+    function parseKml(xmlText) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xmlText, "text/xml");
+      const places = [];
+
+      const placemarks = doc.getElementsByTagName("Placemark");
+      for (let p of placemarks) {
+        const name = getNodeVal(p, "name") || "İsimsiz";
+        const desc = getNodeVal(p, "description") || "";
+        // Check MultiGeometry/Point/LineString
+        let coords = "";
+
+        // Simplistic coord finder
+        const coordNodes = p.getElementsByTagName("coordinates");
+        if (coordNodes.length > 0) coords = coordNodes[0].textContent.trim();
+
+        if (coords) {
+          const parts = coords.split(/\s+/)[0].split(','); // Take first point
+          if (parts.length >= 2) {
+            // Folder name?
+            let folder = "Genel";
+            if (p.parentNode && p.parentNode.nodeName === "Folder") {
+              const fn = getNodeVal(p.parentNode, "name");
+              if (fn) folder = fn;
             }
-            importNewCityFromPoints(points, name);
-          });
-        });
-      })(arr[k]);
-    }
-    return p.then(function(){
-      search.value = "";
-      renderAll();
-    }).catch(function(e){
-      alert(e && e.message ? e.message : String(e));
-      renderAll();
-    });
-  }
 
-  function handleMultiAppend(files){
-    var c = activeCity();
-    if(!c){ alert("Önce bir şehir oluşturun."); return; }
-    var arr = [];
-    for(var i=0;i<files.length;i++) arr.push(files[i]);
-    if(!arr.length) return;
-    var p = Promise.resolve();
-    for(var k=0;k<arr.length;k++){
-      (function(f){
-        p = p.then(function(){
-          return fileToPoints(f).then(function(points){
-            if(!points.length) throw new Error("KML boş görünüyor: " + f.name);
-            appendPointsToActive(points);
-          });
-        });
-      })(arr[k]);
-    }
-    return p.then(function(){
-      search.value = "";
-      renderAll();
-    }).catch(function(e){
-      alert(e && e.message ? e.message : String(e));
-      renderAll();
-    });
-  }
-
-  function renameActiveCity(){
-    var c = activeCity();
-    if(!c) return;
-    var name = prompt("Şehir adını güncelle:", c.name);
-    if(!name) return;
-    updateActiveCity(function(city){
-      city.name = name;
-      city.updatedAt = nowIso();
-      return city;
-    });
-    renderAll();
-  }
-
-  function deleteActiveCity(){
-    var c = activeCity();
-    if(!c) return;
-    if(!confirm("\"" + c.name + "\" kaydını silmek istiyor musunuz?")) return;
-    var next = [];
-    for(var i=0;i<state.cities.length;i++){
-      if(state.cities[i].id !== c.id) next.push(state.cities[i]);
-    }
-    state.cities = next;
-    state.activeCityId = state.cities.length ? state.cities[0].id : null;
-    save();
-    renderAll();
-  }
-
-  function resetAll(){
-    if(!confirm("Tüm şehir kayıtlarını silmek istiyor musunuz?")) return;
-    state = { cities: [], activeCityId: null };
-    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
-    renderAll();
-  }
-
-  function toggleSelect(pointId){
-    var c = activeCity(); if(!c) return;
-    updateActiveCity(function(city){
-      var sel = {};
-      var i;
-      for(i=0;i<(city.selectedIds||[]).length;i++) sel[city.selectedIds[i]] = true;
-      if(sel[pointId]) delete sel[pointId]; else sel[pointId] = true;
-      var selectedIds = [];
-      for(i in sel) if(sel.hasOwnProperty(i)) selectedIds.push(i);
-
-      // keep order only for selected
-      var prevOrder = city.order || [];
-      var nextOrder = [];
-      for(i=0;i<prevOrder.length;i++) if(sel[prevOrder[i]]) nextOrder.push(prevOrder[i]);
-      for(i=0;i<selectedIds.length;i++) if(nextOrder.indexOf(selectedIds[i]) < 0) nextOrder.push(selectedIds[i]);
-
-      city.selectedIds = selectedIds;
-      city.order = nextOrder;
-      city.updatedAt = nowIso();
-      city.lastStats = null;
-      return city;
-    });
-    renderAll();
-  }
-
-  function move(pointId, dir){
-    var c = activeCity(); if(!c) return;
-    updateActiveCity(function(city){
-      var ord = (city.order || []).slice();
-      var i = ord.indexOf(pointId);
-      var j = i + dir;
-      if(i < 0 || j < 0 || j >= ord.length) return city;
-      var tmp = ord[i]; ord[i] = ord[j]; ord[j] = tmp;
-      city.order = ord;
-      city.updatedAt = nowIso();
-      city.lastStats = null;
-      return city;
-    });
-    renderAll();
-  }
-
-  function clearRoute(){
-    var c = activeCity(); if(!c) return;
-    updateActiveCity(function(city){
-      city.selectedIds = [];
-      city.order = [];
-      city.updatedAt = nowIso();
-      city.lastStats = null;
-      return city;
-    });
-    renderAll();
-  }
-
-  function selectedOrderedPoints(city){
-    var pts = city.points || [];
-    var sel = {};
-    for(var i=0;i<(city.selectedIds||[]).length;i++) sel[city.selectedIds[i]] = true;
-    var map = {};
-    for(i=0;i<pts.length;i++) map[pts[i].id] = pts[i];
-    var ordered = [];
-    var ord = city.order || [];
-    for(i=0;i<ord.length;i++){
-      var p = map[ord[i]];
-      if(p && sel[p.id]) ordered.push(p);
-    }
-    return ordered;
-  }
-
-  function startFromNorthmost(points){
-    if(!points || points.length < 2) return points || [];
-    var idx = 0;
-    for(var i=1;i<points.length;i++){
-      if(points[i].lat > points[idx].lat) idx = i;
-    }
-    var start = points[idx];
-    var rest = [];
-    for(i=0;i<points.length;i++) if(i !== idx) rest.push(points[i]);
-    return [start].concat(rest);
-  }
-
-  function buildGoogleMapsUrl(orderedPoints, travelMode){
-    if(!orderedPoints || !orderedPoints.length) return null;
-    var origin = orderedPoints[0].lat + "," + orderedPoints[0].lng;
-    var dest = orderedPoints[orderedPoints.length-1].lat + "," + orderedPoints[orderedPoints.length-1].lng;
-    var wps = [];
-    for(var i=1;i<orderedPoints.length-1;i++){
-      wps.push(orderedPoints[i].lat + "," + orderedPoints[i].lng);
-    }
-    var params = [];
-    params.push("api=1");
-    params.push("origin=" + encodeURIComponent(origin));
-    params.push("destination=" + encodeURIComponent(dest));
-    if(wps.length) params.push("waypoints=" + encodeURIComponent(wps.join("|")));
-    params.push("travelmode=" + encodeURIComponent(travelMode || "walking"));
-    return "https://www.google.com/maps/dir/?" + params.join("&");
-  }
-
-  function openMaps(){
-    var c = activeCity(); if(!c) return;
-    var ordered = startFromNorthmost(selectedOrderedPoints(c));
-    if(ordered.length < 2){ alert("Google Maps rotası için en az 2 nokta seçin."); return; }
-    var url = buildGoogleMapsUrl(ordered, c.travelMode);
-    window.open(url, "_blank");
-  }
-
-  function exportJson(){
-    var c = activeCity(); if(!c) return;
-    var ordered = selectedOrderedPoints(c);
-    var out = [];
-    for(var i=0;i<ordered.length;i++){
-      var p = ordered[i];
-      out.push({
-        id: p.id,
-        name: p.name,
-        category: p.folderPath ? [p.folderPath] : [c.name],
-        duration: "",
-        lat: p.lat,
-        lng: p.lng,
-        note: stripHtml(p.description).slice(0,600)
-      });
-    }
-    var blob = new Blob([JSON.stringify(out, null, 2)], {type:"application/json"});
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = c.name + "-places.json";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    try{ URL.revokeObjectURL(a.href); }catch(e){}
-  }
-
-  // KM/DK
-  function mapModeToOsrmProfile(mode){
-    if(mode === "walking") return "walking";
-    if(mode === "bicycling") return "cycling";
-    if(mode === "driving") return "driving";
-    if(mode === "transit") return "driving";
-    return "walking";
-  }
-  function modeSpeedKmh(mode){
-    if(mode === "walking") return 5;
-    if(mode === "bicycling") return 15;
-    if(mode === "driving") return 40;
-    if(mode === "transit") return 25;
-    return 5;
-  }
-  function haversineKm(lat1, lon1, lat2, lon2){
-    var R = 6371;
-    var toRad = function(x){ return x * Math.PI / 180; };
-    var dLat = toRad(lat2 - lat1);
-    var dLon = toRad(lon2 - lon1);
-    var a = Math.sin(dLat/2)*Math.sin(dLat/2) +
-            Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)*Math.sin(dLon/2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  }
-  function osrmLeg(a, b, profile){
-    var url = "https://router.project-osrm.org/route/v1/" + profile + "/" + a.lng + "," + a.lat + ";" + b.lng + "," + b.lat + "?overview=false";
-    return fetch(url, { cache: "no-store" }).then(function(r){
-      if(!r.ok) throw new Error("OSRM yanıt hatası");
-      return r.json();
-    }).then(function(j){
-      if(!j.routes || !j.routes.length) throw new Error("OSRM rota bulamadı");
-      return { distance_m: j.routes[0].distance, duration_s: j.routes[0].duration };
-    });
-  }
-
-  function computeRouteStats(){
-    var c = activeCity(); if(!c) return;
-    var ptsRaw = selectedOrderedPoints(c);
-    var pts = startFromNorthmost(ptsRaw);
-    if(pts.length < 2){
-      statsMsg.textContent = "Km/Dk hesabı için en az 2 nokta seçin.";
-      return;
-    }
-    btnCompute.disabled = true;
-    statsMsg.textContent = "Hesaplanıyor...";
-    legsEl.innerHTML = "";
-
-    var startName = pts[0].name || "-";
-    var mode = c.travelMode || "walking";
-    var profile = mapModeToOsrmProfile(mode);
-
-    var totalKm = 0;
-    var totalMin = 0;
-    var legs = [];
-    var source = "OSRM";
-
-    // Try OSRM, fallback offline
-    var chain = Promise.resolve();
-    for(var i=0;i<pts.length-1;i++){
-      (function(a,b){
-        chain = chain.then(function(){
-          return osrmLeg(a,b,profile).then(function(leg){
-            var km = leg.distance_m / 1000;
-            var min = leg.duration_s / 60;
-            legs.push({ from: a.name, to: b.name, km: km, min: min, src: "OSRM" });
-            totalKm += km;
-            totalMin += min;
-          });
-        });
-      })(pts[i], pts[i+1]);
-    }
-
-    chain.then(function(){
-      if(mode === "transit") source = "OSRM (driving approx)";
-      statsMsg.textContent = "Hesaplandı. Başlangıç en kuzey nokta olarak alındı.";
-      updateActiveCity(function(city){
-        city.lastStats = { computedAt: nowIso(), mode: mode, source: source, startName: startName, totalKm: totalKm, totalMin: totalMin, legs: legs };
-        return city;
-      });
-      btnCompute.disabled = false;
-      renderStats();
-    }).catch(function(){
-      source = "Offline approx";
-      var spd = modeSpeedKmh(mode);
-      legs = [];
-      totalKm = 0;
-      totalMin = 0;
-      for(var j=0;j<pts.length-1;j++){
-        var a = pts[j], b = pts[j+1];
-        var km2 = haversineKm(a.lat, a.lng, b.lat, b.lng);
-        var min2 = (km2 / spd) * 60;
-        legs.push({ from: a.name, to: b.name, km: km2, min: min2, src: "Haversine+speed" });
-        totalKm += km2;
-        totalMin += min2;
+            places.push({ id: uid(), name, lat: parseFloat(parts[1]), lng: parseFloat(parts[0]), folder, desc });
+          }
+        }
       }
-      statsMsg.textContent = "OSRM erişilemedi. Offline yaklaşık hesap kullanıldı. Başlangıç en kuzey nokta.";
-      updateActiveCity(function(city){
-        city.lastStats = { computedAt: nowIso(), mode: mode, source: source, startName: startName, totalKm: totalKm, totalMin: totalMin, legs: legs };
-        return city;
-      });
-      btnCompute.disabled = false;
-      renderStats();
-    });
-  }
-
-  // Modal
-  function setModalStatus(msg){ if(modalStatus) modalStatus.textContent = msg; }
-  function showModal(){
-    modalOverlay.classList.add("show");
-    modalOverlay.setAttribute("aria-hidden","false");
-    setModalStatus("Hazır.");
-    // default target
-    if(activeCity()) kmlTargetEl.value = "new"; else kmlTargetEl.value = "new";
-  }
-  function hideModal(){
-    modalOverlay.classList.remove("show");
-    modalOverlay.setAttribute("aria-hidden","true");
-  }
-  function fetchTextFromUrl(url){
-    return fetch(url, { cache: "no-store" }).then(function(r){
-      if(!r.ok) throw new Error("URL okunamadı (HTTP " + r.status + ")");
-      return r.text();
-    });
-  }
-  function importFromKmlText(kmlText, cityName, target){
-    var text = String(kmlText || "").trim();
-    if(!text) throw new Error("KML içeriği boş.");
-    var points = parseKmlText(text);
-    if(!points.length) throw new Error("KML içinde koordinatlı öğe bulunamadı.");
-
-    if(target === "append" && !activeCity()) target = "new";
-
-    if(target === "append"){
-      appendPointsToActive(points);
-      return { mode: "append", count: points.length };
-    }else{
-      var nm = (cityName && cityName.trim()) ? cityName.trim() : "Yeni Şehir";
-      importNewCityFromPoints(points, nm);
-      return { mode: "new", count: points.length, name: nm };
+      return places;
     }
-  }
 
-  // Render
-  function renderCitySelect(){
-    citySelect.innerHTML = "";
-    if(!state.cities.length){
-      var opt = document.createElement("option");
-      opt.value = "";
-      opt.textContent = "Henüz şehir yok";
-      citySelect.appendChild(opt);
-      citySelect.disabled = true;
-      return;
-    }
-    citySelect.disabled = false;
-    for(var i=0;i<state.cities.length;i++){
-      var c = state.cities[i];
-      var o = document.createElement("option");
-      o.value = c.id;
-      o.textContent = c.name + " (" + (c.points ? c.points.length : 0) + ")";
-      citySelect.appendChild(o);
-    }
-    citySelect.value = state.activeCityId || state.cities[0].id;
-  }
-
-  function renderBadge(){
-    var c = activeCity();
-    badgeCity.textContent = c ? c.name : "-";
-    badgeSel.textContent = c ? (c.selectedIds ? c.selectedIds.length : 0) : "0";
-  }
-
-  function renderList(){
-    listEl.innerHTML = "";
-    var c = activeCity();
-    if(!c){
-      listEl.innerHTML = '<div style="color:var(--muted); font-size:12px; padding:10px">Henüz şehir yok. “Yeni şehir” ile başlayın.</div>';
-      return;
-    }
-    var q = (search.value || "").trim().toLowerCase();
-    var pts = c.points || [];
-    var selected = {};
-    for(var i=0;i<(c.selectedIds||[]).length;i++) selected[c.selectedIds[i]] = true;
-
-    var filtered = [];
-    for(i=0;i<pts.length;i++){
-      var p = pts[i];
-      var ok = true;
-      if(q){
-        var n = (p.name||"").toLowerCase();
-        var d = (p.description||"").toLowerCase();
-        ok = (n.indexOf(q) >= 0) || (d.indexOf(q) >= 0);
+    function addCity(name, points, mode) {
+      if (mode === 'new' || !state.cities.length) {
+        // Ask for name uniqueness? default to filename
+        const newCity = {
+          id: uid(),
+          name: name || "Yeni Şehir",
+          points: points,
+          selectedIds: points.map(p => p.id), // Select all by default
+          order: points.map(p => p.id),
+          travelMode: 'walking',
+          lastStats: null
+        };
+        state.cities.unshift(newCity);
+        state.activeCityId = newCity.id;
+      } else {
+        // Append
+        const c = activeCity();
+        c.points = c.points.concat(points);
+        // Add new ones to selection
+        const newIds = points.map(p => p.id);
+        c.selectedIds = c.selectedIds.concat(newIds);
+        c.order = c.order.concat(newIds);
       }
-      if(ok) filtered.push(p);
-    }
 
-    for(i=0;i<filtered.length;i++){
-      (function(p){
-        var card = document.createElement("div");
-        card.className = "card";
-
-        var left = document.createElement("div");
-        left.className = "cardLeft";
-
-        var cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.className = "check";
-        cb.checked = !!selected[p.id];
-        cb.addEventListener("change", function(){ toggleSelect(p.id); });
-
-        var body = document.createElement("div");
-        body.innerHTML =
-          "<h3>" + escapeHtml(p.name) + "</h3>" +
-          '<div class="meta">' +
-            "<span>📍 " + p.lat.toFixed(5) + ", " + p.lng.toFixed(5) + "</span>" +
-            "<span>🧭 " + escapeHtml(p.geomType || "Unknown") + "</span>" +
-          "</div>" +
-          '<div class="tag">' + escapeHtml(p.folderPath || c.name) + "</div>" +
-          (p.description ? ('<div class="small">' + escapeHtml(stripHtml(p.description)).slice(0,160) + (stripHtml(p.description).length>160 ? "…" : "") + "</div>") : "");
-
-        left.appendChild(cb);
-        left.appendChild(body);
-
-        var right = document.createElement("div");
-        right.style.display = "flex";
-        right.style.gap = "8px";
-        right.style.flexWrap = "wrap";
-
-        var btn = document.createElement("button");
-        btn.className = "btn";
-        btn.type = "button";
-        btn.textContent = "Haritada aç";
-        btn.addEventListener("click", function(){
-          window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(p.lat + "," + p.lng), "_blank");
-        });
-        right.appendChild(btn);
-
-        card.appendChild(left);
-        card.appendChild(right);
-        listEl.appendChild(card);
-      })(filtered[i]);
-    }
-
-    if(pts.length && !filtered.length){
-      listEl.innerHTML = '<div style="color:var(--muted); font-size:12px; padding:10px">Arama kriterine uygun kayıt yok.</div>';
-    }
-  }
-
-  function renderItinerary(){
-    itineraryEl.innerHTML = "";
-    var c = activeCity();
-    if(!c){
-      itineraryEl.innerHTML = '<div style="color:var(--muted); font-size:12px;">Önce bir şehir içe aktarın.</div>';
-      return;
-    }
-    travelModeEl.value = c.travelMode || "walking";
-    var selectedOrdered = selectedOrderedPoints(c);
-
-    for(var i=0;i<selectedOrdered.length;i++){
-      (function(p){
-        var row = document.createElement("div");
-        row.className = "itItem";
-
-        var left = document.createElement("div");
-        left.innerHTML = "<strong>" + escapeHtml(p.name) + "</strong>" +
-          '<div style="color:var(--muted); font-size:12px; margin-top:3px;">' + escapeHtml(p.folderPath || c.name) + "</div>";
-
-        var ctrls = document.createElement("div");
-        ctrls.className = "itControls";
-
-        var up = document.createElement("button");
-        up.className = "iconBtn";
-        up.type = "button";
-        up.title = "Yukarı";
-        up.textContent = "↑";
-        up.addEventListener("click", function(){ move(p.id, -1); });
-
-        var down = document.createElement("button");
-        down.className = "iconBtn";
-        down.type = "button";
-        down.title = "Aşağı";
-        down.textContent = "↓";
-        down.addEventListener("click", function(){ move(p.id, +1); });
-
-        var del = document.createElement("button");
-        del.className = "iconBtn";
-        del.type = "button";
-        del.title = "Çıkar";
-        del.textContent = "✕";
-        del.addEventListener("click", function(){ toggleSelect(p.id); });
-
-        ctrls.appendChild(up); ctrls.appendChild(down); ctrls.appendChild(del);
-        row.appendChild(left); row.appendChild(ctrls);
-        itineraryEl.appendChild(row);
-      })(selectedOrdered[i]);
-    }
-
-    btnOpenMaps.disabled = !(selectedOrdered.length >= 2);
-    btnClearRoute.disabled = !(selectedOrdered.length >= 1);
-    btnExportJson.disabled = !(selectedOrdered.length >= 1);
-  }
-
-  function renderStats(){
-    var c = activeCity();
-    if(!c){
-      kpiKm.textContent = "-";
-      kpiMin.textContent = "-";
-      kpiSrc.textContent = "-";
-      kpiStart.textContent = "-";
-      statsMsg.textContent = "Km/Dk hesabı için en az 2 nokta seçin.";
-      legsEl.innerHTML = "";
-      btnCompute.disabled = true;
-      return;
-    }
-    var pts = selectedOrderedPoints(c);
-    var canCompute = pts.length >= 2;
-    btnCompute.disabled = !canCompute;
-    if(!canCompute){
-      kpiKm.textContent = "-";
-      kpiMin.textContent = "-";
-      kpiSrc.textContent = "-";
-      kpiStart.textContent = "-";
-      statsMsg.textContent = "Km/Dk hesabı için en az 2 nokta seçin.";
-      legsEl.innerHTML = "";
-      return;
-    }
-    var s = c.lastStats;
-    if(!s){
-      kpiKm.textContent = "-";
-      kpiMin.textContent = "-";
-      kpiSrc.textContent = "-";
-      kpiStart.textContent = "-";
-      statsMsg.textContent = "Hazır. “Km/Dk Hesapla” butonuna basın.";
-      legsEl.innerHTML = "";
-      return;
-    }
-    kpiKm.textContent = (s.totalKm || 0).toFixed(1);
-    kpiMin.textContent = String(Math.round(s.totalMin || 0));
-    kpiSrc.textContent = s.source || "-";
-    kpiStart.textContent = s.startName || "-";
-    statsMsg.textContent = "Son hesap: " + (new Date(s.computedAt)).toLocaleString("tr-TR") + " — Mod: " + s.mode;
-    legsEl.innerHTML = "";
-    for(var i=0;i<(s.legs||[]).length;i++){
-      var lg = s.legs[i];
-      var div = document.createElement("div");
-      div.className = "leg";
-      div.innerHTML = '<div class="t">' + escapeHtml(lg.from) + " → " + escapeHtml(lg.to) + "</div>" +
-        "<div>" + lg.km.toFixed(1) + " km • " + Math.round(lg.min) + " dk • <span style='opacity:.85'>" + escapeHtml(lg.src) + "</span></div>";
-      legsEl.appendChild(div);
-    }
-  }
-
-  function renderAll(){
-    if(!state.activeCityId && state.cities.length) state.activeCityId = state.cities[0].id;
-    save();
-    renderCitySelect();
-    renderBadge();
-    renderList();
-    renderItinerary();
-    renderStats();
-
-    var c = activeCity();
-    var hasCity = !!c;
-    btnAppendCity.setAttribute("aria-disabled", hasCity ? "false" : "true");
-    btnRenameCity.disabled = !hasCity;
-    btnDeleteCity.disabled = !hasCity;
-    search.disabled = !hasCity;
-  }
-
-  // View switcher
-  function setView(mode){
-    if(mode === "right"){
-      document.body.classList.remove("show-left");
-      document.body.classList.add("show-right");
-      segLeft.classList.remove("active");
-      segRight.classList.add("active");
-    }else{
-      document.body.classList.remove("show-right");
-      document.body.classList.add("show-left");
-      segRight.classList.remove("active");
-      segLeft.classList.add("active");
-    }
-  }
-
-  // Events
-  segLeft.addEventListener("click", function(){ setView("left"); });
-  segRight.addEventListener("click", function(){ setView("right"); });
-
-  btnResetAll.addEventListener("click", resetAll);
-  btnRenameCity.addEventListener("click", renameActiveCity);
-  btnDeleteCity.addEventListener("click", deleteActiveCity);
-
-  citySelect.addEventListener("change", function(){
-    state.activeCityId = citySelect.value || null;
-    save();
-    search.value = "";
-    renderAll();
-  });
-  search.addEventListener("input", function(){ renderAll(); });
-
-  fileNew.addEventListener("change", function(e){
-    var files = e.target.files;
-    e.target.value = "";
-    if(files && files.length) handleMultiNew(files);
-  });
-
-  fileAppend.addEventListener("change", function(e){
-    var files = e.target.files;
-    e.target.value = "";
-    if(files && files.length) handleMultiAppend(files);
-  });
-
-  travelModeEl.addEventListener("change", function(){
-    var c = activeCity(); if(!c) return;
-    updateActiveCity(function(city){
-      city.travelMode = travelModeEl.value;
-      city.updatedAt = nowIso();
-      city.lastStats = null;
-      return city;
-    });
-    renderAll();
-  });
-
-  btnClearRoute.addEventListener("click", clearRoute);
-  btnExportJson.addEventListener("click", exportJson);
-  btnOpenMaps.addEventListener("click", openMaps);
-  btnCompute.addEventListener("click", computeRouteStats);
-
-  // Modal events
-  btnPasteKml.addEventListener("click", function(){ showModal(); });
-  btnModalClose.addEventListener("click", function(){ hideModal(); });
-  modalOverlay.addEventListener("click", function(e){ if(e.target === modalOverlay) hideModal(); });
-
-  btnPasteSample.addEventListener("click", function(){
-    var sample = '<?xml version="1.0" encoding="UTF-8"?>\n' +
-      '<kml xmlns="http://www.opengis.net/kml/2.2">\n' +
-      '  <Document>\n' +
-      '    <Placemark><name>Örnek Nokta 1</name><Point><coordinates>28.9784,41.0082,0</coordinates></Point></Placemark>\n' +
-      '    <Placemark><name>Örnek Nokta 2</name><Point><coordinates>28.9870,41.0150,0</coordinates></Point></Placemark>\n' +
-      '  </Document>\n' +
-      '</kml>';
-    kmlTextEl.value = sample;
-    setModalStatus("Örnek KML eklendi.");
-  });
-
-  btnFetchUrl.addEventListener("click", function(){
-    var url = (kmlUrlEl.value || "").trim();
-    if(!url){ setModalStatus("Lütfen bir URL girin."); return; }
-    setModalStatus("URL’den getiriliyor...");
-    btnFetchUrl.disabled = true;
-    fetchTextFromUrl(url).then(function(t){
-      kmlTextEl.value = t;
-      setModalStatus("URL’den alındı. Şimdi “İçe aktar” diyebilirsiniz.");
-    }).catch(function(){
-      setModalStatus("URL alınamadı. Not: Bazı siteler CORS nedeniyle engeller. Başka kaynak deneyin.");
-    }).finally(function(){
-      btnFetchUrl.disabled = false;
-    });
-  });
-
-  btnImportText.addEventListener("click", function(){
-    var target = kmlTargetEl.value || "new";
-    var name = (kmlCityNameEl.value || "").trim();
-    setModalStatus("İçe aktarılıyor...");
-    btnImportText.disabled = true;
-    try{
-      var res = importFromKmlText(kmlTextEl.value, name, target);
-      hideModal();
-      search.value = "";
+      state.mapMoved = false; // Reset map fit trigger
+      saveState();
       renderAll();
-      alert(res.mode === "append" ? ("Aktif şehre eklendi (" + res.count + ").") : ("Yeni şehir eklendi: " + res.name + " (" + res.count + ")."));
-    }catch(err){
-      setModalStatus(err && err.message ? err.message : String(err));
     }
-    btnImportText.disabled = false;
-  });
 
-  // Init
-  load();
-  renderAll();
-})();
-</script>
-
-<script>
-  (function(){
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", function(){
-        navigator.serviceWorker.register("./sw.js").catch(function(){ /* ignore */ });
-      });
+    function getNodeVal(el, tag) {
+      const n = el.getElementsByTagName(tag)[0];
+      return n ? n.textContent.trim() : null;
     }
-  })();
-</script>
+    function readFileTxt(f) { return new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsText(f); }); }
+    function readFileBuf(f) { return new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsArrayBuffer(f); }); }
 
+    // --- Point Operations ---
+    function togglePoint(id) {
+      const c = activeCity();
+      if (!c) return;
+      const idx = c.selectedIds.indexOf(id);
+      if (idx > -1) {
+        c.selectedIds.splice(idx, 1);
+        c.order = c.order.filter(x => x !== id);
+      } else {
+        c.selectedIds.push(id);
+        c.order.push(id);
+      }
+      saveState();
+      renderAll();
+    }
+
+    function movePoint(id, dir) {
+      const c = activeCity();
+      const arr = c.order;
+      const i = arr.indexOf(id);
+      if (i > -1 && i + dir >= 0 && i + dir < arr.length) {
+        [arr[i], arr[i + dir]] = [arr[i + dir], arr[i]];
+        saveState();
+        renderAll();
+      }
+    }
+
+    function deleteActiveCity() {
+      if (!state.activeCityId) return;
+      if (confirm("Bu şehri ve tüm noktalarını silmek istediğinize emin misiniz?")) {
+        state.cities = state.cities.filter(c => c.id !== state.activeCityId);
+        state.activeCityId = state.cities.length ? state.cities[0].id : null;
+        saveState();
+        renderAll();
+      }
+    }
+
+    function clearRoute() {
+      const c = activeCity();
+      if (c) {
+        c.selectedIds = [];
+        c.order = [];
+        c.lastStats = null;
+        saveState();
+        renderAll();
+      }
+    }
+
+    // --- Route & Stats ---
+    function getOrderedPoints(c) {
+      return c.order.map(id => c.points.find(p => p.id === id)).filter(Boolean);
+    }
+
+    function updateRouteMode() {
+      const c = activeCity();
+      if (c) {
+        c.travelMode = document.getElementById('travelMode').value;
+        saveState();
+      }
+    }
+
+    async function computeRoute() {
+      const c = activeCity();
+      if (!c) return;
+      const pts = getOrderedPoints(c);
+      if (pts.length < 2) return alert("En az 2 nokta gerekli.");
+
+      const btn = document.getElementById('btnCompute');
+      btn.innerText = "⏳";
+      btn.disabled = true;
+
+      let totalKm = 0;
+      let totalMin = 0;
+      let source = "Kuş Uçuşu (Offline)";
+
+      // Try OSRM
+      try {
+        // Break into chunks if necessary, generic OSRM demo server has limits but for small routes ok
+        // Using a simplistic approach: sum legs
+        // mode mapping: walking, driving (car), cycling (bicycle)
+        let profile = "walking";
+        if (c.travelMode === 'driving') profile = "driving";
+        if (c.travelMode === 'bicycling') profile = "cycling";
+        if (c.travelMode === 'transit') profile = "driving"; // OSRM default no public transit
+
+        source = "OSRM (" + profile + ")";
+
+        for (let i = 0; i < pts.length - 1; i++) {
+          const p1 = pts[i];
+          const p2 = pts[i + 1];
+          const url = `https://router.project-osrm.org/route/v1/${profile}/${p1.lng},${p1.lat};${p2.lng},${p2.lat}?overview=false`;
+
+          const res = await fetch(url);
+          const j = await res.json();
+          if (j.routes && j.routes.length) {
+            totalKm += j.routes[0].distance / 1000;
+            totalMin += j.routes[0].duration / 60;
+          } else {
+            throw new Error("No route");
+          }
+          await new Promise(r => setTimeout(r, 100)); // Rate limit polite
+        }
+      } catch (e) {
+        // Fallback Haversine
+        source = "Kuş Uçuşu (Hata/Offline)";
+        totalKm = 0; totalMin = 0;
+        const speed = c.travelMode === 'walking' ? 5 : (c.travelMode === 'driving' ? 50 : 20);
+
+        for (let i = 0; i < pts.length - 1; i++) {
+          const d = haversine(pts[i], pts[i + 1]);
+          totalKm += d;
+          totalMin += (d / speed) * 60;
+        }
+      }
+
+      c.lastStats = { totalKm, totalMin, source };
+      saveState();
+      renderAll(); // updates UI
+      btn.innerText = "Hesapla";
+      btn.disabled = false;
+    }
+
+    function haversine(p1, p2) {
+      var R = 6371;
+      var dLat = (p2.lat - p1.lat) * Math.PI / 180;
+      var dLon = (p2.lng - p1.lng) * Math.PI / 180;
+      var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(p1.lat * Math.PI / 180) * Math.cos(p2.lat * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function openGoogleMaps() {
+      const c = activeCity();
+      if (!c) return;
+      const pts = getOrderedPoints(c);
+      if (pts.length < 2) return alert("En az 2 nokta gerekli.");
+
+      const origin = `${pts[0].lat},${pts[0].lng}`;
+      const dest = `${pts[pts.length - 1].lat},${pts[pts.length - 1].lng}`;
+      const waypoints = pts.slice(1, -1).map(p => `${p.lat},${p.lng}`).join('|');
+
+      const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}&waypoints=${waypoints}&travelmode=${c.travelMode}`;
+      window.open(url, '_blank');
+    }
+
+    // --- Import Modal Logic ---
+    const modal = document.getElementById('importModal');
+    const urlInput = document.getElementById('urlInput');
+    const kmlTextArea = document.getElementById('kmlText');
+    const modalStatus = document.getElementById('modalStatus');
+
+    function openImportModal() {
+      modal.classList.add('open');
+      urlInput.value = "";
+      kmlTextArea.value = "";
+      modalStatus.textContent = "";
+    }
+    function closeImportModal() { modal.classList.remove('open'); }
+
+    async function fetchFromUrl() {
+      const rawUrl = urlInput.value.trim();
+      if (!rawUrl) return;
+
+      const btn = document.getElementById('btnFetch');
+      btn.disabled = true;
+      btn.textContent = "...";
+      modalStatus.textContent = "Bağlanıyor...";
+
+      // Smart MyMaps URL logic
+      let fetchUrl = rawUrl;
+
+      // Detect standard viewer URL: google.com/maps/d/viewer?mid=XXXXX
+      // We need to convert it to: google.com/maps/d/kml?mid=XXXXX
+      if (rawUrl.includes("maps/d/") && (rawUrl.includes("viewer") || rawUrl.includes("edit"))) {
+        try {
+          const u = new URL(rawUrl);
+          const mid = u.searchParams.get("mid");
+          if (mid) {
+            // Direct KML export link
+            // Note: Direct fetch from browser to google.com often fails CORS.
+            // We will try a CORS proxy if direct fails, or warn user.
+            fetchUrl = `https://www.google.com/maps/d/kml?mid=${mid}&forcekml=1`;
+          }
+        } catch (e) { }
+      }
+
+      try {
+        // Attempt 1: Direct
+        let res = await fetch(fetchUrl).catch(() => null);
+
+        // Attempt 2: CORS Proxy (using a public one for demo: corsproxy.io)
+        if (!res || !res.ok) {
+          modalStatus.textContent = "Direkt erişim engellendi, proxy deneniyor...";
+          const proxy = "https://corsproxy.io/?";
+          res = await fetch(proxy + encodeURIComponent(fetchUrl));
+        }
+
+        if (res.ok) {
+          const text = await res.text();
+          kmlTextArea.value = text;
+          modalStatus.textContent = "KML başarıyla alındı! 'İçe Aktar' tuşuna basın.";
+        } else {
+          throw new Error("Erişim hatası");
+        }
+      } catch (e) {
+        console.error(e);
+        modalStatus.innerHTML = `Hata: URL okunamadı (CORS). <br>Lütfen linki tarayıcıda açıp inen dosyayı yükleyin veya içeriği yapıştırın.`;
+      }
+
+      btn.disabled = false;
+      btn.textContent = "Getir";
+    }
+
+    function processImportText() {
+      const txt = kmlTextArea.value.trim();
+      if (!txt) return alert("İçerik boş.");
+      if (!txt.startsWith("<?xml") && !txt.includes("<kml")) return alert("Geçersiz KML formatı.");
+
+      try {
+        const points = parseKml(txt);
+        if (!points.length) throw new Error("Nokta bulunamadı");
+
+        // Determine target
+        const target = document.getElementById('importTarget').value; // 'new' or 'append'
+        let mainName = "İçe Aktarılan";
+        const nameInput = document.getElementById('kmlCityName');
+        if (nameInput && nameInput.value.trim()) mainName = nameInput.value.trim();
+
+        // Group by folder
+        const groups = {};
+        points.forEach(p => {
+          const k = p.folder || "Genel";
+          if (!groups[k]) groups[k] = [];
+          groups[k].push(p);
+        });
+        const folderNames = Object.keys(groups);
+
+        // Logic: If 'new' mode AND multiple folders exist -> Split them
+        if (target === 'new' && folderNames.length > 1) {
+          // Iterate in reverse so the first folder ends up at the top of the list (since addCity uses unshift)
+          for (let i = folderNames.length - 1; i >= 0; i--) {
+            const fname = folderNames[i];
+            // Use folder name as city name
+            addCity(fname, groups[fname], 'new');
+          }
+          alert(`İşlem tamam! ${folderNames.length} ayrı katman (şehir) olarak eklendi.`);
+        } else {
+          // Standard merge (single folder or append mode)
+          if (folderNames.length === 1 && target === 'new' && !nameInput.value.trim()) {
+            mainName = folderNames[0]; // Auto-name from folder if single
+          }
+          addCity(mainName, points, target);
+          alert(`${points.length} nokta başarıyla eklendi.`);
+        }
+
+        closeImportModal();
+        search.value = "";
+        renderAll();
+
+      } catch (e) {
+        alert("Hata: " + e.message);
+      }
+    }
+
+    // Mobile Tab Switcher
+    function showTab(id) {
+      document.querySelectorAll('.mobile-nav .btn').forEach(b => b.classList.remove('primary'));
+      // simplistic toggle, real app would use state
+      const cols = ['colList', 'colMap', 'colRoute'];
+      const isMobile = window.innerWidth <= 768;
+
+      if (isMobile) {
+        cols.forEach(c => document.getElementById(c).style.display = 'none');
+        document.getElementById(id).style.display = 'flex';
+      }
+    }
+  </script>
 </body>
+
 </html>
