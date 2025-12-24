@@ -541,7 +541,7 @@
     // --- State & Config ---
     const STORAGE_KEY = "trip_planner_v4";
     let state = { cities: [], activeCityId: null };
-    let map, markersLayer, mapPoints = [];
+    let map, markersLayer, routeLayer, mapPoints = [];
 
     // --- Lifecycle ---
     window.onload = () => {
@@ -576,6 +576,7 @@
       renderList();
       renderRoute();
       renderMapMarkers();
+      drawRouteOnMap();
       updateBadge();
     }
 
@@ -674,6 +675,7 @@
       }).addTo(map);
       L.control.zoom({ position: 'bottomright' }).addTo(map);
       markersLayer = L.layerGroup().addTo(map);
+      routeLayer = L.layerGroup().addTo(map);
     }
 
     function renderMapMarkers() {
@@ -701,6 +703,16 @@
         map.fitBounds(bounds, { padding: [50, 50] });
         state.mapMoved = true;
       }
+    }
+
+    function drawRouteOnMap() {
+      if (!routeLayer) return;
+      routeLayer.clearLayers();
+      const c = activeCity();
+      if (!c || !c.lastStats || !c.lastStats.latLngs) return;
+
+      // Draw polyline
+      L.polyline(c.lastStats.latLngs, { color: '#ef4444', weight: 5, opacity: 0.8 }).addTo(routeLayer);
     }
 
     // --- Data Operations ---
