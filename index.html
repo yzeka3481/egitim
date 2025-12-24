@@ -441,6 +441,8 @@
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn primary" onclick="document.getElementById('fileNew').click()">+ Yeni Yükle</button>
+        <button class="btn" style="border-color:var(--accent);color:var(--accent)" onclick="openExploreModal()">🧭 Şehir
+          Keşfet</button>
         <input type="file" id="fileNew" accept=".kml,.kmz" multiple hidden
           onchange="handleFileSelect(this.files, true)">
         <button class="btn" onclick="openImportModal()">🔗 Link/KML</button>
@@ -533,6 +535,28 @@
           <button class="btn primary" onclick="processImportText()">İçe Aktar</button>
         </div>
         <p id="modalStatus" style="font-size:12px;color:var(--accent);margin:0;min-height:16px"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Explore Modal -->
+  <div class="modal-overlay" id="exploreModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Şehir Keşfet (Otomatik Rota)</h3>
+        <button class="btn icon-btn" onclick="closeExploreModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;gap:8px">
+          <input class="input" id="exploreInput" placeholder="Şehir adı (örn: Roma, Paris, İstanbul)..."
+            onkeyup="if(event.key==='Enter') searchCity()">
+          <button class="btn primary" onclick="searchCity()" id="btnExplore">Bul</button>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin:0">
+          OpenStreetMap verileri kullanılarak o şehirdeki en popüler turistik noktalar, müzeler ve manzaralar bulunur.
+        </p>
+        <div id="exploreResults" style="max-height:200px;overflow-y:auto;display:grid;gap:6px;margin-top:8px"></div>
+        <p id="exploreStatus" style="font-size:12px;color:var(--accent);margin:0;min-height:16px"></p>
       </div>
     </div>
   </div>
@@ -1031,6 +1055,103 @@
 
       btn.disabled = false;
       btn.textContent = "Getir";
+    }
+
+    // --- Explore City Logic ---
+    const expModal = document.getElementById('exploreModal');
+    const expInput = document.getElementById('exploreInput');
+    const expStatus = document.getElementById('exploreStatus');
+    const expResults = document.getElementById('exploreResults');
+
+    function openExploreModal() { expModal.classList.add('open'); expInput.value = ""; expResults.innerHTML = ""; expStatus.textContent = ""; expInput.focus(); }
+    function closeExploreModal() { expModal.classList.remove('open'); }
+
+    async function searchCity() {
+      const query = expInput.value.trim();
+      if (!query) return;
+      const btn = document.getElementById('btnExplore');
+      btn.disabled = true; btn.textContent = "...";
+      expStatus.textContent = "Şehir merkezi aranıyor...";
+      expResults.innerHTML = "";
+
+      try {
+        // 1. Nominatim Geocoding
+        const searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+        const res = await fetch(searchUrl);
+        const data = await res.json();
+
+        if (!data || !data.length) throw new Error("Şehir bulunamadı.");
+
+        const city = data[0];
+        const lat = parseFloat(city.lat);
+        const lon = parseFloat(city.lon);
+        const displayName = city.display_name.split(',')[0];
+
+        expStatus.textContent = `Bulundu: ${displayName}. Popüler yerler taranıyor...`;
+
+        // 2. Overpass API (Attractions)
+        // Radius: 5km (5000m) around center
+        const overpassQuery = `
+                [out:json][timeout:25];
+                (
+                  node["tourism"~"attraction|museum|viewpoint|monument"](around:5000,${lat},${lon});
+                  way["tourism"~"attraction|museum|viewpoint|monument"](around:5000,${lat},${lon});
+                  node["historic"~"castle|ruins|monument"](around:5000,${lat},${lon});
+                );
+                out center 30;
+            `;
+        const opUrl = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(overpassQuery);
+        const opRes = await fetch(opUrl);
+        const opData = await opRes.json();
+
+        if (!opData.elements || !opData.elements.length) {
+          throw new Error("Bu bölgede turistik nokta verisi bulunamadı.");
+        }
+
+        // Filter and Format
+        const points = [];
+        // Basic popularity filter: try to prioritize items with 'name' and maybe english name if available
+        // Note: Overpass returns nodes and ways. For 'way', we used 'out center' so we get 'center' prop.
+
+        opData.elements.forEach(el => {
+          if (el.tags && el.tags.name) { // Must have a name
+            const pLat = el.lat || (el.center && el.center.lat);
+            const pLng = el.lon || (el.center && el.center.lon);
+            if (pLat && pLng) {
+              // Deduplicate by name roughly
+              if (!points.find(p => p.name === el.tags.name)) {
+                let folder = "Genel";
+                if (el.tags.tourism === 'museum') folder = "Müze";
+                else if (el.tags.historic) folder = "Tarihi";
+                else if (el.tags.tourism === 'viewpoint') folder = "Manzara";
+                else folder = "Turistik";
+
+                points.push({
+                  id: uid(),
+                  name: el.tags.name,
+                  lat: pLat,
+                  lng: pLng,
+                  folder: folder,
+                  desc: el.tags.description || ""
+                });
+              }
+            }
+          }
+        });
+
+        if (!points.length) throw new Error("İsimli nokta bulunamadı.");
+
+        // Success - Add City
+        addCity(displayName + " (Keşfet)", points, 'new');
+        closeExploreModal();
+        alert(`${displayName} için ${points.length} popüler nokta eklendi!`);
+
+      } catch (e) {
+        console.error(e);
+        expStatus.textContent = "Hata: " + e.message;
+      } finally {
+        btn.disabled = false; btn.textContent = "Bul";
+      }
     }
 
     function processImportText() {
