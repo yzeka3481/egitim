@@ -1,5 +1,5 @@
 /* Simple PWA Service Worker (cache-first for app shell) */
-const CACHE_NAME = "trip-planner-pwa-v1";
+const CACHE_NAME = "trip-planner-pwa-v2";
 const ASSETS = [
   "./",
   "./index.html",
