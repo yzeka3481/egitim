@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ödeme Takip — Stabil Tek Dosya</title>
+  <title>Ödeme Takip</title>
   <meta name="theme-color" content="#0b1220" />
   <style>
     :root {
@@ -1059,6 +1059,338 @@
         max-height: none;
       }
     }
+
+    /* ── Calendar mobile: horizontal scroll ── */
+    .calWrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .calWrap .calGrid {
+      min-width: 560px;
+      /* ensure 7 columns always readable */
+    }
+
+    @media (max-width: 640px) {
+      .calWrap .calGrid {
+        min-width: 480px;
+        gap: 3px;
+      }
+
+      .calCell {
+        padding: 5px;
+        min-height: 52px;
+        border-radius: 9px;
+      }
+
+      .calDay {
+        font-size: 11px;
+      }
+
+      .calAmt {
+        font-size: 9px;
+      }
+
+      .calMini span {
+        font-size: 8px;
+      }
+    }
+
+    /* ── Light theme ── */
+    [data-theme="light"] {
+      --bg: #f0f4ff;
+      --panel: #e7edf8;
+      --card: rgba(255, 255, 255, .85);
+      --text: #1a2540;
+      --muted: #6278a8;
+      --line: rgba(0, 0, 0, .1);
+      --shadow: 0 8px 32px rgba(0, 0, 0, .12);
+    }
+
+    [data-theme="light"] body {
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 90% 55% at 15% -5%, rgba(91, 142, 255, .12), transparent 60%),
+        radial-gradient(ellipse 70% 50% at 88% 5%, rgba(124, 92, 255, .08), transparent 60%);
+    }
+
+    [data-theme="light"] .card {
+      background: rgba(255, 255, 255, .8);
+    }
+
+    [data-theme="light"] .header {
+      background: rgba(240, 244, 255, .92);
+    }
+
+    [data-theme="light"] .tabbarWrap {
+      background: rgba(240, 244, 255, .95);
+    }
+
+    [data-theme="light"] input,
+    [data-theme="light"] select {
+      background: rgba(255, 255, 255, .9);
+      color: var(--text);
+    }
+
+    [data-theme="light"] .rowCard {
+      background: rgba(255, 255, 255, .75);
+    }
+
+    [data-theme="light"] .modal {
+      background: rgba(240, 244, 255, .99);
+    }
+
+    [data-theme="light"] .brand h1 {
+      background: linear-gradient(120deg, #1a2540 30%, #3a6fff 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Settings section card ── */
+    .settingsSection {
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .settingsSection h3 {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      margin: 0;
+    }
+
+    .settingsRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .settingsRow:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .settingsRow .sLabel {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .settingsRow .sDesc {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .sLabelWrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    /* Toggle switch */
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .toggleTrack {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .12);
+      border: 1px solid var(--line);
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .toggle input:checked+.toggleTrack {
+      background: var(--brand);
+      border-color: var(--brand);
+    }
+
+    .toggleTrack::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform .2s;
+    }
+
+    .toggle input:checked+.toggleTrack::after {
+      transform: translateX(20px);
+    }
+
+    /* ── Item detail card ── */
+    .itemDetailCard {
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .itemDetailHero {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .itemDetailHero .heroAmt {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .itemDetailHero .heroTitle {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .itemDetailHero .heroMeta {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .itemDetailRows {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .itemDetailRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-top: 1px solid var(--line);
+      gap: 12px;
+    }
+
+    .itemDetailRow .dLabel {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .itemDetailRow .dVal {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* ── List page: header/list separator ── */
+    .listPageHeader {
+      padding-bottom: 14px;
+      margin-bottom: 2px;
+      border-bottom: 2px solid var(--line);
+    }
+
+    .listPageHeader h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .listPageHeader .sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── Row card soft colors by type ── */
+    .rowCard.exp-card {
+      background: rgba(245, 104, 128, .07);
+      border-color: rgba(245, 104, 128, .18);
+    }
+
+    .rowCard.exp-card:hover {
+      background: rgba(245, 104, 128, .12);
+      border-color: rgba(245, 104, 128, .3);
+    }
+
+    .rowCard.inc-card {
+      background: rgba(34, 211, 170, .07);
+      border-color: rgba(34, 211, 170, .18);
+    }
+
+    .rowCard.inc-card:hover {
+      background: rgba(34, 211, 170, .12);
+      border-color: rgba(34, 211, 170, .3);
+    }
+
+    /* ── Horizontal bar chart ── */
+    .hBarChart {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .hBarItem {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hBarLabel {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+
+    .hBarLabel .hName {
+      color: var(--text);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hBarLabel .hVal {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .hBarTrack {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .07);
+      overflow: hidden;
+    }
+
+    .hBarFill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width .5s cubic-bezier(.4, 0, .2, 1);
+    }
   </style>
 </head>
 
@@ -1229,6 +1561,53 @@
 
   <script>
     (function () {
+      /* ── Theme ── */
+      function applyTheme(light) {
+        document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
+        localStorage.setItem('theme', light ? 'light' : 'dark');
+      }
+      (function initTheme() {
+        var saved = localStorage.getItem('theme');
+        applyTheme(saved === 'light');
+      })();
+
+      /* ── Export ── */
+      function exportData() {
+        if (!user || !allRows.length) { toast('Dışa aktaracak veri yok.'); return; }
+        var data = JSON.stringify(allRows, null, 2);
+        var blob = new Blob([data], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = 'odeme-takip-' + selectedMonth + '.json';
+        a.click(); URL.revokeObjectURL(url);
+        toast('JSON indirildi: ' + allRows.length + ' kayıt.');
+      }
+
+      /* ── Import ── */
+      function importData(file) {
+        if (!file || !user || !db) return;
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            var rows = JSON.parse(e.target.result);
+            if (!Array.isArray(rows)) throw new Error('Geçersiz format');
+            var batch = db.batch();
+            var count = 0;
+            rows.forEach(function (r) {
+              if (!r.title) return;
+              var ref = db.collection('payments').doc();
+              var obj = Object.assign({}, r, { userId: user.uid, importedAt: new Date().toISOString() });
+              delete obj.id;
+              batch.set(ref, obj);
+              count++;
+            });
+            batch.commit().then(function () { toast(count + ' kayıt içe aktarıldı.'); })
+              .catch(function (err) { toast('Hata: ' + err.message); });
+          } catch (ex) { toast('JSON okunamıyor: ' + ex.message); }
+        };
+        reader.readAsText(file);
+      }
+
       var firebaseConfig = {
         apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
         authDomain: "gezi-5b54b.firebaseapp.com",
@@ -1765,49 +2144,41 @@
         return '<svg viewBox="0 0 180 180" aria-hidden="true">' + base + circles + '</svg>';
       }
 
-      function renderSpendingChart(rowsMonth) {
-        var cats = groupExpensesByCategory(rowsMonth);
+      function renderSpendingChart(rows) {
+        var cats = groupExpensesByCategory(rows);
+        if (!cats.length) return '<div class="card spending" style="grid-column:span 8;"><h2>💳 Harcama Analizi</h2><div class="hint" style="padding:16px 0;text-align:center;">Bu ay gider kaydı yok.</div></div>';
         var total = cats.reduce(function (s, x) { return s + x.amount; }, 0);
+        var max = cats[0].amount || 1;
 
-        if (!total) {
-          return '<div class="card spending" style="grid-column: span 8;"><h2>Nereye ne harcadım?</h2><div class="hint">Bu ay gider yok.</div></div>';
-        }
-
-        var top = cats.slice(0, 6);
-        var rest = cats.slice(6);
-        var restSum = rest.reduce(function (s, x) { return s + x.amount; }, 0);
-
-        var viz = top.slice();
-        if (restSum > 0) viz.push({ category: "Diğer", amount: restSum });
-
-        var parts = viz.map(function (x) { return { value: x.amount / total, color: colorForCategory(x.category) }; });
+        /* Mini donut */
+        var parts = cats.map(function (x) { return { value: x.amount / total, color: colorForCategory(x.category) }; });
         var svg = makeDonutSVG(parts);
 
-        var legend = viz.map(function (x) {
-          var pct = Math.round((x.amount / total) * 100);
-          return '<div class="legItem"><div class="legLeft"><span class="dot" style="background:' + colorForCategory(x.category) + '"></span><div class="legName">' + escapeHtml(x.category) + '</div></div><div class="legVal">' + pct + '% • ' + fmt.format(x.amount) + '</div></div>';
-        }).join("");
-
-        var max = viz[0].amount || 1;
-        var bars = viz.map(function (x) {
-          var w = Math.max(6, Math.round((x.amount / max) * 100));
-          return '<div><div class="hint" style="display:flex;justify-content:space-between;gap:10px;"><span><span class="dot" style="background:' + colorForCategory(x.category) + '"></span>' + escapeHtml(x.category) + '</span><span>' + fmt.format(x.amount) + '</span></div><div class="bar"><div style="width:' + w + '%;background:' + colorForCategory(x.category) + '"></div></div></div>';
-        }).join("");
+        /* Horizontal bars (top 7) */
+        var hBars = cats.slice(0, 7).map(function (x) {
+          var pct = Math.max(4, Math.round(x.amount / max * 100));
+          var pctOfTotal = total > 0 ? Math.round(x.amount / total * 100) : 0;
+          var col = colorForCategory(x.category);
+          return '' +
+            '<div class="hBarItem">' +
+            '<div class="hBarLabel">' +
+            '<span class="hName"><span class="dot" style="background:' + col + '"></span>' + escapeHtml(x.category) + '</span>' +
+            '<span class="hVal">' + fmt.format(x.amount) + ' <span style="color:var(--muted);font-size:10px;">%' + pctOfTotal + '</span></span>' +
+            '</div>' +
+            '<div class="hBarTrack"><div class="hBarFill" style="width:' + pct + '%;background:' + col + ';opacity:.85;"></div></div>' +
+            '</div>';
+        }).join('');
 
         return '' +
-          '<div class="card" style="grid-column: span 8;">' +
-          '<h2>Nereye ne harcadım?</h2>' +
-          '<div class="chartRow">' +
-          '<div class="donutWrap">' +
-          '<div class="donut">' +
+          '<div class="card spending" style="grid-column:span 8;">' +
+          '<h2>💳 Nereye ne harcadım?</h2>' +
+          '<div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">' +
+          '<div class="donut" style="flex-shrink:0;">' +
           svg +
-          '<div class="donutCenter"><div class="big">' + fmt.format(total) + '</div><div class="small">Toplam gider</div></div>' +
+          '<div class="donutCenter"><div class="big">' + fmt.format(total) + '</div><div class="small">Toplam</div></div>' +
           '</div>' +
-          '<div class="legend">' + legend + '</div>' +
-          '</div>' +
-          '<div style="flex:1;min-width:260px;">' +
-          '<div class="hint">Kategori dağılımı (gider)</div>' +
-          '<div class="barList">' + bars + '</div>' +
+          '<div style="flex:1;min-width:200px;">' +
+          '<div class="hBarChart">' + hBars + '</div>' +
           '</div>' +
           '</div>' +
           '</div>';
@@ -1859,34 +2230,6 @@
       }
 
 
-      function renderCompactList(rows) {
-        if (!rows.length) return '<div class="hint" style="padding:24px 0;text-align:center;">Bu ay için kayıt yok.</div>';
-        return '<div class="list">' + rows.map(function (r) {
-          var title = escapeHtml(r.title || "—");
-          var cat = escapeHtml(r.category || "Diğer");
-          var dateStr = escapeHtml(String(r.date || "").slice(0, 10) || "—");
-          var dot = '<span class="dot" style="background:' + colorForCategory(r.category) + '"></span>';
-          var dir = normalizeDir(r);
-          var amtColor = dir === "income" ? "var(--good)" : "var(--bad)";
-          var recIcon = r.isRecurring ? ' <span style="color:var(--brand);font-size:10px;">🔄</span>' : '';
-          var st = isPaid(r)
-            ? '<span class="miniPill paid">' + (dir === "income" ? "Alındı" : "Ödendi") + '</span>'
-            : '<span class="miniPill unpaid">' + (dir === "income" ? "Bekliyor" : "Ödenmedi") + '</span>';
-
-          return '' +
-            '<div class="rowCard" data-open="item" data-id="' + escapeHtml(r.id) + '">' +
-            '<div class="rowMain">' +
-            '<div class="rowTitle">' + title + recIcon + '</div>' +
-            '<div class="rowMeta">' + dot + '<span>' + cat + '</span><span style="opacity:.4;margin:0 2px">•</span><span>' + dateStr + '</span></div>' +
-            '</div>' +
-            '<div class="rowRight">' +
-            '<div class="rowAmt" style="color:' + amtColor + '">' + fmt.format(Number(r.amount || 0)) + '</div>' +
-            st +
-            '</div>' +
-            '</div>';
-        }).join("") + '</div>';
-      }
-
 
 
       var itemBg = document.getElementById("itemBg");
@@ -1901,25 +2244,41 @@
         itemRowId = id;
 
         var dir = normalizeDir(row);
-        var dirTag = dir === "income" ? '<span class="tag good">Gelir</span>' : '<span class="tag bad">Gider</span>';
-        var paidTag = isPaid(row) ? '<span class="tag good">Alındı/Ödendi</span>' : '<span class="tag">Alınmadı</span>';
-        var recTag = isRecurring(row) ? '<span class="tag rec">Aylık</span>' : '<span class="tag">—</span>';
-        var dot = '<span class="dot" style="background:' + colorForCategory(row.category) + '"></span>';
+        var isInc = dir === 'income';
+        var heroColor = isInc ? 'var(--good)' : 'var(--bad)';
+        var heroBg = isInc ? 'rgba(34,211,170,.08)' : 'rgba(245,104,128,.08)';
+        var heroBorder = isInc ? 'rgba(34,211,170,.2)' : 'rgba(245,104,128,.2)';
+        var dirLabel = isInc ? 'Gelir' : 'Gider';
+        var dirTag = isInc ? '<span class="tag good">' + dirLabel + '</span>' : '<span class="tag bad">' + dirLabel + '</span>';
+        var paidLabel = isPaid(row) ? (isInc ? 'Alındı ✅' : 'Ödendi ✅') : (isInc ? 'Alınmadı ⏳' : 'Ödenmedi ⏳');
+        var paidTag = isPaid(row) ? '<span class="tag good">' + paidLabel + '</span>' : '<span class="tag" style="border-color:rgba(251,191,36,.3);color:#ffd98a;">' + paidLabel + '</span>';
+        var recTag = isRecurring(row) ? '<span class="tag rec">🔄 Aylık Tekrar</span>' : '';
+        var catColor = colorForCategory(row.category);
+        var dot = '<span class="dot" style="background:' + catColor + ';width:12px;height:12px;"></span>';
+        var dateStr = escapeHtml(String(row.date || '').slice(0, 10) || '—');
 
-        document.getElementById("itemTitle").textContent = "Kayıt Detayı";
-        document.getElementById("itemBody").innerHTML =
-          '<div class="hint">Tarih</div><div style="font-weight:750">' + escapeHtml(String(row.date || "").slice(0, 10) || "—") + '</div>' +
-          '<div class="hr"></div>' +
-          '<div class="hint">Başlık</div><div style="font-weight:750">' + escapeHtml(row.title || "—") + '</div>' +
-          '<div class="hint" style="margin-top:8px;">Kategori</div><div style="font-weight:750">' + dot + '<span>' + escapeHtml(row.category || "Diğer") + '</span></div>' +
-          '<div class="hint" style="margin-top:8px;">Tutar</div><div style="font-weight:850; font-size:18px; color:' + (dir === "income" ? 'var(--good)' : 'var(--bad)') + '">' + fmt.format(Number(row.amount || 0)) + '</div>' +
-          '<div class="hr"></div>' +
-          '<div style="display:flex; gap:8px; flex-wrap:wrap;">' + dirTag + paidTag + recTag + '</div>';
+        document.getElementById('itemTitle').textContent = ''; // cleared, hero has it
+        document.getElementById('itemBody').innerHTML =
+          '<div class="itemDetailCard">' +
+          '<div class="itemDetailHero" style="background:' + heroBg + ';border-bottom:1px solid ' + heroBorder + ';">' +
+          '<div style="width:48px;height:48px;border-radius:50%;background:' + heroBg + ';border:2px solid ' + heroBorder + ';display:flex;align-items:center;justify-content:center;font-size:22px;">' + (isInc ? '💰' : '💸') + '</div>' +
+          '<div class="heroAmt" style="color:' + heroColor + ';">' + (isInc ? '+' : '-') + fmt.format(Number(row.amount || 0)) + '</div>' +
+          '<div class="heroTitle">' + escapeHtml(row.title || '—') + '</div>' +
+          '<div class="heroMeta">' + dateStr + '</div>' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px;">' + dirTag + paidTag + recTag + '</div>' +
+          '</div>' +
+          '<div class="itemDetailRows">' +
+          '<div class="itemDetailRow"><span class="dLabel">📁 Kategori</span><span class="dVal">' + dot + escapeHtml(row.category || 'Diğer') + '</span></div>' +
+          '<div class="itemDetailRow"><span class="dLabel">📅 Tarih</span><span class="dVal">' + dateStr + '</span></div>' +
+          (row.note ? '<div class="itemDetailRow"><span class="dLabel">📝 Not</span><span class="dVal" style="max-width:200px;text-align:right;font-size:12px;">' + escapeHtml(row.note) + '</span></div>' : '') +
+          (isRecurring(row) && row.recurrenceTotalMonths ? '<div class="itemDetailRow"><span class="dLabel">🔄 Süre</span><span class="dVal">' + Number(row.recurrenceTotalMonths) + ' ay</span></div>' : '') +
+          '</div>' +
+          '</div>';
 
-        var btn = document.getElementById("itemTogglePaid");
-        btn.textContent = isPaid(row) ? "Geri Al" : (dir === "income" ? "Alındı" : "Ödendi");
+        var btn = document.getElementById('itemTogglePaid');
+        btn.textContent = isPaid(row) ? 'Geri Al' : (isInc ? 'Alındı İşaretle' : 'Ödendi İşaretle');
 
-        itemBg.classList.add("show");
+        itemBg.classList.add('show');
       }
 
       function openEditForRow(row) {
@@ -2063,12 +2422,13 @@
           );
         }
 
-        return head + '<div class="calGrid" id="calCells">' + cells.join("") + '</div>';
+        return head + '<div class="calWrap"><div class="calGrid" id="calCells">' + cells.join("") + '</div></div>';
       }
 
       function bindCalendarClicks() {
         var wrap = document.getElementById("calCells");
         if (!wrap) return;
+        var calWrap = wrap.closest ? wrap.closest('.calWrap') : null;
         wrap.querySelectorAll(".calCell[data-date]").forEach(function (cell) {
           cell.addEventListener("click", function () { openDayDetail(cell.getAttribute("data-date")); });
         });
@@ -2189,11 +2549,14 @@
 
           if (currentPage === "expense") {
             var rowsE = filteredRowsForMonth("expense");
+            var expTotal = rowsE.reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
             content.innerHTML =
               '<div class="card">' +
-              '<h2>Gider • ' + selectedMonth + '</h2>' +
-              '<div class="hint">İlk bakış: Başlık • Kategori • Tutar (tıkla → detay)</div>' +
-              renderCompactList(rowsE) +
+              '<div class="listPageHeader">' +
+              '<h2>💸 Gider</h2>' +
+              '<div class="sub">' + selectedMonth + ' • ' + rowsE.length + ' kayıt • Toplam: <b style="color:var(--bad)">' + fmt.format(expTotal) + '</b></div>' +
+              '</div>' +
+              renderCompactList(rowsE, "expense") +
               '</div>';
             bindCompactListClicks();
             return;
@@ -2201,11 +2564,14 @@
 
           if (currentPage === "income") {
             var rowsI = filteredRowsForMonth("income");
+            var incTotal = rowsI.reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
             content.innerHTML =
               '<div class="card">' +
-              '<h2>Gelir • ' + selectedMonth + '</h2>' +
-              '<div class="hint">İlk bakış: Başlık • Kategori • Tutar (tıkla → detay)</div>' +
-              renderCompactList(rowsI) +
+              '<div class="listPageHeader">' +
+              '<h2>💰 Gelir</h2>' +
+              '<div class="sub">' + selectedMonth + ' • ' + rowsI.length + ' kayıt • Toplam: <b style="color:var(--good)">' + fmt.format(incTotal) + '</b></div>' +
+              '</div>' +
+              renderCompactList(rowsI, "income") +
               '</div>';
             bindCompactListClicks();
             return;
@@ -2223,17 +2589,79 @@
           }
 
           if (currentPage === "settings") {
+            var isDark = (document.documentElement.getAttribute('data-theme') !== 'light');
             content.innerHTML =
-              '<div class="card">' +
-              '<h2>Ayarlar</h2>' +
-              '<div class="hint"><b>Koleksiyon:</b> payments</div>' +
-              '<div class="hint"><b>Kullanıcı alanı:</b> userId</div>' +
-              '<div class="hint"><b>Gelir:</b> type=incoming • <b>Gider:</b> type!=incoming</div>' +
-              '<div class="hr"></div>' +
-              '<div class="hint">Firestore Rules (öneri):</div>' +
-              '<pre>rules_version = \'2\';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /payments/{docId} {\n      allow read: if request.auth != null\n        && resource.data.userId == request.auth.uid;\n\n      allow create: if request.auth != null\n        && request.resource.data.userId == request.auth.uid;\n\n      allow update, delete: if request.auth != null\n        && resource.data.userId == request.auth.uid;\n    }\n  }\n}</pre>' +
-              '<div class="hint">Bu sürüm index istememek için <b>orderBy</b> kullanmadan userId ile çekip tarayıcıda filtreler/sıralar.</div>' +
+              '<div style="display:flex;flex-direction:column;gap:14px;">' +
+
+              /* Appearance */
+              '<div class="settingsSection">' +
+              '<h3>🎨 Görünüm</h3>' +
+              '<div class="settingsRow">' +
+              '<div class="sLabelWrap"><div class="sLabel">Koyu Tema</div><div class="sDesc">Ekrana uygun renk şemasnı seç</div></div>' +
+              '<label class="toggle"><input type="checkbox" id="themeToggle"' + (isDark ? ' checked' : '') + '><span class="toggleTrack"></span></label>' +
+              '</div>' +
+              '</div>' +
+
+              /* Data */
+              '<div class="settingsSection">' +
+              '<h3>💾 Veri Yönetimi</h3>' +
+              '<div class="settingsRow">' +
+              '<div class="sLabelWrap"><div class="sLabel">Verileri Dışa Aktar</div><div class="sDesc">Tüm kayıtları JSON dosyası olarak indir</div></div>' +
+              '<button class="btn small" id="btnExport">↓ JSON</button>' +
+              '</div>' +
+              '<div class="settingsRow">' +
+              '<div class="sLabelWrap"><div class="sLabel">Verileri İçe Aktar</div><div class="sDesc">JSON dosyasından kayıtları yükle (var olanların üstüne ekler)</div></div>' +
+              '<button class="btn small" id="btnImport">↑ JSON</button>' +
+              '<input type="file" id="importFile" accept=".json" style="display:none;">' +
+              '</div>' +
+              '</div>' +
+
+              /* Account */
+              (user ? '<div class="settingsSection"><h3>👤 Hesap</h3>' +
+                '<div class="settingsRow"><span class="dLabel">E-posta</span><span class="dVal" style="font-size:13px;font-weight:700;color:var(--text);">' + escapeHtml(user.email || '—') + '</span></div>' +
+                '</div>' : '') +
+
+              /* Privacy */
+              '<div class="settingsSection">' +
+              '<h3>🔒 Gizlilik ve KVKK</h3>' +
+              '<div class="hint" style="line-height:1.8;font-size:13px;">' +
+              '<b>Kişisel Verilerin Korunması (KVKK)</b><br>' +
+              'Bu uygulama, finansal kayıtlarınızı Firebase üzerinde şifrelenmiş bir şekilde saklar. Verileriniz yalnızca kendi hesabınıza bağlıdır ve üçüncü taraflarla paylaşılmaz.<br><br>' +
+              '<b>Saklanan Veriler</b><br>' +
+              '• Kayıt başlığı, tutar, kategori, tarih, ödeme durumu<br>' +
+              '• Firebase Authentication e-posta adresi<br><br>' +
+              '<b>Veri Silme</b><br>' +
+              'Hesabınızı sildiğinizde tüm verileriniz Firebase\'den silinir. Dilediğiniz zaman verileri dışa aktarabilir veya silebilirsiniz.<br><br>' +
+              '<b>İletişim</b><br>' +
+              'Sorular için uygulamanın geliştiricisiyle iletişime geçebilirsiniz.' +
+              '</div>' +
+              '</div>' +
+
+              /* Version */
+              '<div class="settingsSection">' +
+              '<h3>ℹ️ Uygulama Hakkında</h3>' +
+              '<div class="settingsRow"><span class="sLabel">Ödeme Takip</span><span class="dVal" style="font-size:12px;color:var(--muted);">v1.0.0</span></div>' +
+              '<div class="settingsRow"><span class="sLabel">Platform</span><span class="dVal" style="font-size:12px;color:var(--muted);">Web (Firebase)</span></div>' +
+              '<div class="settingsRow" style="border:none;"><span class="sLabel">Güncelleme</span><span class="dVal" style="font-size:12px;color:var(--muted);">Mart 2026</span></div>' +
+              '</div>' +
+
               '</div>';
+
+            /* Bind theme toggle */
+            var thTog = document.getElementById('themeToggle');
+            if (thTog) thTog.addEventListener('change', function () { applyTheme(!this.checked); });
+
+            /* Bind export */
+            var bExp = document.getElementById('btnExport');
+            if (bExp) bExp.addEventListener('click', exportData);
+
+            /* Bind import */
+            var bImp = document.getElementById('btnImport');
+            var fImp = document.getElementById('importFile');
+            if (bImp && fImp) {
+              bImp.addEventListener('click', function () { fImp.click(); });
+              fImp.addEventListener('change', function (e) { importData(e.target.files[0]); fImp.value = ''; });
+            }
             return;
           }
         } catch (e) { console.error(e); toast('Ekran hatası: ' + (e.message || e)); }
