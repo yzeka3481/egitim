@@ -2229,8 +2229,34 @@
         return head + body + '</tbody></table>';
       }
 
+      function renderCompactList(rows, dir) {
+        if (!rows.length) return '<div class="hint" style="padding:24px 0;text-align:center;">Bu ay için kayıt yok.</div>';
+        return '<div class="list">' + rows.map(function (r) {
+          var title = escapeHtml(r.title || '—');
+          var cat = escapeHtml(r.category || 'Diğer');
+          var dateStr = escapeHtml(String(r.date || '').slice(0, 10) || '—');
+          var dot = '<span class="dot" style="background:' + colorForCategory(r.category) + '"></span>';
+          var rowDir = normalizeDir(r);
+          var amtColor = rowDir === 'income' ? 'var(--good)' : 'var(--bad)';
+          var cardCls = rowDir === 'income' ? 'inc-card' : 'exp-card';
+          var recIcon = r.isRecurring ? ' <span style="color:var(--brand);font-size:10px;">🔄</span>' : '';
+          var st = isPaid(r)
+            ? '<span class="miniPill paid">' + (rowDir === 'income' ? 'Alındı' : 'Ödendi') + '</span>'
+            : '<span class="miniPill unpaid">' + (rowDir === 'income' ? 'Bekliyor' : 'Ödenmedi') + '</span>';
 
-
+          return '' +
+            '<div class="rowCard ' + cardCls + '" data-open="item" data-id="' + escapeHtml(r.id) + '">' +
+            '<div class="rowMain">' +
+            '<div class="rowTitle">' + title + recIcon + '</div>' +
+            '<div class="rowMeta">' + dot + '<span>' + cat + '</span><span style="opacity:.4;margin:0 2px">•</span><span>' + dateStr + '</span></div>' +
+            '</div>' +
+            '<div class="rowRight">' +
+            '<div class="rowAmt" style="color:' + amtColor + '">' + fmt.format(Number(r.amount || 0)) + '</div>' +
+            st +
+            '</div>' +
+            '</div>';
+        }).join('') + '</div>';
+      }
 
       var itemBg = document.getElementById("itemBg");
       var itemRowId = null;
