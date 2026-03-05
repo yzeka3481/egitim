@@ -2,1249 +2,2307 @@
 <html lang="tr">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Gezi Planlayıcı</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ödeme Takip — Stabil Tek Dosya</title>
+  <meta name="theme-color" content="#0b1220" />
   <style>
     :root {
-      --bg: #0f172a;
-      --panel: #1e293b;
-      --border: rgba(255, 255, 255, .1);
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --accent: #38bdf8;
-      --accent-glow: rgba(56, 189, 248, .2);
-      --danger: #ef4444;
-      --success: #10b981;
-      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif
+      --bg: #0b1220;
+      --panel: #111a2e;
+      --card: #0f1730;
+      --text: #e8f0ff;
+      --muted: #8ea3c7;
+      --line: #1e2a46;
+      --good: #2dd4bf;
+      --bad: #fb7185;
+      --warn: #fbbf24;
+      --brand: #4f7cff;
+      --shadow: 0 18px 45px rgba(0, 0, 0, .32);
+      --r: 16px;
     }
 
     * {
-      box-sizing: border-box
+      box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      font-family: var(--font);
-      background: var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:
+        radial-gradient(1100px 600px at 20% -10%, rgba(79, 124, 255, .25), transparent 55%),
+        radial-gradient(900px 500px at 90% 0%, rgba(45, 212, 191, .16), transparent 55%),
+        linear-gradient(180deg, #071022, #0b1220 40%, #081025);
       color: var(--text);
-      height: 100vh;
-      overflow: hidden
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+      padding-bottom: 98px;
     }
 
     .app {
-      display: grid;
-      grid-template-rows: auto 1fr;
-      height: 100%;
-      max-width: 1400px;
-      margin: 0 auto
+      width: min(1100px, 100%);
+      border: 1px solid rgba(255, 255, 255, .06);
+      background: rgba(12, 18, 35, .65);
+      backdrop-filter: blur(10px);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 32px - 98px);
     }
 
     .header {
-      padding: 12px 16px;
-      background: var(--panel);
-      border-bottom: 1px solid var(--border);
+      padding: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
+      background: linear-gradient(180deg, rgba(17, 26, 46, .7), rgba(17, 26, 46, .25));
       display: flex;
+      gap: 12px;
+      align-items: center;
       justify-content: space-between;
-      align-items: center
+      flex-wrap: wrap;
     }
 
-    .header h1 {
-      font-size: 16px;
-      margin: 0;
-      font-weight: 600;
-      letter-spacing: -.5px
-    }
-
-    .badge {
-      font-size: 11px;
-      background: rgba(255, 255, 255, .05);
-      padding: 4px 8px;
-      border-radius: 6px;
-      border: 1px solid var(--border)
-    }
-
-    .main {
-      display: grid;
-      grid-template-columns: 350px 1fr 300px;
-      height: 100%;
-      overflow: hidden
-    }
-
-    @media(max-width:1024px) {
-      .main {
-        grid-template-columns: 300px 1fr 0;
-        transform: translateX(0);
-        transition: transform .3s
-      }
-    }
-
-    @media(max-width:768px) {
-      .header h1 {
-        font-size: 14px
-      }
-
-      .main {
-        display: block;
-        overflow: auto
-      }
-
-      .col {
-        height: auto !important;
-        border-right: 0 !important
-      }
-    }
-
-    .col {
-      background: var(--bg);
-      border-right: 1px solid var(--border);
+    .brand {
       display: flex;
       flex-direction: column;
-      height: 100%;
-      overflow: hidden;
-      position: relative
+      gap: 4px;
     }
 
-    .col-head {
-      padding: 12px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255, 255, 255, .02);
-      display: flex;
-      justify-content: space-between;
-      align-items: center
-    }
-
-    .col-head h2 {
-      font-size: 13px;
-      font-weight: 600;
+    .brand h1 {
       margin: 0;
+      font-size: 14px;
+      letter-spacing: .2px;
+      font-weight: 750;
+    }
+
+    .brand small {
       color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .5px
+      font-size: 12px;
     }
 
-    .col-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
+    .pill {
+      border: 1px solid var(--line);
+      background: rgba(14, 22, 42, .9);
+      padding: 8px 10px;
+      border-radius: 999px;
       display: flex;
-      flex-direction: column;
-      gap: 10px
+      gap: 10px;
+      align-items: center;
+      color: #cfe0ff;
+      font-weight: 650;
+      font-size: 12px;
+      white-space: nowrap;
     }
 
     .btn {
-      background: var(--panel);
-      border: 1px solid var(--border);
+      border: 1px solid var(--line);
+      background: rgba(15, 23, 48, .9);
       color: var(--text);
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 12px;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 700;
       cursor: pointer;
-      transition: all .2s;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 6px
+      gap: 8px;
+      user-select: none;
     }
 
     .btn:hover {
-      background: rgba(255, 255, 255, .05);
-      border-color: rgba(255, 255, 255, .2)
+      filter: brightness(1.08);
     }
 
     .btn.primary {
-      background: rgba(56, 189, 248, .15);
-      border-color: rgba(56, 189, 248, .3);
-      color: #7dd3fc
+      background: rgba(79, 124, 255, .95);
+      border-color: rgba(79, 124, 255, .55);
     }
 
-    .btn.primary:hover {
-      background: rgba(56, 189, 248, .25);
-      box-shadow: 0 0 10px var(--accent-glow)
+    .btn.small {
+      padding: 8px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
     }
 
     .btn.danger {
-      background: rgba(239, 68, 68, .15);
-      border-color: rgba(239, 68, 68, .3);
-      color: #fca5a5
+      background: rgba(251, 113, 133, .14);
+      border-color: rgba(251, 113, 133, .35);
     }
 
-    .icon-btn {
-      width: 28px;
-      height: 28px;
-      padding: 0;
-      border-radius: 6px
-    }
-
-    .input {
-      background: rgba(0, 0, 0, .2);
-      border: 1px solid var(--border);
+    input,
+    select {
+      border: 1px solid var(--line);
+      background: rgba(14, 22, 42, .9);
       color: var(--text);
-      padding: 8px;
-      border-radius: 8px;
-      width: 100%;
-      font-size: 12px
-    }
-
-    .input:focus {
+      padding: 10px 12px;
+      border-radius: 14px;
       outline: none;
-      border-color: var(--accent)
+      font-weight: 600;
     }
 
-    .select {
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 8px center;
-      background-size: 16px
+    input::placeholder {
+      color: #6f86b2;
+    }
+
+    .header .left {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .header .right {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 550;
+    }
+
+    .content {
+      padding: 14px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 280px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
     }
 
     .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px;
-      display: flex;
-      gap: 10px;
-      transition: border-color .2s
-    }
-
-    .card:hover {
-      border-color: rgba(255, 255, 255, .2)
-    }
-
-    .card h3 {
-      margin: 0 0 4px 0;
-      font-size: 13px;
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis
-    }
-
-    .card .meta {
-      font-size: 11px;
-      color: var(--muted);
-      display: flex;
-      gap: 8px
-    }
-
-    .check {
-      width: 16px;
-      height: 16px;
-      margin: 2px 0 0 0;
-      accent-color: var(--accent);
-      cursor: pointer
-    }
-
-    .tag {
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, .05);
-      color: var(--muted)
-    }
-
-    #map {
-      width: 100%;
-      height: 100%;
-      background: #0f172a
-    }
-
-    /* Upload Zone */
-    .dropzone {
-      border: 1px dashed var(--border);
-      border-radius: 8px;
-      padding: 20px;
-      text-align: center;
-      background: rgba(0, 0, 0, .1);
-      transition: all .2s;
-      cursor: pointer
-    }
-
-    .dropzone:hover {
-      border-color: var(--accent);
-      background: rgba(56, 189, 248, .05)
-    }
-
-    .dropzone p {
-      margin: 0;
-      font-size: 12px;
-      color: var(--muted)
-    }
-
-    /* Itinerary */
-    .it-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      margin-bottom: 6px
-    }
-
-    .it-item strong {
-      font-size: 12px;
-      display: block
-    }
-
-    .sort-controls {
-      display: flex;
-      gap: 2px
-    }
-
-    /* Stats */
-    .stats {
+      background: rgba(17, 26, 46, .55);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
       padding: 12px;
-      background: var(--panel);
-      border-top: 1px solid var(--border)
+      min-width: 0;
     }
 
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 12px
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      color: #cfe0ff;
+      font-weight: 700;
     }
 
     .kpi {
-      background: rgba(0, 0, 0, .2);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .kpi .value {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+
+    .value.bad {
+      color: var(--bad);
+    }
+
+    .value.good {
+      color: var(--good);
+    }
+
+    .hr {
+      height: 1px;
+      background: rgba(255, 255, 255, .06);
+      margin: 10px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
+      padding: 10px 8px;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      color: #bcd1ff;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .right {
+      text-align: right;
+    }
+
+    .nowrap {
+      white-space: nowrap;
+    }
+
+    .tag {
+      font-size: 12px;
+      font-weight: 650;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(14, 22, 42, .9);
+      color: #cfe0ff;
+      display: inline-block;
+    }
+
+    .tag.bad {
+      border-color: rgba(251, 113, 133, .35);
+      background: rgba(42, 16, 24, .85);
+      color: #ffb3c2;
+    }
+
+    .tag.good {
+      border-color: rgba(45, 212, 191, .35);
+      background: rgba(13, 42, 34, .85);
+      color: #8ff6e4;
+    }
+
+    .tag.rec {
+      border-color: rgba(79, 124, 255, .35);
+      background: rgba(27, 35, 56, .85);
+      color: #c5d3ff;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, .06);
+    }
+
+    .chartRow {
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+      flex-wrap: wrap;
+    }
+
+    .donutWrap {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .donut {
+      width: 180px;
+      height: 180px;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .donut svg {
+      width: 180px;
+      height: 180px;
+      transform: rotate(-90deg);
+    }
+
+    .donutCenter {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-radius: 999px;
+      background: rgba(11, 18, 32, .55);
+      border: 1px solid rgba(255, 255, 255, .08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
       padding: 8px;
-      border-radius: 6px;
+    }
+
+    .donutCenter .big {
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .donutCenter .small {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .legend {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 240px;
+    }
+
+    .legItem {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .legLeft {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .legName {
+      color: #dbe8ff;
+      font-weight: 650;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .legVal {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .barList {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .06);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .bar>div {
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    .calGrid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .calCell {
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(14, 22, 42, .55);
+      border-radius: 14px;
+      padding: 8px;
+      min-height: 76px;
+      cursor: pointer;
+      user-select: none;
+      transition: filter .12s ease, transform .12s ease;
+    }
+
+    .calCell:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+
+    .calCell.disabled {
+      opacity: .25;
+      cursor: default;
+    }
+
+    .calTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .calDay {
+      font-weight: 700;
+      font-size: 12px;
+      color: #cfe0ff;
+    }
+
+    .calAmt {
+      font-weight: 750;
+      font-size: 12px;
+    }
+
+    .calAmt.good {
+      color: var(--good);
+    }
+
+    .calAmt.bad {
+      color: var(--bad);
+    }
+
+    .calMini {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .calMini span {
       font-size: 11px;
       color: var(--muted);
-      text-align: center
     }
 
-    .kpi b {
-      display: block;
+    .tabbarWrap {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: center;
+      padding: 10px 12px 14px;
+      background: linear-gradient(180deg, rgba(11, 18, 32, 0), rgba(11, 18, 32, .72) 22%, rgba(11, 18, 32, .96));
+      border-top: 1px solid rgba(255, 255, 255, .06);
+      z-index: 9999;
+    }
+
+    .tabbar {
+      width: min(1100px, calc(100% - 24px));
+      display: flex;
+      gap: 10px;
+    }
+
+    .tab {
+      flex: 1;
+      border: 1px solid rgba(255, 255, 255, .06);
+      background: rgba(14, 22, 42, .7);
+      border-radius: 16px;
+      padding: 10px 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 11px;
+      user-select: none;
+    }
+
+    .tab.active {
+      color: var(--text);
+      border-color: rgba(79, 124, 255, .35);
+      background: rgba(79, 124, 255, .14);
+    }
+
+    .ico {
       font-size: 16px;
-      color: var(--accent);
-      margin-bottom: 2px
+      line-height: 1;
     }
 
-    /* Modal */
-    .modal-overlay {
+    .modalBg {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, .7);
+      background: rgba(0, 0, 0, .55);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 9999;
-      backdrop-filter: blur(2px)
+      padding: 14px;
+      z-index: 10000;
     }
 
-    .modal-overlay.open {
-      display: flex
+    .modalBg.show {
+      display: flex;
     }
 
     .modal {
-      background: #1e293b;
-      width: 90%;
-      max-width: 600px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, .5);
+      width: min(600px, 100%);
+      background: rgba(15, 23, 48, .98);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
       overflow: hidden;
-      animation: slideUp .2s ease-out
     }
 
-    .modal-head {
-      padding: 16px;
-      border-bottom: 1px solid var(--border);
+    .modalTop {
+      padding: 10px 12px;
       display: flex;
       justify-content: space-between;
-      align-items: center
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
     }
 
-    .modal-head h3 {
-      margin: 0;
-      font-size: 15px;
-      color: var(--text)
+    .modalTop strong {
+      font-size: 13px;
+      font-weight: 750;
     }
 
-    .modal-body {
-      padding: 16px;
+    .modalBody {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .grid2 {
       display: grid;
-      gap: 12px
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
     }
 
-    .textarea {
-      background: rgba(0, 0, 0, .2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      width: 100%;
-      min-height: 150px;
-      font-family: monospace;
-      font-size: 12px;
-      padding: 10px;
-      resize: vertical;
-      border-radius: 8px
+    .modal .actions {
+      display: flex;
+      gap: 10px;
+      padding: 12px;
+      border-top: 1px solid rgba(255, 255, 255, .06);
     }
 
-    /* Mobile Nav */
-    .mobile-nav {
-      display: none;
+    .toast {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #1e293b;
-      border-top: 1px solid var(--border);
+      left: 50%;
+      bottom: 92px;
+      transform: translateX(-50%);
+      background: rgba(14, 22, 42, .95);
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      border-radius: 14px;
+      display: none;
+      max-width: min(920px, calc(100% - 24px));
+      color: #dbe8ff;
+      box-shadow: var(--shadow);
+      font-weight: 650;
+      font-size: 13px;
+      z-index: 10001;
+    }
+
+    .toast.show {
+      display: block;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      background: rgba(14, 22, 42, .6);
+      border: 1px solid rgba(255, 255, 255, .06);
       padding: 10px;
-      justify-content: space-around;
-      z-index: 1000
+      border-radius: 14px;
+      margin: 10px 0 0;
+      color: #bcd1ff;
+      font-size: 12px;
     }
 
-    @media(max-width:768px) {
-      .mobile-nav {
-        display: flex
+    @media (max-width: 860px) {
+      .grid {
+        grid-template-columns: repeat(6, 1fr);
       }
 
-      .col {
-        padding-bottom: 70px
-      }
-    }
-
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px)
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0)
+      .tabbar {
+        width: calc(100% - 24px);
       }
     }
 
-    /* Utility */
-    .d-none {
-      display: none !important
+    /* --- Mobile polish --- */
+    @media (max-width: 640px) {
+      body {
+        padding: 12px;
+        padding-bottom: 110px;
+      }
+
+      .app {
+        border-radius: 18px;
+        min-height: calc(100vh - 24px - 110px);
+      }
+
+      .header {
+        padding: 12px;
+        gap: 10px;
+      }
+
+      .header .left,
+      .header .right {
+        width: 100%;
+      }
+
+      .header .right {
+        justify-content: space-between;
+      }
+
+      .pill {
+        padding: 7px 9px;
+        font-size: 12px;
+      }
+
+      .btn {
+        padding: 10px 12px;
+      }
+
+      .btn.small {
+        padding: 9px 10px;
+      }
+
+      input,
+      select {
+        width: 100%;
+      }
+
+      #search {
+        min-width: 100%;
+      }
+
+      .content {
+        padding: 12px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+
+      .card {
+        padding: 11px;
+      }
+
+      .chartRow {
+        gap: 10px;
+      }
+
+      .donut {
+        width: 150px;
+        height: 150px;
+      }
+
+      .donut svg {
+        width: 150px;
+        height: 150px;
+      }
+
+      .donutCenter {
+        width: 104px;
+        height: 104px;
+      }
+
+      .legend {
+        min-width: 200px;
+      }
+
+      th,
+      td {
+        padding: 9px 7px;
+      }
+
+      .tabbarWrap {
+        padding: 10px 10px 16px;
+      }
+
+      .tabbar {
+        gap: 8px;
+      }
+
+      .tab {
+        padding: 10px 8px;
+        border-radius: 16px;
+      }
+
+      .ico {
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .brand h1 {
+        font-size: 13px;
+      }
+
+      .brand small {
+        font-size: 11px;
+      }
+
+      .tab {
+        font-size: 10px;
+        gap: 5px;
+      }
+
+      .tabbar {
+        gap: 7px;
+      }
+
+      .btn {
+        border-radius: 13px;
+      }
+
+      .modal {
+        border-radius: 18px;
+      }
+
+      .grid2 {
+        grid-template-columns: 1fr;
+      }
+
+      .donutWrap {
+        width: 100%;
+      }
+
+      .legend {
+        width: 100%;
+        min-width: 0;
+      }
+    }
+
+    /* Make modals more usable on mobile */
+    @media (max-width: 520px) {
+      .modalBg {
+        padding: 10px;
+      }
+
+      .modal {
+        width: 100%;
+      }
+
+      .modalBody {
+        padding: 10px;
+      }
+
+      .modal .actions {
+        padding: 10px;
+      }
+    }
+
+
+    /* --- Mobile layout fixes (KPI + cards) --- */
+    @media (max-width: 640px) {
+      .card.kpi-exp {
+        grid-column: span 3 !important;
+      }
+
+      .card.kpi-inc {
+        grid-column: span 3 !important;
+      }
+
+      .card.kpi-net {
+        grid-column: span 6 !important;
+      }
+
+      .card.spending {
+        grid-column: span 6 !important;
+      }
+
+      .card.quick {
+        grid-column: span 6 !important;
+      }
+
+      .card.recent {
+        grid-column: span 6 !important;
+      }
+    }
+
+    @media (max-width: 420px) {
+
+      .card.kpi-exp,
+      .card.kpi-inc,
+      .card.kpi-net,
+      .card.spending,
+      .card.quick,
+      .card.recent {
+        grid-column: span 6 !important;
+      }
+    }
+
+
+    /* --- Mobile dashboard: Gider/Gelir yan yana, Net altta --- */
+    @media (max-width: 640px) {
+      .grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+
+      .card.kpi-exp {
+        grid-column: span 3 !important;
+      }
+
+      .card.kpi-inc {
+        grid-column: span 3 !important;
+      }
+
+      .card.kpi-net {
+        grid-column: span 6 !important;
+      }
+
+      .card.spending,
+      .card.quick,
+      .card.recent {
+        grid-column: span 6 !important;
+      }
+
+      .chartRow {
+        flex-direction: column;
+      }
+
+      .donutWrap {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .legend {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .donut {
+        width: 160px;
+        height: 160px;
+      }
+
+      .donut svg {
+        width: 160px;
+        height: 160px;
+      }
+    }
+
+    @media (max-width: 420px) {
+
+      .card.kpi-exp,
+      .card.kpi-inc,
+      .card.kpi-net,
+      .card.spending,
+      .card.quick,
+      .card.recent {
+        grid-column: span 6 !important;
+      }
+    }
+
+    /* Compact list rows (Gider/Gelir sayfaları) */
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .rowCard {
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(14, 22, 42, .55);
+      border-radius: 16px;
+      padding: 10px 12px;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: filter .12s ease, transform .12s ease;
+    }
+
+    .rowCard:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+
+    .rowMain {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .rowTitle {
+      font-weight: 750;
+      color: #e8f0ff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .rowMeta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .rowAmt {
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+
+    /* --- App-like KPI cards + list status badge --- */
+    .kpiCard h2 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .kpiCard h2 .ttl {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .kpiCard h2 .ttl .kico {
+      font-size: 16px;
+    }
+
+    .kpiCard .value {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .kpiCard .sub {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(14, 22, 42, .7);
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 650;
+      color: #cfe0ff;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip.good {
+      border-color: rgba(45, 212, 191, .28);
+      background: rgba(13, 42, 34, .55);
+      color: #a7fff0;
+    }
+
+    .chip.bad {
+      border-color: rgba(251, 113, 133, .28);
+      background: rgba(42, 16, 24, .55);
+      color: #ffc1cc;
+    }
+
+    .miniPill {
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(14, 22, 42, .7);
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #cfe0ff;
+      white-space: nowrap;
+    }
+
+    .miniPill.paid {
+      border-color: rgba(45, 212, 191, .32);
+      background: rgba(13, 42, 34, .6);
+      color: #86f7e3;
+    }
+
+    .miniPill.unpaid {
+      border-color: rgba(251, 191, 36, .28);
+      background: rgba(44, 35, 14, .55);
+      color: #ffd98a;
+    }
+
+    .rowRight {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    @media (max-width: 640px) {
+      .kpiCard .value {
+        font-size: 18px;
+        font-weight: 800;
+      }
+
+      /* exact mobile layout user requested */
+      .grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+
+      .card.kpi-exp {
+        grid-column: span 3 !important;
+      }
+
+      .card.kpi-inc {
+        grid-column: span 3 !important;
+      }
+
+      .card.kpi-net {
+        grid-column: span 6 !important;
+      }
+
+      .card.spending,
+      .card.quick,
+      .card.recent {
+        grid-column: span 6 !important;
+      }
+    }
+
+
+    /* --- Dashboard mobile: force clean vertical stacking to avoid overlap --- */
+    @media (max-width: 680px) {
+      .dashGrid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .dashGrid>.card {
+        grid-column: 1 / -1 !important;
+      }
+
+      .kpiCard .value {
+        font-size: 18px !important;
+      }
+
+      .kpiCard h2 {
+        font-size: 13px;
+      }
+
+      .donutWrap {
+        width: 100%;
+      }
+
+      .chartRow {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .legend {
+        width: 100%;
+        min-width: 0;
+      }
     }
   </style>
 </head>
 
 <body>
-
   <div class="app">
-    <div class="header">
-      <div style="display:flex;align-items:center;gap:10px">
-        <h1>🌍 Gezi Planlayıcı</h1>
-        <span class="badge" id="cityBadge">Şehir Seçilmedi</span>
+    <header class="header">
+      <div class="left">
+        <div class="brand">
+          <h1>Ödeme Takip</h1>
+          <small id="subline">Dashboard</small>
+        </div>
+        <button id="btnPrev" class="btn small">◀</button>
+        <span class="pill"><span>📅</span><span id="monthLabel">—</span></span>
+        <button id="btnNext" class="btn small">▶</button>
+
+        <select id="statusFilter">
+          <option value="all">Durum: Hepsi</option>
+          <option value="unpaid">Durum: Alınmadı/Ödenmedi</option>
+          <option value="paid">Durum: Alındı/Ödendi</option>
+        </select>
+
+        <input id="search" placeholder="Ara (başlık / kategori)" />
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn primary" onclick="document.getElementById('fileNew').click()">+ Yeni Yükle</button>
-        <button class="btn" style="border-color:var(--accent);color:var(--accent)" onclick="openExploreModal()">🧭 Şehir
-          Keşfet</button>
-        <input type="file" id="fileNew" accept=".kml,.kmz" multiple hidden
-          onchange="handleFileSelect(this.files, true)">
-        <button class="btn" onclick="openImportModal()">🔗 Link/KML</button>
+
+      <div class="right">
+        <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
+        <button id="btnAdd" class="btn primary" style="display:none;">＋ Yeni</button>
+        <button id="btnLogout" class="btn" style="display:none;">Çıkış</button>
+        <button id="btnLoginOpen" class="btn primary">Giriş</button>
+        <span class="hint" id="topHint"></span>
+      </div>
+    </header>
+    <div id="content" class="content"></div>
+  </div>
+
+  <div class="tabbarWrap">
+    <div class="tabbar">
+      <div class="tab active" data-page="dashboard">
+        <div class="ico">📊</div>Dashboard
+      </div>
+      <div class="tab" data-page="expense">
+        <div class="ico">💸</div>Gider
+      </div>
+      <div class="tab" data-page="income">
+        <div class="ico">💰</div>Gelir
+      </div>
+      <div class="tab" data-page="calendar">
+        <div class="ico">📆</div>Takvim
+      </div>
+      <div class="tab" data-page="settings">
+        <div class="ico">⚙️</div>Ayarlar
       </div>
     </div>
+  </div>
 
-    <div class="main" id="mainContainer">
-      <!-- Panel 1: List -->
-      <div class="col" id="colList">
-        <div class="col-head">
-          <h2>Yerler</h2>
-          <div style="display:flex;gap:6px">
-            <input class="input" id="search" placeholder="Ara..." style="width:120px">
-            <button class="btn icon-btn danger" onclick="deleteActiveCity()" title="Şehri Sil">🗑</button>
-          </div>
-        </div>
-        <div class="col-body">
-          <select id="citySelect" class="input select" onchange="changeCity()"></select>
-          <div id="list" style="display:grid;gap:8px"></div>
-          <div class="dropzone" id="dropzone" onclick="document.getElementById('fileNew').click()">
-            <p>KML/KMZ Dosyalarını Sürükleyin<br>veya Tıklayın</p>
-          </div>
-        </div>
+  <div id="authBg" class="modalBg">
+    <div class="modal">
+      <div class="modalTop">
+        <strong>Giriş / Kayıt</strong>
+        <button id="authClose" class="btn small">✕</button>
       </div>
-
-      <!-- Panel 2: Map -->
-      <div class="col" id="colMap" style="padding:0">
-        <div id="map"></div>
+      <div class="modalBody">
+        <div class="hint">Dosyada <b>firebaseConfig</b> alanını kendi projenle doldur.</div>
+        <input id="aEmail" type="email" placeholder="E-posta" autocomplete="email" />
+        <input id="aPass" type="password" placeholder="Şifre" autocomplete="current-password" />
+        <div class="grid2">
+          <button id="btnLogin" class="btn primary">Giriş Yap</button>
+          <button id="btnRegister" class="btn">Kayıt Ol</button>
+        </div>
+        <div class="hint" id="authErr" style="display:none;"></div>
       </div>
+    </div>
+  </div>
 
-      <!-- Panel 3: Itinerary -->
-      <div class="col" id="colRoute">
-        <div class="col-head">
-          <h2>Rota</h2>
-          <select id="travelMode" class="input select" style="width:auto;height:24px;padding:2px 6px"
-            onchange="updateRouteMode()">
-            <option value="walking">🚶 Yürüyüş</option>
-            <option value="driving">🚗 Araba</option>
-            <option value="transit">🚌 Toplu Taşıma</option>
-            <option value="bicycling">🚲 Bisiklet</option>
+  <div id="addBg" class="modalBg">
+    <div class="modal">
+      <div class="modalTop">
+        <strong id="addTitle">Yeni Kayıt</strong>
+        <button id="addClose" class="btn small">✕</button>
+      </div>
+      <div class="modalBody">
+        <div class="grid2">
+          <select id="mDir">
+            <option value="expense">Gider</option>
+            <option value="income">Gelir</option>
+          </select>
+          <select id="mPaid">
+            <option value="false">Alınmadı/Ödenmedi</option>
+            <option value="true">Alındı/Ödendi</option>
           </select>
         </div>
-        <div class="col-body" id="itinerary"></div>
-        <div class="stats">
-          <div class="kpi-grid">
-            <div class="kpi"><b id="kpiKm">-</b>km</div>
-            <div class="kpi"><b id="kpiMin">-</b>dk</div>
+
+        <div class="grid2">
+          <input id="mAmount" type="number" step="0.01" placeholder="Tutar (₺)" />
+          <input id="mDate" type="date" />
+        </div>
+
+        <div class="grid2">
+          <select id="mCategorySel"></select>
+          <input id="mCategoryOther" placeholder="Diğer kategori yaz" style="display:none;" />
+        </div>
+
+        <input id="mTitle" placeholder="Başlık (örn: Derya, Macbook)" />
+
+        <div class="card" style="padding:10px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+              <input id="mRecurring" type="checkbox" />
+              <span style="font-weight:650;">Tekrarlayan ödeme/gelir</span>
+            </label>
+            <span class="hint">Ay bazında otomatik üretim</span>
           </div>
-          <button class="btn primary" style="width:100%" onclick="computeRoute()" id="btnCompute">Hesapla</button>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button class="btn" style="flex:1" onclick="openGoogleMaps()">Maps'te Aç</button>
-            <button class="btn danger" onclick="clearRoute()">Temizle</button>
+          <div id="recBox" class="grid2" style="margin-top:10px; display:none;">
+            <input id="mRecMonths" type="number" min="1" step="1" placeholder="Kaç ay sürecek? (örn: 4)" />
+            <div class="hint" style="display:flex; align-items:center;">Girdiğin ay dahil sayılır</div>
           </div>
-          <p id="statsMsg" style="font-size:10px;color:var(--muted);text-align:center;margin:8px 0 0 0"></p>
-        </div>
-      </div>
-    </div>
+          <div class="hr" style="margin:10px 0;"></div>
+          <label id="seriesRow" style="display:none;align-items:center;gap:10px;cursor:pointer;">
+            <input id="mSeriesUpdate" type="checkbox" />
+            <span style="font-weight:650;">Bu seri şablonunu da güncelle (gelecek aylar için)</span>
+          </label>
 
-    <div class="mobile-nav">
-      <button class="btn" onclick="showTab('colList')">Liste</button>
-      <button class="btn" onclick="showTab('colMap')">Harita</button>
-      <button class="btn" onclick="showTab('colRoute')">Rota</button>
+        </div>
+
+        <div class="hint">Şema uyumu: <b>userId, type(incoming/payment), isPaid, isRecurring, recurrenceId</b></div>
+      </div>
+      <div class="actions">
+        <button id="addSave" class="btn primary" style="flex:1;">Kaydet</button>
+        <button id="addCancel" class="btn" style="flex:1;">Vazgeç</button>
+      </div>
     </div>
   </div>
 
-  <!-- Modal -->
-  <div class="modal-overlay" id="importModal">
+  <div id="dayBg" class="modalBg">
     <div class="modal">
-      <div class="modal-head">
-        <h3>KML / MyMaps Ekle</h3>
-        <button class="btn icon-btn" onclick="closeImportModal()">✕</button>
+      <div class="modalTop">
+        <strong id="dayTitle">Gün Detayı</strong>
+        <button id="dayClose" class="btn small">✕</button>
       </div>
-      <div class="modal-body">
-        <div style="display:flex;gap:8px">
-          <input class="input" id="urlInput" placeholder="Google My Maps Paylaşım Linki veya KML URL">
-          <button class="btn primary" onclick="fetchFromUrl()" id="btnFetch">Getir</button>
-        </div>
-        <p style="font-size:11px;color:var(--muted);margin:0">
-          Google My Maps için: Harita > Paylaş > "Bağlantısı olan herkes" > Linki kopyala yapıştır.
-        </p>
-        <div style="text-align:center;font-size:10px;color:var(--muted)">— VEYA —</div>
-        <textarea id="kmlText" class="textarea"
-          placeholder="<?xml version='1.0'... KML içeriğini buraya yapıştırın"></textarea>
-
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <select id="importTarget" class="input select" style="width:auto">
-            <option value="new">Yeni Şehir</option>
-            <option value="append">Seçili Şehre Ekle</option>
-          </select>
-          <button class="btn primary" onclick="processImportText()">İçe Aktar</button>
-        </div>
-        <p id="modalStatus" style="font-size:12px;color:var(--accent);margin:0;min-height:16px"></p>
+      <div class="modalBody" id="dayBody"></div>
+      <div class="actions">
+        <button id="dayOk" class="btn primary" style="flex:1;">Kapat</button>
       </div>
     </div>
   </div>
 
-  <!-- Explore Modal -->
-  <div class="modal-overlay" id="exploreModal">
+
+  <div id="itemBg" class="modalBg">
     <div class="modal">
-      <div class="modal-head">
-        <h3>Şehir Keşfet (Otomatik Rota)</h3>
-        <button class="btn icon-btn" onclick="closeExploreModal()">✕</button>
+      <div class="modalTop">
+        <strong id="itemTitle">Kayıt Detayı</strong>
+        <button id="itemClose" class="btn small">✕</button>
       </div>
-      <div class="modal-body">
-        <div style="display:flex;gap:8px">
-          <input class="input" id="exploreInput" placeholder="Şehir adı (örn: Roma, Paris, İstanbul)..."
-            onkeyup="if(event.key==='Enter') searchCity()">
-          <button class="btn primary" onclick="searchCity()" id="btnExplore">Bul</button>
-        </div>
-        <p style="font-size:11px;color:var(--muted);margin:0">
-          OpenStreetMap verileri kullanılarak o şehirdeki en popüler turistik noktalar, müzeler ve manzaralar bulunur.
-        </p>
-        <div id="exploreResults" style="max-height:200px;overflow-y:auto;display:grid;gap:6px;margin-top:8px"></div>
-        <p id="exploreStatus" style="font-size:12px;color:var(--accent);margin:0;min-height:16px"></p>
+      <div class="modalBody" id="itemBody"></div>
+      <div class="actions">
+        <button id="itemTogglePaid" class="btn" style="flex:1;">Ödendi/Alındı</button>
+        <button id="itemEdit" class="btn primary" style="flex:1;">Düzenle</button>
+        <button id="itemDelete" class="btn danger" style="flex:1;">Sil</button>
       </div>
     </div>
   </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <script>
-    // --- State & Config ---
-    const STORAGE_KEY = "trip_planner_v4";
-    let state = { cities: [], activeCityId: null };
-    let map, markersLayer, routeLayer, mapPoints = [];
+    (function () {
+      var firebaseConfig = {
+        apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
+        authDomain: "gezi-5b54b.firebaseapp.com",
+        projectId: "gezi-5b54b",
+        storageBucket: "gezi-5b54b.firebasestorage.app",
+        messagingSenderId: "926426747002",
+        appId: "1:926426747002:web:15ea0e6c6fb19b2c156bc3",
+        measurementId: "G-KB8SKRCQ9X"
+      };
 
-    // --- Lifecycle ---
-    window.onload = () => {
-      loadState();
-      initMap();
-      renderAll();
 
-      // Drag & Drop
-      const dz = document.getElementById('dropzone');
-      dz.ondragover = e => { e.preventDefault(); dz.style.borderColor = 'var(--accent)'; };
-      dz.ondragleave = () => dz.style.borderColor = 'var(--border)';
-      dz.ondrop = e => { e.preventDefault(); handleFileSelect(e.dataTransfer.files, true); };
-    };
+      function $(id) { return document.getElementById(id); }
+      var fmt = new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" });
 
-    // --- App Logic ---
-    function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
-
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) state = JSON.parse(raw);
-      } catch (e) { console.error(e); }
-    }
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
-
-    function activeCity() { return state.cities.find(c => c.id === state.activeCityId) || null; }
-
-    function renderAll() {
-      renderCitySelect();
-      renderList();
-      renderRoute();
-      renderMapMarkers();
-      drawRouteOnMap();
-      updateBadge();
-    }
-
-    function renderCitySelect() {
-      const s = document.getElementById('citySelect');
-      s.innerHTML = "";
-      if (!state.cities.length) {
-        s.innerHTML = "<option>Şehir Yok</option>";
-        s.disabled = true;
-        return;
+      var CATEGORY_COLORS = {
+        "Kira": "#7c9cff", "Market": "#2dd4bf", "Fatura": "#fbbf24", "Ulaşım": "#fb7185", "Eğlence": "#a78bfa",
+        "Sağlık": "#34d399", "Eğitim": "#60a5fa", "Yemek": "#f472b6", "Giyim": "#f59e0b", "Kredi/Kart": "#f97316",
+        "Nakit": "#93c5fd", "Diğer": "#9ca3af"
+      };
+      var PRESET_CATS = ["Kira", "Market", "Fatura", "Ulaşım", "Yemek", "Eğlence", "Sağlık", "Eğitim", "Giyim", "Kredi/Kart", "Nakit", "Diğer"];
+      function colorForCategory(cat) {
+        cat = (cat || "Diğer").trim() || "Diğer";
+        return CATEGORY_COLORS[cat] || CATEGORY_COLORS["Diğer"];
       }
-      s.disabled = false;
-      state.cities.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.id;
-        opt.textContent = `${c.name} (${c.points.length})`;
-        opt.selected = c.id === state.activeCityId;
-        s.appendChild(opt);
-      });
-    }
-
-    function changeCity() {
-      const val = document.getElementById('citySelect').value;
-      if (val) { state.activeCityId = val; saveState(); renderAll(); }
-    }
-
-    function renderList() {
-      const c = activeCity();
-      const list = document.getElementById('list');
-      list.innerHTML = "";
-      if (!c) return;
-
-      const filter = document.getElementById('search').value.toLowerCase();
-      const points = c.points.filter(p => !filter || p.name.toLowerCase().includes(filter));
-
-      points.forEach(p => {
-        const sel = c.selectedIds.includes(p.id);
-        const div = document.createElement('div');
-        div.className = "card";
-        div.style.borderColor = sel ? "var(--accent)" : "";
-        div.innerHTML = `
-      <input type="checkbox" class="check" ${sel ? 'checked' : ''} onchange="togglePoint('${p.id}')">
-      <div style="flex:1;overflow:hidden">
-        <h3>${p.name}</h3>
-        <div class="meta">
-          <span class="tag">${p.folder || 'Genel'}</span>
-        </div>
-      </div>
-      <button class="btn icon-btn" onclick="map.flyTo([${p.lat}, ${p.lng}], 15)">📍</button>
-    `;
-        list.appendChild(div);
-      });
-    }
-
-    function renderRoute() {
-      const c = activeCity();
-      const div = document.getElementById('itinerary');
-      div.innerHTML = "";
-      if (!c) return;
-
-      const ordered = getOrderedPoints(c);
-      ordered.forEach((p, idx) => {
-        const row = document.createElement('div');
-        row.className = 'it-item';
-        row.innerHTML = `
-      <div style="flex:1"><strong>${idx + 1}. ${p.name}</strong></div>
-      <div class="sort-controls">
-        <button class="btn icon-btn" onclick="movePoint('${p.id}', -1)" ${idx === 0 ? 'disabled' : ''}>↑</button>
-        <button class="btn icon-btn" onclick="movePoint('${p.id}', 1)" ${idx === ordered.length - 1 ? 'disabled' : ''}>↓</button>
-        <button class="btn icon-btn danger" onclick="togglePoint('${p.id}')">✕</button>
-      </div>
-    `;
-        div.appendChild(row);
-      });
-
-      // Update stats display if available
-      const stats = c.lastStats;
-      document.getElementById('kpiKm').textContent = stats ? stats.totalKm.toFixed(1) : '-';
-      document.getElementById('kpiMin').textContent = stats ? Math.round(stats.totalMin) : '-';
-      document.getElementById('statsMsg').textContent = stats ? `Son hesap: ${stats.source}` : '';
-
-      // Selection mode
-      const modeSel = document.getElementById('travelMode');
-      if (c.travelMode) modeSel.value = c.travelMode;
-    }
-
-    function updateBadge() {
-      const c = activeCity();
-      document.getElementById('cityBadge').textContent = c ? c.name : "Şehir Seçilmedi";
-    }
-
-    function initMap() {
-      map = L.map('map', { zoomControl: false }).setView([41.0082, 28.9784], 11);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OSM & CartoDB'
-      }).addTo(map);
-      L.control.zoom({ position: 'bottomright' }).addTo(map);
-      markersLayer = L.layerGroup().addTo(map);
-      routeLayer = L.layerGroup().addTo(map);
-    }
-
-    function renderMapMarkers() {
-      markersLayer.clearLayers();
-      const c = activeCity();
-      if (!c) return;
-
-      const bounds = [];
-      c.points.forEach(p => {
-        const isSel = c.selectedIds.includes(p.id);
-        const color = isSel ? '#38bdf8' : '#94a3b8';
-
-        const icon = L.divIcon({
-          className: 'custom-pin',
-          html: `<div style="background:${color};width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.5)"></div>`,
-          iconSize: [12, 12]
-        });
-
-        const m = L.marker([p.lat, p.lng], { icon }).bindPopup(`<b>${p.name}</b><br>${p.folder || ''}`);
-        m.addTo(markersLayer);
-        bounds.push([p.lat, p.lng]);
-      });
-
-      if (bounds.length && !state.mapMoved) {
-        map.fitBounds(bounds, { padding: [50, 50] });
-        state.mapMoved = true;
+      function escapeHtml(text) {
+        if (text === null || text === undefined) return "";
+        text = String(text);
+        return text
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
       }
-    }
+      function toast(msg) {
+        var t = $("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        setTimeout(function () { t.classList.remove("show"); }, 2400);
+      }
+      function pad2(n) { return String(n).padStart(2, "0"); }
+      function ymFromDate(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1); }
+      function nextMonth(ym) {
+        var parts = ym.split("-").map(Number);
+        var d = new Date(parts[0], parts[1] - 1, 1);
+        d.setMonth(d.getMonth() + 1);
+        return ymFromDate(d);
+      }
+      function prevMonth(ym) {
+        var parts = ym.split("-").map(Number);
+        var d = new Date(parts[0], parts[1] - 1, 1);
+        d.setMonth(d.getMonth() - 1);
+        return ymFromDate(d);
+      }
+      function uuid() { return Math.random().toString(16).slice(2) + Math.random().toString(16).slice(2); }
+      function monthOfDoc(d) {
+        var date = (d && d.date ? String(d.date) : "").slice(0, 7);
+        if (date && date.length === 7) return date;
+        var rs = (d && d.recurrenceStart ? String(d.recurrenceStart) : "").slice(0, 7);
+        return (rs && rs.length === 7) ? rs : "";
+      }
+      function normalizeDir(d) { return (d && d.type === "incoming") ? "income" : "expense"; }
+      function isPaid(d) { return !!(d && d.isPaid); }
+      function isRecurring(d) { return !!(d && d.isRecurring); }
+      function isTemplate(d) { return !!(d && d.isTemplate); }
 
-    function drawRouteOnMap() {
-      if (!routeLayer) return;
-      routeLayer.clearLayers();
-      const c = activeCity();
-      if (!c || !c.lastStats || !c.lastStats.latLngs) return;
+      var selectedMonth = ymFromDate(new Date());
+      var currentPage = "dashboard";
+      var unsub = null;
+      var allRows = [];
+      var user = null;
+      var editingId = null; // doc id
+      var editingRow = null;
 
-      // Draw polyline
-      L.polyline(c.lastStats.latLngs, { color: '#ef4444', weight: 5, opacity: 0.8 }).addTo(routeLayer);
-    }
-
-    // --- Data Operations ---
-
-    async function handleFileSelect(files, isNew) {
-      if (!files || !files.length) return;
-
-      let points = [];
-      let name = files[0].name.replace(/\.(kml|kmz)$/i, "");
-
-      for (let f of files) {
-        try {
-          let txt = "";
-          if (f.name.toLowerCase().endsWith('.kmz')) {
-            const buf = await readFileBuf(f);
-            const zip = await JSZip.loadAsync(buf);
-            const kmlFile = Object.keys(zip.files).find(n => n.endsWith('.kml'));
-            if (kmlFile) txt = await zip.file(kmlFile).async("text");
-          } else {
-            txt = await readFileTxt(f);
-          }
-          if (txt) points = points.concat(parseKml(txt));
-        } catch (e) { alert("Hata: " + f.name); }
+      function openAddModalForCreate() {
+        editingId = null;
+        editingRow = null;
+        $("addTitle").textContent = "Yeni Kayıt";
+        $("mSeriesUpdate").checked = false;
+        $("seriesRow").style.display = "none";
       }
 
-      if (!points.length) return alert("Nokta bulunamadı (Point/LineString/Polygon parse edilemedi).");
+      function openAddModalForEdit(row) {
+        editingId = row.id;
+        editingRow = row;
+        $("addTitle").textContent = "Kayıt Düzenle";
+        $("mDir").value = (normalizeDir(row) === "income") ? "income" : "expense";
+        $("mPaid").value = String(!!row.isPaid);
+        $("mAmount").value = Number(row.amount || 0) || "";
+        $("mDate").value = String(row.date || selectedMonth + "-01").slice(0, 10);
 
-      addCity(name, points, isNew ? 'new' : 'append');
-    }
-
-    function parseKml(xmlText) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(xmlText, "text/xml");
-      const places = [];
-
-      const placemarks = doc.getElementsByTagName("Placemark");
-      for (let p of placemarks) {
-        const name = getNodeVal(p, "name") || "İsimsiz";
-        const desc = getNodeVal(p, "description") || "";
-        // Check MultiGeometry/Point/LineString
-        let coords = "";
-
-        // Simplistic coord finder
-        const coordNodes = p.getElementsByTagName("coordinates");
-        if (coordNodes.length > 0) coords = coordNodes[0].textContent.trim();
-
-        if (coords) {
-          const parts = coords.split(/\s+/)[0].split(','); // Take first point
-          if (parts.length >= 2) {
-            // Folder name?
-            let folder = "Genel";
-            if (p.parentNode && p.parentNode.nodeName === "Folder") {
-              const fn = getNodeVal(p.parentNode, "name");
-              if (fn) folder = fn;
-            }
-
-            places.push({ id: uid(), name, lat: parseFloat(parts[1]), lng: parseFloat(parts[0]), folder, desc });
-          }
-        }
-      }
-      return places;
-    }
-
-    function addCity(name, points, mode) {
-      if (mode === 'new' || !state.cities.length) {
-        // Ask for name uniqueness? default to filename
-        const newCity = {
-          id: uid(),
-          name: name || "Yeni Şehir",
-          points: points,
-          selectedIds: points.map(p => p.id), // Select all by default
-          order: points.map(p => p.id),
-          travelMode: 'walking',
-          lastStats: null
-        };
-        state.cities.unshift(newCity);
-        state.activeCityId = newCity.id;
-      } else {
-        // Append
-        const c = activeCity();
-        c.points = c.points.concat(points);
-        // Add new ones to selection
-        const newIds = points.map(p => p.id);
-        c.selectedIds = c.selectedIds.concat(newIds);
-        c.order = c.order.concat(newIds);
-      }
-
-      state.mapMoved = false; // Reset map fit trigger
-      saveState();
-      renderAll();
-    }
-
-    function getNodeVal(el, tag) {
-      const n = el.getElementsByTagName(tag)[0];
-      return n ? n.textContent.trim() : null;
-    }
-    function readFileTxt(f) { return new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsText(f); }); }
-    function readFileBuf(f) { return new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsArrayBuffer(f); }); }
-
-    // --- Point Operations ---
-    function togglePoint(id) {
-      const c = activeCity();
-      if (!c) return;
-      const idx = c.selectedIds.indexOf(id);
-      if (idx > -1) {
-        c.selectedIds.splice(idx, 1);
-        c.order = c.order.filter(x => x !== id);
-      } else {
-        c.selectedIds.push(id);
-        c.order.push(id);
-      }
-      saveState();
-      renderAll();
-    }
-
-    function movePoint(id, dir) {
-      const c = activeCity();
-      const arr = c.order;
-      const i = arr.indexOf(id);
-      if (i > -1 && i + dir >= 0 && i + dir < arr.length) {
-        [arr[i], arr[i + dir]] = [arr[i + dir], arr[i]];
-        saveState();
-        renderAll();
-      }
-    }
-
-    function deleteActiveCity() {
-      if (!state.activeCityId) return;
-      if (confirm("Bu şehri ve tüm noktalarını silmek istediğinize emin misiniz?")) {
-        state.cities = state.cities.filter(c => c.id !== state.activeCityId);
-        state.activeCityId = state.cities.length ? state.cities[0].id : null;
-        saveState();
-        renderAll();
-      }
-    }
-
-    function clearRoute() {
-      const c = activeCity();
-      if (c) {
-        c.selectedIds = [];
-        c.order = [];
-        c.lastStats = null;
-        saveState();
-        renderAll();
-      }
-    }
-
-    // --- Route & Stats ---
-    function getOrderedPoints(c) {
-      return c.order.map(id => c.points.find(p => p.id === id)).filter(Boolean);
-    }
-
-    function updateRouteMode() {
-      const c = activeCity();
-      if (c) {
-        c.travelMode = document.getElementById('travelMode').value;
-        saveState();
-      }
-    }
-
-    async function computeRoute() {
-      const c = activeCity();
-      if (!c) return;
-      const pts = getOrderedPoints(c);
-      if (pts.length < 2) return alert("En az 2 nokta gerekli.");
-
-      const btn = document.getElementById('btnCompute');
-      btn.innerText = "⏳";
-      btn.disabled = true;
-
-      let totalKm = 0;
-      let totalMin = 0;
-      let source = "Kuş Uçuşu (Offline)";
-      let allLatLngs = [];
-
-      // Try OSRM
-      try {
-        let profile = "walking";
-        if (c.travelMode === 'driving') profile = "driving";
-        if (c.travelMode === 'bicycling') profile = "cycling";
-        if (c.travelMode === 'transit') profile = "driving";
-
-        source = "OSRM (" + profile + ")";
-
-        for (let i = 0; i < pts.length - 1; i++) {
-          const p1 = pts[i];
-          const p2 = pts[i + 1];
-          // Get full geometry
-          const url = `https://router.project-osrm.org/route/v1/${profile}/${p1.lng},${p1.lat};${p2.lng},${p2.lat}?overview=full&geometries=geojson`;
-
-          const res = await fetch(url);
-          const j = await res.json();
-          if (j.routes && j.routes.length) {
-            totalKm += j.routes[0].distance / 1000;
-            totalMin += j.routes[0].duration / 60;
-            // OSRM geojson: [lng, lat] -> Leaflet: [lat, lng]
-            const coords = j.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-            allLatLngs = allLatLngs.concat(coords);
-          } else {
-            throw new Error("No route");
-          }
-          await new Promise(r => setTimeout(r, 100));
-        }
-      } catch (e) {
-        // Fallback Haversine - straight lines
-        source = "Kuş Uçuşu (Hata/Offline)";
-        totalKm = 0; totalMin = 0;
-        allLatLngs = [];
-        const speed = c.travelMode === 'walking' ? 5 : (c.travelMode === 'driving' ? 50 : 20);
-
-        for (let i = 0; i < pts.length - 1; i++) {
-          const p1 = pts[i], p2 = pts[i + 1];
-          const d = haversine(p1, p2);
-          totalKm += d;
-          totalMin += (d / speed) * 60;
-          allLatLngs.push([p1.lat, p1.lng]);
-          allLatLngs.push([p2.lat, p2.lng]);
-        }
-      }
-
-      c.lastStats = { totalKm, totalMin, source, latLngs: allLatLngs };
-      saveState();
-      renderAll();
-      btn.innerText = "Hesapla";
-      btn.disabled = false;
-    }
-
-    function haversine(p1, p2) {
-      var R = 6371;
-      var dLat = (p2.lat - p1.lat) * Math.PI / 180;
-      var dLon = (p2.lng - p1.lng) * Math.PI / 180;
-      var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(p1.lat * Math.PI / 180) * Math.cos(p2.lat * Math.PI / 180) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
-    }
-
-    function openGoogleMaps() {
-      const c = activeCity();
-      if (!c) return;
-      const pts = getOrderedPoints(c);
-      if (pts.length < 2) return alert("En az 2 nokta gerekli.");
-
-      const origin = `${pts[0].lat},${pts[0].lng}`;
-      const dest = `${pts[pts.length - 1].lat},${pts[pts.length - 1].lng}`;
-      const waypoints = pts.slice(1, -1).map(p => `${p.lat},${p.lng}`).join('|');
-
-      const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}&waypoints=${waypoints}&travelmode=${c.travelMode}`;
-      window.open(url, '_blank');
-    }
-
-    // --- Import Modal Logic ---
-    const modal = document.getElementById('importModal');
-    const urlInput = document.getElementById('urlInput');
-    const kmlTextArea = document.getElementById('kmlText');
-    const modalStatus = document.getElementById('modalStatus');
-
-    function openImportModal() {
-      modal.classList.add('open');
-      urlInput.value = "";
-      kmlTextArea.value = "";
-      modalStatus.textContent = "";
-    }
-    function closeImportModal() { modal.classList.remove('open'); }
-
-    async function fetchFromUrl() {
-      const rawUrl = urlInput.value.trim();
-      if (!rawUrl) return;
-
-      const btn = document.getElementById('btnFetch');
-      btn.disabled = true;
-      btn.textContent = "...";
-      modalStatus.textContent = "Bağlanıyor...";
-
-      // Smart MyMaps URL logic
-      let fetchUrl = rawUrl;
-
-      // Detect standard viewer URL: google.com/maps/d/viewer?mid=XXXXX
-      // We need to convert it to: google.com/maps/d/kml?mid=XXXXX
-      if (rawUrl.includes("maps/d/") && (rawUrl.includes("viewer") || rawUrl.includes("edit"))) {
-        try {
-          const u = new URL(rawUrl);
-          const mid = u.searchParams.get("mid");
-          if (mid) {
-            // Direct KML export link
-            // Note: Direct fetch from browser to google.com often fails CORS.
-            // We will try a CORS proxy if direct fails, or warn user.
-            fetchUrl = `https://www.google.com/maps/d/kml?mid=${mid}&forcekml=1`;
-          }
-        } catch (e) { }
-      }
-
-      try {
-        // Attempt 1: Direct
-        let res = await fetch(fetchUrl).catch(() => null);
-
-        // Attempt 2: CORS Proxy (using a public one for demo: corsproxy.io)
-        if (!res || !res.ok) {
-          modalStatus.textContent = "Direkt erişim engellendi, proxy deneniyor...";
-          const proxy = "https://corsproxy.io/?";
-          res = await fetch(proxy + encodeURIComponent(fetchUrl));
-        }
-
-        if (res.ok) {
-          const text = await res.text();
-          kmlTextArea.value = text;
-          modalStatus.textContent = "KML başarıyla alındı! 'İçe Aktar' tuşuna basın.";
+        // category
+        fillCategorySelect();
+        var cat = (row.category || "Diğer").trim() || "Diğer";
+        if (PRESET_CATS.includes(cat)) {
+          $("mCategorySel").value = cat;
+          $("mCategoryOther").style.display = (cat === "Diğer") ? "" : "none";
+          $("mCategoryOther").value = "";
         } else {
-          throw new Error("Erişim hatası");
+          $("mCategorySel").value = "Diğer";
+          $("mCategoryOther").style.display = "";
+          $("mCategoryOther").value = cat;
         }
+
+        $("mTitle").value = row.title || "";
+
+        // recurring
+        var rec = !!row.isRecurring;
+        $("mRecurring").checked = rec;
+        $("recBox").style.display = rec ? "grid" : "none";
+        $("mRecMonths").value = (row.recurrenceTotalMonths ? Number(row.recurrenceTotalMonths) : "");
+
+        // allow updating template (future months) if recurring
+        if (rec && row.recurrenceId) {
+          $("seriesRow").style.display = "flex";
+          $("mSeriesUpdate").checked = false;
+        } else {
+          $("seriesRow").style.display = "none";
+          $("mSeriesUpdate").checked = false;
+        }
+      }
+
+      // Delegated actions (works in overflow tables + mobile Safari)
+      document.addEventListener("click", function (e) {
+        var btn = e.target && e.target.closest ? e.target.closest("button[data-act]") : null;
+        if (!btn) return;
+        var act = btn.getAttribute("data-act");
+        var id = btn.getAttribute("data-id");
+        if (!act || !id) return;
+
+        if (!user) {
+          toast("Önce giriş yap.");
+          return;
+        }
+
+        var row = allRows.find(function (r) { return r.id === id; });
+        if (!row) return;
+
+        var ref = db.collection("payments").doc(id);
+
+        if (act === "toggle") {
+          ref.update({ isPaid: !isPaid(row), updatedAt: serverTs() })
+            .then(function () { toast("Güncellendi."); renderPage(); })
+            .catch(function (err) { console.error(err); toast("İşlem hatası: " + (err.code || err.message)); });
+        }
+
+        if (act === "del") {
+          if (!confirm("Silinsin mi?")) return;
+          ref.delete()
+            .then(function () { toast("Silindi."); renderPage(); })
+            .catch(function (err) { console.error(err); toast("İşlem hatası: " + (err.code || err.message)); });
+        }
+
+        if (act === "edit") {
+          openAddModalForEdit(row);
+          window.__editingId = row.id;
+          document.getElementById("mRecurring").disabled = false;
+          document.getElementById("mRecMonths").disabled = false;
+          addBg.classList.add("show");
+        }
+      });
+
+      var app = null, auth = null, db = null;
+      try {
+        app = firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
       } catch (e) {
         console.error(e);
-        modalStatus.innerHTML = `Hata: URL okunamadı (CORS). <br>Lütfen linki tarayıcıda açıp inen dosyayı yükleyin veya içeriği yapıştırın.`;
+        toast("Firebase config eksik/yanlış. firebaseConfig'i doldur.");
       }
 
-      btn.disabled = false;
-      btn.textContent = "Getir";
-    }
+      function setActiveTab(page) {
+        currentPage = page;
+        document.querySelectorAll(".tab").forEach(function (t) {
+          t.classList.toggle("active", t.getAttribute("data-page") === page);
+        });
+        $("subline").textContent =
+          page === "dashboard" ? "Dashboard" :
+            page === "expense" ? "Gider" :
+              page === "income" ? "Gelir" :
+                page === "calendar" ? "Takvim" : "Ayarlar";
+        renderPage();
+      }
+      document.querySelectorAll(".tab").forEach(function (tab) {
+        tab.addEventListener("click", function () { setActiveTab(tab.getAttribute("data-page")); });
+      });
 
-    // --- Explore City Logic ---
-    const expModal = document.getElementById('exploreModal');
-    const expInput = document.getElementById('exploreInput');
-    const expStatus = document.getElementById('exploreStatus');
-    const expResults = document.getElementById('exploreResults');
+      $("btnPrev").addEventListener("click", function () { selectedMonth = prevMonth(selectedMonth); onMonthChanged(); });
+      $("btnNext").addEventListener("click", function () { selectedMonth = nextMonth(selectedMonth); onMonthChanged(); });
+      $("statusFilter").addEventListener("change", renderPage);
+      $("search").addEventListener("input", renderPage);
 
-    function openExploreModal() { expModal.classList.add('open'); expInput.value = ""; expResults.innerHTML = ""; expStatus.textContent = ""; expInput.focus(); }
-    function closeExploreModal() { expModal.classList.remove('open'); }
+      var authBg = $("authBg");
+      $("btnLoginOpen").addEventListener("click", function () { authBg.classList.add("show"); });
+      $("authClose").addEventListener("click", function () { authBg.classList.remove("show"); });
+      authBg.addEventListener("click", function (e) { if (e.target === authBg) authBg.classList.remove("show"); });
+      function showAuthErr(msg) { var el = $("authErr"); el.style.display = ""; el.textContent = msg; }
+      function hideAuthErr() { var el = $("authErr"); el.style.display = "none"; el.textContent = ""; }
 
-    async function searchCity() {
-      const query = expInput.value.trim();
-      if (!query) return;
-      const btn = document.getElementById('btnExplore');
-      btn.disabled = true; btn.textContent = "...";
-      expStatus.textContent = "Şehir merkezi aranıyor...";
-      expResults.innerHTML = "";
+      $("btnLogin").addEventListener("click", function () {
+        var email = $("aEmail").value.trim();
+        var pass = $("aPass").value;
+        if (!email || !pass) return showAuthErr("E-posta/şifre gir.");
+        auth.signInWithEmailAndPassword(email, pass)
+          .then(function () { hideAuthErr(); authBg.classList.remove("show"); })
+          .catch(function (e) { console.error(e); showAuthErr(e.code || e.message); });
+      });
 
-      try {
-        // 1. Geocoding via Photon Komoot
-        const searchUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`;
-        const res = await fetch(searchUrl);
-        if (!res.ok) throw new Error("Geocoding sunucu hatası.");
-        const data = await res.json();
+      $("btnRegister").addEventListener("click", function () {
+        var email = $("aEmail").value.trim();
+        var pass = $("aPass").value;
+        if (!email || !pass) return showAuthErr("E-posta/şifre gir.");
+        auth.createUserWithEmailAndPassword(email, pass)
+          .then(function () { hideAuthErr(); authBg.classList.remove("show"); })
+          .catch(function (e) { console.error(e); showAuthErr(e.code || e.message); });
+      });
 
-        if (!data || !data.features || !data.features.length) throw new Error("Şehir bulunamadı.");
+      $("btnLogout").addEventListener("click", function () { auth.signOut().catch(function (e) { console.error(e); }); });
 
-        const feat = data.features[0];
-        const [lon, lat] = feat.geometry.coordinates; // GeoJSON [lon, lat]
-        const displayName = feat.properties.name + ", " + (feat.properties.country || "");
+      var addBg = $("addBg");
+      function fillCategorySelect() {
+        var sel = $("mCategorySel");
+        sel.innerHTML = PRESET_CATS.map(function (c) { return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; }).join("");
+        sel.value = "Market";
+        $("mCategoryOther").style.display = "none";
+      }
+      $("mCategorySel").addEventListener("change", function () {
+        $("mCategoryOther").style.display = ($("mCategorySel").value === "Diğer") ? "" : "none";
+      });
+      $("mRecurring").addEventListener("change", function () { $("recBox").style.display = $("mRecurring").checked ? "grid" : "none"; });
 
-        expStatus.textContent = `Bulundu: ${displayName}. Popüler yerler taranıyor (biraz sürebilir)...`;
+      $("btnAdd").addEventListener("click", function () {
+        if (!user) return toast("Önce giriş yap.");
+        $("mDir").value = "expense";
+        $("mPaid").value = "false";
+        $("mAmount").value = "";
+        $("mDate").value = selectedMonth + "-01";
+        fillCategorySelect();
+        $("mCategoryOther").value = "";
+        $("mTitle").value = "";
+        $("mRecurring").checked = false;
+        $("recBox").style.display = "none";
+        $("mRecMonths").value = "";
+        window.__editingId = null;
+        document.getElementById("mRecurring").disabled = false;
+        document.getElementById("mRecMonths").disabled = false;
+        addBg.classList.add("show");
+      });
+      $("addClose").addEventListener("click", function () {
+        addBg.classList.remove("show");
+        editingId = null; editingRow = null;
+      });
+      $("addCancel").addEventListener("click", function () {
+        addBg.classList.remove("show");
+        editingId = null; editingRow = null;
+      });
+      addBg.addEventListener("click", function (e) { if (e.target === addBg) addBg.classList.remove("show"); });
 
-        // 2. Overpass API (Attractions) with Multi-Server Fallback
-        // Increased timeout to 45s, radius 5km
-        const overpassQuery = `
-                [out:json][timeout:45];
-                (
-                  node["tourism"~"attraction|museum|viewpoint|monument"](around:5000,${lat},${lon});
-                  way["tourism"~"attraction|museum|viewpoint|monument"](around:5000,${lat},${lon});
-                  node["historic"~"castle|ruins|monument"](around:5000,${lat},${lon});
-                );
-                out center 30;
-            `;
-
-        const servers = [
-          "https://overpass-api.de/api/interpreter",
-          "https://overpass.kumi.systems/api/interpreter",
-          "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
-        ];
-
-        let opData = null;
-        let lastError = null;
-
-        for (const server of servers) {
-          try {
-            // Determine raw fetch or via corsproxy if needed (try direct first)
-            const opUrl = server + "?data=" + encodeURIComponent(overpassQuery);
-            const opRes = await fetch(opUrl);
-
-            if (!opRes.ok) throw new Error(`HTTP ${opRes.status}`);
-
-            const opText = await opRes.text();
-            // Check if HTML error page
-            if (opText.trim().startsWith("<")) throw new Error("HTML error page");
-
-            opData = JSON.parse(opText);
-            if (opData) break; // Success
-
-          } catch (e) {
-            console.warn(`Server ${server} failed: ${e.message}`);
-            lastError = e;
-            continue; // Try next server
-          }
+      function categoryValueFromForm() {
+        var sel = $("mCategorySel").value;
+        if (sel === "Diğer") {
+          var other = $("mCategoryOther").value.trim();
+          return other || "Diğer";
         }
+        return sel;
+      }
+      function serverTs() { return firebase.firestore.FieldValue.serverTimestamp(); }
 
-        if (!opData || !opData.elements) {
-          throw new Error("Tüm sunucular meşgul veya hata verdi. Lütfen 1 dakika sonra tekrar deneyin.");
-        }
+      $("addSave").addEventListener("click", function () {
+        if (!user) return;
+        var editingId = window.__editingId || null;
 
-        if (!opData.elements.length) {
-          throw new Error("Bu bölgede turistik nokta verisi bulunamadı.");
-        }
+        // EDIT MODE: update existing doc
+        if (editingId) {
+          var dirE = $("mDir").value;
+          var paidE = $("mPaid").value === "true";
+          var amountE = Number($("mAmount").value);
+          var dateE = $("mDate").value;
+          var categoryE = categoryValueFromForm();
+          var titleE = $("mTitle").value.trim();
+          var recurringE = $("mRecurring").checked;
+          var recMonthsE = Number($("mRecMonths").value);
 
-        // Filter and Format
-        const points = [];
-        opData.elements.forEach(el => {
-          if (el.tags && el.tags.name) {
-            const pLat = el.lat || (el.center && el.center.lat);
-            const pLng = el.lon || (el.center && el.center.lon);
-            if (pLat && pLng) {
-              if (!points.find(p => p.name === el.tags.name)) {
-                let folder = "Genel";
-                if (el.tags.tourism === 'museum') folder = "Müze";
-                else if (el.tags.historic) folder = "Tarihi";
-                else if (el.tags.tourism === 'viewpoint') folder = "Manzara";
-                else folder = "Turistik";
+          if (!amountE || amountE <= 0) return toast("Tutar gir.");
+          if (!dateE) return toast("Tarih seç.");
+          if (recurringE && (!recMonthsE || recMonthsE < 1)) return toast("Tekrarlayan için ay sayısı gir.");
 
-                points.push({
-                  id: uid(),
-                  name: el.tags.name,
-                  lat: pLat,
-                  lng: pLng,
-                  folder: folder,
-                  desc: el.tags.description || ""
-                });
+          var payloadE = {
+            amount: amountE,
+            category: categoryE,
+            date: dateE,
+            isPaid: paidE,
+            title: titleE || "",
+            type: (dirE === "income") ? "incoming" : "payment",
+            isRecurring: recurringE,
+            recurrenceTotalMonths: recurringE ? recMonthsE : null,
+            updatedAt: serverTs()
+          };
+
+          var refE = db.collection("payments").doc(editingId);
+
+          refE.set(payloadE, { merge: true })
+            .then(function () {
+              // Optionally update template (future months) if recurring
+              if (($("mSeriesUpdate").checked) && editingRow && editingRow.recurrenceId) {
+                var tid = "T_" + String(editingRow.recurrenceId);
+                return db.collection("payments").doc(tid).set({
+                  amount: amountE,
+                  category: categoryE,
+                  title: titleE || "",
+                  type: (dirE === "income") ? "incoming" : "payment",
+                  recurrenceTotalMonths: recMonthsE,
+                  updatedAt: serverTs()
+                }, { merge: true }).catch(function (err) { console.error(err); });
               }
-            }
-          }
-        });
+            })
+            .then(function () {
+              addBg.classList.remove("show");
+              editingId = null; editingRow = null;
+              toast("Güncellendi.");
+            })
+            .catch(function (err) {
+              console.error(err);
+              toast("Güncelleme hatası: " + (err.code || err.message));
+            });
 
-        if (!points.length) throw new Error("İsimli nokta bulunamadı.");
-
-        // Success
-        addCity(displayName + " (Keşfet)", points, 'new');
-        closeExploreModal();
-        alert(`${displayName} için ${points.length} popüler nokta eklendi!`);
-
-      } catch (e) {
-        console.error(e);
-        expStatus.textContent = "Hata: " + e.message;
-      } finally {
-        btn.disabled = false; btn.textContent = "Bul";
-      }
-    }
-
-    function processImportText() {
-      const txt = kmlTextArea.value.trim();
-      if (!txt) return alert("İçerik boş.");
-      if (!txt.startsWith("<?xml") && !txt.includes("<kml")) return alert("Geçersiz KML formatı.");
-
-      try {
-        const points = parseKml(txt);
-        if (!points.length) throw new Error("Nokta bulunamadı");
-
-        // Determine target
-        const target = document.getElementById('importTarget').value; // 'new' or 'append'
-        let mainName = "İçe Aktarılan";
-        const nameInput = document.getElementById('kmlCityName');
-        if (nameInput && nameInput.value.trim()) mainName = nameInput.value.trim();
-
-        // Group by folder
-        const groups = {};
-        points.forEach(p => {
-          const k = p.folder || "Genel";
-          if (!groups[k]) groups[k] = [];
-          groups[k].push(p);
-        });
-        const folderNames = Object.keys(groups);
-
-        // Logic: If 'new' mode AND multiple folders exist -> Split them
-        if (target === 'new' && folderNames.length > 1) {
-          // Iterate in reverse so the first folder ends up at the top of the list (since addCity uses unshift)
-          for (let i = folderNames.length - 1; i >= 0; i--) {
-            const fname = folderNames[i];
-            // Use folder name as city name
-            addCity(fname, groups[fname], 'new');
-          }
-          alert(`İşlem tamam! ${folderNames.length} ayrı katman (şehir) olarak eklendi.`);
-        } else {
-          // Standard merge (single folder or append mode)
-          if (folderNames.length === 1 && target === 'new' && !nameInput.value.trim()) {
-            mainName = folderNames[0]; // Auto-name from folder if single
-          }
-          addCity(mainName, points, target);
-          alert(`${points.length} nokta başarıyla eklendi.`);
+          return;
         }
 
-        closeImportModal();
-        search.value = "";
-        renderAll();
+        var dir = $("mDir").value;
+        var paid = $("mPaid").value === "true";
+        var amount = Number($("mAmount").value);
+        var date = $("mDate").value;
+        var category = categoryValueFromForm();
+        var title = $("mTitle").value.trim();
+        var recurring = $("mRecurring").checked;
+        var recMonths = Number($("mRecMonths").value);
 
-      } catch (e) {
-        alert("Hata: " + e.message);
+        if (!amount || amount <= 0) return toast("Tutar gir.");
+        if (!date) return toast("Tarih seç.");
+        if (recurring && (!recMonths || recMonths < 1)) return toast("Tekrarlayan için ay sayısı gir.");
+
+        var month = date.slice(0, 7);
+        // If editing, update existing document (do not re-generate recurring)
+        if (editingId) {
+          var ref = db.collection("payments").doc(editingId);
+          var row0 = allRows.find(function (r) { return r.id === editingId; }) || {};
+          var payload = {
+            amount: amount,
+            category: category,
+            date: date,
+            isPaid: paid,
+            title: title || "",
+            type: (dir === "income") ? "incoming" : "payment",
+            updatedAt: serverTs()
+          };
+          ref.update(payload).then(function () {
+            addBg.classList.remove("show");
+            toast("Güncellendi.");
+            window.__editingId = null;
+            // unlock recurring fields back for new entries
+            document.getElementById("mRecurring").disabled = false;
+            document.getElementById("mRecMonths").disabled = false;
+          }).catch(function (e) {
+            console.error(e);
+            toast("Güncelleme hatası: " + (e.code || e.message));
+          });
+          return;
+        }
+
+        if (recurring) {
+          var rid = uuid().slice(0, 8);
+          var templateId = "T_" + rid;
+          var common = {
+            userId: user.uid,
+            amount: amount,
+            category: category,
+            isRecurring: true,
+            mode: "payment",
+            recurrenceId: rid,
+            recurrenceStart: month,
+            recurrenceTotalMonths: recMonths,
+            title: title || "",
+            type: (dir === "income") ? "incoming" : "payment",
+            updatedAt: serverTs()
+          };
+
+          Promise.resolve()
+            .then(function () {
+              return db.collection("payments").doc(templateId).set(Object.assign({}, common, {
+                isTemplate: true,
+                date: month + "-01",
+                isPaid: false,
+                createdAt: serverTs()
+              }), { merge: true });
+            })
+            .then(function () {
+              return db.collection("payments").doc(rid + "_" + month).set(Object.assign({}, common, {
+                isTemplate: false,
+                date: date,
+                isPaid: paid,
+                createdAt: serverTs()
+              }), { merge: true });
+            })
+            .then(function () {
+              addBg.classList.remove("show");
+              toast("Tekrarlayan kaydedildi."); renderPage();
+              return generateRecurringForMonth(month);
+            })
+            .catch(function (e) {
+              console.error(e);
+              toast("Kaydetme hatası: " + (e.code || e.message));
+            });
+
+          return;
+        }
+
+        db.collection("payments").add({
+          userId: user.uid,
+          amount: amount,
+          category: category,
+          date: date,
+          isPaid: paid,
+          isRecurring: false,
+          isTemplate: false,
+          mode: "payment",
+          title: title || "",
+          type: (dir === "income") ? "incoming" : "payment",
+          recurrenceId: null,
+          recurrenceStart: null,
+          recurrenceTotalMonths: null,
+          createdAt: serverTs(),
+          updatedAt: serverTs()
+        }).then(function () {
+          addBg.classList.remove("show");
+          toast("Kaydedildi."); renderPage();
+        }).catch(function (e) {
+          console.error(e);
+          toast("Kaydetme hatası: " + (e.code || e.message));
+        });
+      });
+
+      var dayBg = $("dayBg");
+      $("dayClose").addEventListener("click", function () { dayBg.classList.remove("show"); });
+      $("dayOk").addEventListener("click", function () { dayBg.classList.remove("show"); });
+      dayBg.addEventListener("click", function (e) { if (e.target === dayBg) dayBg.classList.remove("show"); });
+
+      function startListener() {
+        if (!user || !db) return;
+        if (unsub) { unsub(); unsub = null; }
+        unsub = db.collection("payments").where("userId", "==", user.uid).onSnapshot(function (snap) {
+          allRows = snap.docs.map(function (d) {
+            var data = d.data() || {};
+            data.id = d.id;
+            return data;
+          });
+          $("topHint").textContent = "";
+          generateRecurringForMonth(selectedMonth).then(renderPage).catch(function () { renderPage(); });
+        }, function (err) {
+          console.error(err);
+          $("topHint").textContent = "Okuma hatası: " + (err.code || err.message);
+          toast("Veri okunamadı. Rules/index kontrol et.");
+        });
       }
-    }
 
-    // Mobile Tab Switcher
-    function showTab(id) {
-      document.querySelectorAll('.mobile-nav .btn').forEach(b => b.classList.remove('primary'));
-      // simplistic toggle, real app would use state
-      const cols = ['colList', 'colMap', 'colRoute'];
-      const isMobile = window.innerWidth <= 768;
-
-      if (isMobile) {
-        cols.forEach(c => document.getElementById(c).style.display = 'none');
-        document.getElementById(id).style.display = 'flex';
+      function onMonthChanged() {
+        $("monthLabel").textContent = selectedMonth;
+        if (user) generateRecurringForMonth(selectedMonth).then(renderPage).catch(function () { renderPage(); });
+        else renderPage();
       }
-    }
+
+      function filteredRowsForMonth(dirFilter) {
+        var st = $("statusFilter").value;
+        var q = ($("search").value || "").trim().toLowerCase();
+
+        var rows = allRows
+          .filter(function (r) { return !isTemplate(r); })
+          .filter(function (r) { return monthOfDoc(r) === selectedMonth; });
+
+        if (dirFilter) rows = rows.filter(function (r) { return normalizeDir(r) === dirFilter; });
+        if (st !== "all") rows = rows.filter(function (r) { return st === "paid" ? isPaid(r) : !isPaid(r); });
+        if (q) rows = rows.filter(function (r) {
+          return ((r.title || "") + " " + (r.category || "")).toLowerCase().includes(q);
+        });
+
+        var seen = new Set();
+        var out = [];
+        rows.forEach(function (r) {
+          var key = (isRecurring(r) && r.recurrenceId) ? (r.recurrenceId + "_" + selectedMonth) : r.id;
+          if (seen.has(key)) return;
+          seen.add(key);
+          out.push(r);
+        });
+
+        out.sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); });
+        return out;
+      }
+
+      function kpisFor(rows) {
+        var exp = rows.filter(function (r) { return normalizeDir(r) === "expense"; }).reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
+        var inc = rows.filter(function (r) { return normalizeDir(r) === "income"; }).reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
+        var net = inc - exp;
+        var expPaid = rows.filter(function (r) { return normalizeDir(r) === "expense" && isPaid(r); }).length;
+        var expUn = rows.filter(function (r) { return normalizeDir(r) === "expense" && !isPaid(r); }).length;
+        var incPaid = rows.filter(function (r) { return normalizeDir(r) === "income" && isPaid(r); }).length;
+        var incUn = rows.filter(function (r) { return normalizeDir(r) === "income" && !isPaid(r); }).length;
+        return { exp: exp, inc: inc, net: net, expPaid: expPaid, expUn: expUn, incPaid: incPaid, incUn: incUn };
+      }
+
+      function groupExpensesByCategory(rows) {
+        var exp = rows.filter(function (r) { return normalizeDir(r) === "expense"; });
+        var map = new Map();
+        exp.forEach(function (r) {
+          var c = (r.category || "Diğer").trim() || "Diğer";
+          map.set(c, (map.get(c) || 0) + Number(r.amount || 0));
+        });
+        var arr = Array.from(map.entries()).map(function (pair) { return { category: pair[0], amount: pair[1] }; });
+        arr.sort(function (a, b) { return b.amount - a.amount; });
+        return arr;
+      }
+
+      function makeDonutSVG(parts) {
+        var r = 70, cx = 90, cy = 90, C = 2 * Math.PI * r;
+        var acc = 0;
+        var base = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="transparent" stroke="rgba(255,255,255,.08)" stroke-width="18"></circle>';
+        var circles = parts.map(function (p) {
+          var frac = p.value;
+          var dash = (frac * C).toFixed(3) + " " + C.toFixed(3);
+          var off = (C * (1 - acc)).toFixed(3);
+          acc += frac;
+          return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="transparent" stroke="' + p.color + '" stroke-width="18" stroke-linecap="round" stroke-dasharray="' + dash + '" stroke-dashoffset="' + off + '"></circle>';
+        }).join("");
+        return '<svg viewBox="0 0 180 180" aria-hidden="true">' + base + circles + '</svg>';
+      }
+
+      function renderSpendingChart(rowsMonth) {
+        var cats = groupExpensesByCategory(rowsMonth);
+        var total = cats.reduce(function (s, x) { return s + x.amount; }, 0);
+
+        if (!total) {
+          return '<div class="card spending" style="grid-column: span 8;"><h2>Nereye ne harcadım?</h2><div class="hint">Bu ay gider yok.</div></div>';
+        }
+
+        var top = cats.slice(0, 6);
+        var rest = cats.slice(6);
+        var restSum = rest.reduce(function (s, x) { return s + x.amount; }, 0);
+
+        var viz = top.slice();
+        if (restSum > 0) viz.push({ category: "Diğer", amount: restSum });
+
+        var parts = viz.map(function (x) { return { value: x.amount / total, color: colorForCategory(x.category) }; });
+        var svg = makeDonutSVG(parts);
+
+        var legend = viz.map(function (x) {
+          var pct = Math.round((x.amount / total) * 100);
+          return '<div class="legItem"><div class="legLeft"><span class="dot" style="background:' + colorForCategory(x.category) + '"></span><div class="legName">' + escapeHtml(x.category) + '</div></div><div class="legVal">' + pct + '% • ' + fmt.format(x.amount) + '</div></div>';
+        }).join("");
+
+        var max = viz[0].amount || 1;
+        var bars = viz.map(function (x) {
+          var w = Math.max(6, Math.round((x.amount / max) * 100));
+          return '<div><div class="hint" style="display:flex;justify-content:space-between;gap:10px;"><span><span class="dot" style="background:' + colorForCategory(x.category) + '"></span>' + escapeHtml(x.category) + '</span><span>' + fmt.format(x.amount) + '</span></div><div class="bar"><div style="width:' + w + '%;background:' + colorForCategory(x.category) + '"></div></div></div>';
+        }).join("");
+
+        return '' +
+          '<div class="card" style="grid-column: span 8;">' +
+          '<h2>Nereye ne harcadım?</h2>' +
+          '<div class="chartRow">' +
+          '<div class="donutWrap">' +
+          '<div class="donut">' +
+          svg +
+          '<div class="donutCenter"><div class="big">' + fmt.format(total) + '</div><div class="small">Toplam gider</div></div>' +
+          '</div>' +
+          '<div class="legend">' + legend + '</div>' +
+          '</div>' +
+          '<div style="flex:1;min-width:260px;">' +
+          '<div class="hint">Kategori dağılımı (gider)</div>' +
+          '<div class="barList">' + bars + '</div>' +
+          '</div>' +
+          '</div>' +
+          '</div>';
+      }
+
+      function renderTable(rows) {
+        if (!rows.length) return '<div class="hint">Kayıt yok.</div>';
+
+        var head =
+          '<table><thead><tr>' +
+          '<th class="nowrap">Tarih</th>' +
+          '<th>Tür</th>' +
+          '<th>Başlık</th>' +
+          '<th>Kategori</th>' +
+          '<th class="right nowrap">Tutar</th>' +
+          '<th>Durum</th>' +
+          '<th>Tekrar</th>' +
+          '<th class="right">İşlem</th>' +
+          '</tr></thead><tbody>';
+
+        var body = rows.map(function (r) {
+          var dir = normalizeDir(r);
+          var t = dir === "income" ? '<span class="tag good">Gelir</span>' : '<span class="tag bad">Gider</span>';
+          var s = isPaid(r) ? '<span class="tag good">Alındı/Ödendi</span>' : '<span class="tag">Alınmadı</span>';
+          var rec = isRecurring(r) ? '<span class="tag rec">Aylık</span>' : '<span class="tag">—</span>';
+          var amtColor = dir === "income" ? "var(--good)" : "var(--bad)";
+          var title = escapeHtml(r.title || "—");
+          var cat = escapeHtml(r.category || "Diğer");
+          var dot = '<span class="dot" style="background:' + colorForCategory(r.category) + '"></span>';
+
+          return '' +
+            '<tr>' +
+            '<td class="nowrap">' + escapeHtml(String(r.date || "").slice(0, 10) || "-") + '</td>' +
+            '<td>' + t + '</td>' +
+            '<td><div style="font-weight:650">' + title + '</div></td>' +
+            '<td>' + dot + '<span>' + cat + '</span></td>' +
+            '<td class="right nowrap" style="font-weight:750;color:' + amtColor + '">' + fmt.format(Number(r.amount || 0)) + '</td>' +
+            '<td>' + s + '</td>' +
+            '<td>' + rec + '</td>' +
+            '<td class="right nowrap">' +
+            '<button class="btn small" data-act="edit" data-id="' + escapeHtml(r.id) + '">Düzenle</button> ' +
+            '<button class="btn small" data-act="toggle" data-id="' + escapeHtml(r.id) + '">' + (isPaid(r) ? "Geri Al" : "Alındı/Ödendi") + '</button> ' +
+            '<button class="btn small danger" data-act="del" data-id="' + escapeHtml(r.id) + '">Sil</button>' +
+            '</td>' +
+            '</tr>';
+        }).join("");
+
+        return head + body + '</tbody></table>';
+      }
+
+
+      function renderCompactList(rows) {
+        if (!rows.length) return '<div class="hint">Kayıt yok.</div>';
+        return '<div class="list">' + rows.map(function (r) {
+          var title = escapeHtml(r.title || "—");
+          var cat = escapeHtml(r.category || "Diğer");
+          var dot = '<span class="dot" style="background:' + colorForCategory(r.category) + '"></span>';
+          var dir = normalizeDir(r);
+          var amtColor = dir === "income" ? "var(--good)" : "var(--bad)";
+          var st = isPaid(r)
+            ? '<span class="miniPill paid">' + (dir === "income" ? "Alındı" : "Ödendi") + '</span>'
+            : '<span class="miniPill unpaid">' + (dir === "income" ? "Bekliyor" : "Ödenmedi") + '</span>';
+
+          return '' +
+            '<div class="rowCard" data-open="item" data-id="' + escapeHtml(r.id) + '">' +
+            '<div class="rowMain">' +
+            '<div class="rowTitle">' + title + '</div>' +
+            '<div class="rowMeta">' + dot + '<span>' + cat + '</span></div>' +
+            '</div>' +
+            '<div class="rowRight">' +
+            '<div class="rowAmt" style="color:' + amtColor + '">' + fmt.format(Number(r.amount || 0)) + '</div>' +
+            st +
+            '</div>' +
+            '</div>';
+        }).join("") + '</div>';
+      }
+
+
+      var itemBg = document.getElementById("itemBg");
+      var itemRowId = null;
+
+      function closeItemModal() { itemBg.classList.remove("show"); itemRowId = null; }
+      function openItemModal(id) {
+        if (!user) return;
+        var row = allRows.find(function (r) { return r.id === id; });
+        if (!row) return;
+
+        itemRowId = id;
+
+        var dir = normalizeDir(row);
+        var dirTag = dir === "income" ? '<span class="tag good">Gelir</span>' : '<span class="tag bad">Gider</span>';
+        var paidTag = isPaid(row) ? '<span class="tag good">Alındı/Ödendi</span>' : '<span class="tag">Alınmadı</span>';
+        var recTag = isRecurring(row) ? '<span class="tag rec">Aylık</span>' : '<span class="tag">—</span>';
+        var dot = '<span class="dot" style="background:' + colorForCategory(row.category) + '"></span>';
+
+        document.getElementById("itemTitle").textContent = "Kayıt Detayı";
+        document.getElementById("itemBody").innerHTML =
+          '<div class="hint">Tarih</div><div style="font-weight:750">' + escapeHtml(String(row.date || "").slice(0, 10) || "—") + '</div>' +
+          '<div class="hr"></div>' +
+          '<div class="hint">Başlık</div><div style="font-weight:750">' + escapeHtml(row.title || "—") + '</div>' +
+          '<div class="hint" style="margin-top:8px;">Kategori</div><div style="font-weight:750">' + dot + '<span>' + escapeHtml(row.category || "Diğer") + '</span></div>' +
+          '<div class="hint" style="margin-top:8px;">Tutar</div><div style="font-weight:850; font-size:18px; color:' + (dir === "income" ? 'var(--good)' : 'var(--bad)') + '">' + fmt.format(Number(row.amount || 0)) + '</div>' +
+          '<div class="hr"></div>' +
+          '<div style="display:flex; gap:8px; flex-wrap:wrap;">' + dirTag + paidTag + recTag + '</div>';
+
+        var btn = document.getElementById("itemTogglePaid");
+        btn.textContent = isPaid(row) ? "Geri Al" : (dir === "income" ? "Alındı" : "Ödendi");
+
+        itemBg.classList.add("show");
+      }
+
+      function openEditForRow(row) {
+        if (!row) return;
+        // Populate add modal with row values
+        document.getElementById("mDir").value = normalizeDir(row);
+        document.getElementById("mPaid").value = String(!!row.isPaid);
+        document.getElementById("mAmount").value = Number(row.amount || 0);
+        document.getElementById("mDate").value = String(row.date || "").slice(0, 10) || (selectedMonth + "-01");
+
+        fillCategorySelect();
+        var cat = (row.category || "Diğer").trim() || "Diğer";
+        if (PRESET_CATS.includes(cat)) {
+          document.getElementById("mCategorySel").value = cat;
+          document.getElementById("mCategoryOther").style.display = (cat === "Diğer") ? "" : "none";
+          document.getElementById("mCategoryOther").value = "";
+        } else {
+          document.getElementById("mCategorySel").value = "Diğer";
+          document.getElementById("mCategoryOther").style.display = "";
+          document.getElementById("mCategoryOther").value = cat;
+        }
+
+        document.getElementById("mTitle").value = row.title || "";
+
+        // Edit mode: recurring fields locked to avoid creating duplicates
+        document.getElementById("mRecurring").checked = !!row.isRecurring;
+        document.getElementById("mRecurring").disabled = true;
+        document.getElementById("recBox").style.display = "none";
+        document.getElementById("mRecMonths").value = row.recurrenceTotalMonths ? Number(row.recurrenceTotalMonths) : "";
+        document.getElementById("mRecMonths").disabled = true;
+
+        window.__editingId = row.id;
+        document.getElementById("addBg").classList.add("show");
+        toast("Düzenleme modunda: Kaydet ile güncelle.");
+      }
+
+      // item modal events
+      document.getElementById("itemClose").addEventListener("click", closeItemModal);
+      itemBg.addEventListener("click", function (e) { if (e.target === itemBg) closeItemModal(); });
+
+      document.getElementById("itemTogglePaid").addEventListener("click", function () {
+        if (!user || !itemRowId) return;
+        var row = allRows.find(function (r) { return r.id === itemRowId; });
+        if (!row) return;
+        db.collection("payments").doc(itemRowId).update({ isPaid: !isPaid(row), updatedAt: serverTs() })
+          .then(function () { toast("Durum güncellendi."); })
+          .catch(function (e) { console.error(e); toast("İşlem hatası: " + (e.code || e.message)); });
+      });
+
+      document.getElementById("itemEdit").addEventListener("click", function () {
+        if (!user || !itemRowId) return;
+        var row = allRows.find(function (r) { return r.id === itemRowId; });
+        if (!row) return;
+        closeItemModal();
+        openEditForRow(row);
+      });
+
+      document.getElementById("itemDelete").addEventListener("click", function () {
+        if (!user || !itemRowId) return;
+        if (!confirm("Silinsin mi?")) return;
+        db.collection("payments").doc(itemRowId).delete()
+          .then(function () { toast("Silindi."); closeItemModal(); })
+          .catch(function (e) { console.error(e); toast("İşlem hatası: " + (e.code || e.message)); });
+      });
+
+      // event delegation for compact lists
+      function bindCompactListClicks() {
+        document.querySelectorAll('[data-open="item"]').forEach(function (el) {
+          el.addEventListener("click", function () {
+            openItemModal(el.getAttribute("data-id"));
+          });
+        });
+      }
+
+      function bindTableActions() {
+        // no-op (we use delegated click handler below)
+      }
+
+
+      function openDayDetail(dateStr) {
+        var dayRows = filteredRowsForMonth(null).filter(function (r) { return String(r.date || "").slice(0, 10) === dateStr; });
+        var exp = dayRows.filter(function (r) { return normalizeDir(r) === "expense"; }).reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
+        var inc = dayRows.filter(function (r) { return normalizeDir(r) === "income"; }).reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
+        var net = inc - exp;
+
+        $("dayTitle").textContent = dateStr + " • Detay";
+        $("dayBody").innerHTML =
+          '<div class="grid" style="grid-template-columns:repeat(12,1fr);gap:10px;">' +
+          '<div class="card" style="grid-column:span 4;"><div class="hint">Gelir</div><div class="kpi"><div class="value good">' + fmt.format(inc) + '</div></div></div>' +
+          '<div class="card" style="grid-column:span 4;"><div class="hint">Gider</div><div class="kpi"><div class="value bad">' + fmt.format(exp) + '</div></div></div>' +
+          '<div class="card" style="grid-column:span 4;"><div class="hint">Net</div><div class="kpi"><div class="value ' + (net >= 0 ? 'good' : 'bad') + '">' + fmt.format(net) + '</div></div></div>' +
+          '</div>' +
+          '<div class="hr"></div>' +
+          '<div style="overflow:auto;">' + renderTable(dayRows) + '</div>';
+
+        bindTableActions();
+        dayBg.classList.add("show");
+      }
+
+      function renderCalendar(rows) {
+        function daysInMonth(ym) { var p = ym.split("-").map(Number); return new Date(p[0], p[1], 0).getDate(); }
+        function firstDayOfWeek(ym) { var p = ym.split("-").map(Number); return new Date(p[0], p[1] - 1, 1).getDay(); }
+        var dim = daysInMonth(selectedMonth);
+        var start = firstDayOfWeek(selectedMonth);
+        var pad = (start + 6) % 7;
+
+        var dayMap = new Map();
+        rows.forEach(function (r) {
+          var d = String(r.date || "").slice(8, 10);
+          var day = Number(d);
+          if (!day || day < 1 || day > 31) return;
+          if (!dayMap.has(day)) dayMap.set(day, { inc: 0, exp: 0 });
+          var x = dayMap.get(day);
+          if (normalizeDir(r) === "income") x.inc += Number(r.amount || 0);
+          else x.exp += Number(r.amount || 0);
+        });
+
+        var labels = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+        var head = '<div class="calGrid">' + labels.map(function (l) {
+          return '<div class="hint" style="text-align:center;font-weight:650">' + l + '</div>';
+        }).join("") + '</div>';
+
+        var cells = [];
+        for (var i = 0; i < pad; i++) cells.push('<div class="calCell disabled"></div>');
+        for (var day = 1; day <= dim; day++) {
+          var v = dayMap.get(day) || { inc: 0, exp: 0 };
+          var net = v.inc - v.exp;
+          var netCls = net >= 0 ? "good" : "bad";
+          var dateStr = selectedMonth + "-" + pad2(day);
+          cells.push(
+            '<div class="calCell" data-date="' + dateStr + '">' +
+            '<div class="calTop">' +
+            '<div class="calDay">' + day + '</div>' +
+            '<div class="calAmt ' + netCls + '">' + fmt.format(net) + '</div>' +
+            '</div>' +
+            '<div class="calMini">' +
+            '<span>G: ' + fmt.format(v.inc) + '</span>' +
+            '<span>H: ' + fmt.format(v.exp) + '</span>' +
+            '</div>' +
+            '</div>'
+          );
+        }
+
+        return head + '<div class="calGrid" id="calCells">' + cells.join("") + '</div>';
+      }
+
+      function bindCalendarClicks() {
+        var wrap = document.getElementById("calCells");
+        if (!wrap) return;
+        wrap.querySelectorAll(".calCell[data-date]").forEach(function (cell) {
+          cell.addEventListener("click", function () { openDayDetail(cell.getAttribute("data-date")); });
+        });
+      }
+
+      function generateRecurringForMonth(targetMonth) {
+        if (!user || !db) return Promise.resolve();
+
+        var templates = allRows.filter(function (r) { return isTemplate(r) && r.isRecurring && r.recurrenceId && r.recurrenceStart; });
+        var fallbackBases = allRows.filter(function (r) {
+          return !isTemplate(r) && r.isRecurring && r.recurrenceId && r.recurrenceStart &&
+            monthOfDoc(r) === String(r.recurrenceStart).slice(0, 7);
+        });
+
+        var bases = templates.length ? templates : fallbackBases;
+
+        var created = 0;
+        var chain = Promise.resolve();
+
+        bases.forEach(function (base) {
+          chain = chain.then(function () {
+            var rid = String(base.recurrenceId);
+            var start = String(base.recurrenceStart || "").slice(0, 7);
+            if (!start) return;
+            if (targetMonth < start) return;
+
+            var total = (base.recurrenceTotalMonths === null || base.recurrenceTotalMonths === undefined) ? null : Number(base.recurrenceTotalMonths);
+            if (total && total > 0) {
+              var sy = Number(start.split("-")[0]), sm = Number(start.split("-")[1]);
+              var ty = Number(targetMonth.split("-")[0]), tm = Number(targetMonth.split("-")[1]);
+              var diff = (ty * 12 + tm) - (sy * 12 + sm) + 1;
+              if (diff > total) return;
+            }
+
+            var docId = rid + "_" + targetMonth;
+            var ref = db.collection("payments").doc(docId);
+
+            return ref.get().then(function (snap) {
+              if (snap.exists) return;
+
+              var day = String(base.date || (start + "-01")).slice(8, 10) || "01";
+              var newDate = targetMonth + "-" + day;
+
+              var test = new Date(newDate + "T00:00:00");
+              if (isNaN(test.getTime()) || ymFromDate(test) !== targetMonth) {
+                newDate = targetMonth + "-01";
+              }
+
+              var payload = {
+                userId: user.uid,
+                amount: Number(base.amount || 0),
+                category: base.category || "Diğer",
+                date: newDate,
+                isPaid: false,
+                isRecurring: true,
+                isTemplate: false,
+                mode: base.mode || "payment",
+                recurrenceId: rid,
+                recurrenceStart: start,
+                recurrenceTotalMonths: (base.recurrenceTotalMonths !== undefined ? base.recurrenceTotalMonths : null),
+                title: base.title || "",
+                type: base.type || "payment",
+                createdAt: serverTs(),
+                updatedAt: serverTs()
+              };
+
+              return ref.set(payload, { merge: true }).then(function () { created++; });
+            });
+          });
+        });
+
+        return chain.then(function () { if (created > 0) toast("Tekrarlayanlar eklendi: " + created); });
+      }
+
+      function renderPage() {
+        try {
+          $("monthLabel").textContent = selectedMonth;
+          var content = $("content");
+
+          if (!user) {
+            content.innerHTML =
+              '<div class="card">' +
+              '<h2>Başlamak için giriş yap</h2>' +
+              '<div class="hint">Sağ üstten <b>Giriş</b> butonuna bas. firebaseConfig’i doldurduğundan emin ol.</div>' +
+              '</div>';
+            return;
+          }
+
+          var rowsMonth = filteredRowsForMonth(null);
+          var k = kpisFor(rowsMonth);
+
+          if (currentPage === "dashboard") {
+            content.innerHTML =
+              '<div class="grid dashGrid">' +
+              '<div class="card kpiCard kpi-exp" style="grid-column: span 4;">' +
+              '<h2><span class="ttl"><span class="kico">💸</span><span>Gider</span></span><span class="tag bad">Bu ay</span></h2>' +
+              '<div class="kpi"><div class="value bad">' + fmt.format(k.exp) + '</div><div class="sub"><span class="chip">✅ ' + k.expPaid + '</span><span class="chip bad">⏳ ' + k.expUn + '</span></div></div>' +
+              '</div>' +
+              '<div class="card kpiCard kpi-inc" style="grid-column: span 4;">' +
+              '<h2><span class="ttl"><span class="kico">💰</span><span>Gelir</span></span><span class="tag good">Bu ay</span></h2>' +
+              '<div class="kpi"><div class="value good">' + fmt.format(k.inc) + '</div><div class="sub"><span class="chip good">✅ ' + k.incPaid + '</span><span class="chip">⏳ ' + k.incUn + '</span></div></div>' +
+              '</div>' +
+              '<div class="card kpiCard kpi-net" style="grid-column: span 4;">' +
+              '<h2><span class="ttl"><span class="kico">🧾</span><span>Net</span></span><span class="tag">Bu ay</span></h2>' +
+              '<div class="kpi"><div class="value ' + (k.net >= 0 ? 'good' : 'bad') + '">' + fmt.format(k.net) + '</div><div class="sub"><span class="hint">Gelir − Gider</span></div></div>' +
+              '</div>' +
+              renderSpendingChart(rowsMonth) +
+              '<div class="card" style="grid-column: span 4;">' +
+              '<h2>Kısa</h2>' +
+              '<div class="hint">• Takvim: güne tıkla → detay</div>' +
+              '<div class="hint">• Tekrarlayanlar: ay değişince otomatik gelir</div>' +
+              '<div class="hint">• Kategori renkleri: listede ve grafikte aynı</div>' +
+              '</div>'
+            '</div>';
+
+            bindTableActions();
+            return;
+          }
+
+
+          if (currentPage === "expense") {
+            var rowsE = filteredRowsForMonth("expense");
+            content.innerHTML =
+              '<div class="card">' +
+              '<h2>Gider • ' + selectedMonth + '</h2>' +
+              '<div class="hint">İlk bakış: Başlık • Kategori • Tutar (tıkla → detay)</div>' +
+              renderCompactList(rowsE) +
+              '</div>';
+            bindCompactListClicks();
+            return;
+          }
+
+          if (currentPage === "income") {
+            var rowsI = filteredRowsForMonth("income");
+            content.innerHTML =
+              '<div class="card">' +
+              '<h2>Gelir • ' + selectedMonth + '</h2>' +
+              '<div class="hint">İlk bakış: Başlık • Kategori • Tutar (tıkla → detay)</div>' +
+              renderCompactList(rowsI) +
+              '</div>';
+            bindCompactListClicks();
+            return;
+          }
+
+          if (currentPage === "calendar") {
+            content.innerHTML =
+              '<div class="card">' +
+              '<h2>Takvim • ' + selectedMonth + '</h2>' +
+              '<div class="hint">Güne tıkla → o günün detayları</div>' +
+              renderCalendar(rowsMonth) +
+              '</div>';
+            bindCalendarClicks();
+            return;
+          }
+
+          if (currentPage === "settings") {
+            content.innerHTML =
+              '<div class="card">' +
+              '<h2>Ayarlar</h2>' +
+              '<div class="hint"><b>Koleksiyon:</b> payments</div>' +
+              '<div class="hint"><b>Kullanıcı alanı:</b> userId</div>' +
+              '<div class="hint"><b>Gelir:</b> type=incoming • <b>Gider:</b> type!=incoming</div>' +
+              '<div class="hr"></div>' +
+              '<div class="hint">Firestore Rules (öneri):</div>' +
+              '<pre>rules_version = \'2\';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /payments/{docId} {\n      allow read: if request.auth != null\n        && resource.data.userId == request.auth.uid;\n\n      allow create: if request.auth != null\n        && request.resource.data.userId == request.auth.uid;\n\n      allow update, delete: if request.auth != null\n        && resource.data.userId == request.auth.uid;\n    }\n  }\n}</pre>' +
+              '<div class="hint">Bu sürüm index istememek için <b>orderBy</b> kullanmadan userId ile çekip tarayıcıda filtreler/sıralar.</div>' +
+              '</div>';
+            return;
+          }
+        } catch (e) { console.error(e); toast('Ekran hatası: ' + (e.message || e)); }
+      }
+
+      auth.onAuthStateChanged(function (u) {
+        user = u || null;
+        $("monthLabel").textContent = selectedMonth;
+
+        if (!user) {
+          $("userPill").style.display = "none";
+          $("btnLogout").style.display = "none";
+          $("btnAdd").style.display = "none";
+          $("btnLoginOpen").style.display = "inline-flex";
+          $("userEmail").textContent = "";
+          $("topHint").textContent = "";
+          allRows = [];
+          if (unsub) { unsub(); unsub = null; }
+          renderPage();
+          return;
+        }
+
+        $("userPill").style.display = "inline-flex";
+        $("btnLogout").style.display = "inline-flex";
+        $("btnAdd").style.display = "inline-flex";
+        $("btnLoginOpen").style.display = "none";
+        $("userEmail").textContent = user.email || "—";
+        $("topHint").textContent = "";
+
+        startListener();
+        renderPage();
+        setTimeout(renderPage, 0);
+      });
+
+      $("monthLabel").textContent = selectedMonth;
+      $("mDate").value = (function () {
+        var d = new Date();
+        return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+      })();
+      fillCategorySelect();
+      renderPage();
+    })();
   </script>
 </body>
 
