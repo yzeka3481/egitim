@@ -8,61 +8,63 @@
   <meta name="theme-color" content="#0b1220" />
   <style>
     :root {
-      --bg: #0b1220;
-      --panel: #111a2e;
-      --card: #0f1730;
+      --bg: #07101f;
+      --panel: #0d1829;
+      --card: rgba(255, 255, 255, .04);
       --text: #e8f0ff;
-      --muted: #8ea3c7;
-      --line: #1e2a46;
-      --good: #2dd4bf;
-      --bad: #fb7185;
+      --muted: #7b94c7;
+      --line: rgba(255, 255, 255, .09);
+      --good: #22d3aa;
+      --bad: #f56880;
       --warn: #fbbf24;
-      --brand: #4f7cff;
-      --shadow: 0 18px 45px rgba(0, 0, 0, .32);
-      --r: 16px;
+      --brand: #5b8eff;
+      --brand2: #7c5cff;
+      --shadow: 0 24px 60px rgba(0, 0, 0, .5);
+      --r: 18px;
     }
 
-    * {
+    *,
+    *::before,
+    *::after {
       box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background:
-        radial-gradient(1100px 600px at 20% -10%, rgba(79, 124, 255, .25), transparent 55%),
-        radial-gradient(900px 500px at 90% 0%, rgba(45, 212, 191, .16), transparent 55%),
-        linear-gradient(180deg, #071022, #0b1220 40%, #081025);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 90% 55% at 15% -5%, rgba(91, 142, 255, .22), transparent 60%),
+        radial-gradient(ellipse 70% 50% at 88% 5%, rgba(124, 92, 255, .16), transparent 60%);
+      background-attachment: fixed;
       color: var(--text);
       min-height: 100vh;
       display: flex;
       justify-content: center;
-      padding: 16px;
-      padding-bottom: 98px;
+      padding: 16px 16px 100px;
+      -webkit-font-smoothing: antialiased;
     }
 
     .app {
       width: min(1100px, 100%);
-      border: 1px solid rgba(255, 255, 255, .06);
-      background: rgba(12, 18, 35, .65);
-      backdrop-filter: blur(10px);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
       display: flex;
       flex-direction: column;
-      min-height: calc(100vh - 32px - 98px);
     }
 
     .header {
-      padding: 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, .06);
-      background: linear-gradient(180deg, rgba(17, 26, 46, .7), rgba(17, 26, 46, .25));
+      padding: 12px 16px;
+      background: rgba(7, 16, 31, .88);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border-bottom: 1px solid var(--line);
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 200;
     }
 
     .brand {
@@ -73,9 +75,13 @@
 
     .brand h1 {
       margin: 0;
-      font-size: 14px;
-      letter-spacing: .2px;
-      font-weight: 750;
+      font-size: 15px;
+      letter-spacing: -.2px;
+      font-weight: 800;
+      background: linear-gradient(120deg, #e8f0ff 30%, #7baeff 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .brand small {
@@ -99,52 +105,78 @@
 
     .btn {
       border: 1px solid var(--line);
-      background: rgba(15, 23, 48, .9);
+      background: rgba(255, 255, 255, .07);
       color: var(--text);
-      border-radius: 14px;
-      padding: 10px 12px;
+      border-radius: 13px;
+      padding: 9px 14px;
       font-weight: 700;
+      font-size: 13px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
       user-select: none;
+      transition: all .15s ease;
+      font-family: inherit;
     }
 
     .btn:hover {
-      filter: brightness(1.08);
+      background: rgba(255, 255, 255, .12);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
     }
 
     .btn.primary {
-      background: rgba(79, 124, 255, .95);
-      border-color: rgba(79, 124, 255, .55);
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%);
+      border-color: rgba(91, 142, 255, .35);
+      box-shadow: 0 4px 20px rgba(91, 142, 255, .28);
+    }
+
+    .btn.primary:hover {
+      filter: brightness(1.1);
     }
 
     .btn.small {
-      padding: 8px 10px;
-      border-radius: 12px;
+      padding: 7px 10px;
+      border-radius: 10px;
       font-size: 12px;
-      font-weight: 700;
     }
 
     .btn.danger {
-      background: rgba(251, 113, 133, .14);
-      border-color: rgba(251, 113, 133, .35);
+      background: rgba(245, 104, 128, .12);
+      border-color: rgba(245, 104, 128, .3);
+      color: #ffa3b5;
     }
 
     input,
     select {
       border: 1px solid var(--line);
-      background: rgba(14, 22, 42, .9);
+      background: rgba(255, 255, 255, .06);
       color: var(--text);
       padding: 10px 12px;
-      border-radius: 14px;
+      border-radius: 13px;
       outline: none;
       font-weight: 600;
+      font-family: inherit;
+      font-size: 14px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: rgba(91, 142, 255, .55);
+      box-shadow: 0 0 0 3px rgba(91, 142, 255, .12);
     }
 
     input::placeholder {
-      color: #6f86b2;
+      color: var(--muted);
+    }
+
+    select option {
+      background: #0d1829;
     }
 
     .header .left {
@@ -168,33 +200,33 @@
     }
 
     .content {
-      padding: 14px;
-      overflow: auto;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      min-height: 280px;
+      gap: 14px;
+      min-height: 300px;
     }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(12, 1fr);
-      gap: 12px;
+      gap: 14px;
     }
 
     .card {
-      background: rgba(17, 26, 46, .55);
+      background: rgba(255, 255, 255, .04);
       border: 1px solid var(--line);
       border-radius: var(--r);
-      padding: 12px;
+      padding: 16px;
       min-width: 0;
     }
 
     .card h2 {
-      margin: 0 0 10px;
+      margin: 0 0 12px;
       font-size: 13px;
-      color: #cfe0ff;
+      color: #b8d0ff;
       font-weight: 700;
+      letter-spacing: .1px;
     }
 
     .kpi {
@@ -206,7 +238,7 @@
     .kpi .value {
       font-size: 22px;
       font-weight: 800;
-      letter-spacing: .2px;
+      letter-spacing: -.3px;
     }
 
     .value.bad {
@@ -219,8 +251,8 @@
 
     .hr {
       height: 1px;
-      background: rgba(255, 255, 255, .06);
-      margin: 10px 0;
+      background: var(--line);
+      margin: 12px 0;
     }
 
     table {
@@ -230,16 +262,18 @@
 
     th,
     td {
-      border-bottom: 1px solid rgba(255, 255, 255, .06);
+      border-bottom: 1px solid var(--line);
       padding: 10px 8px;
       text-align: left;
       font-size: 13px;
     }
 
     th {
-      color: #bcd1ff;
-      font-size: 12px;
-      font-weight: 650;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .3px;
+      text-transform: uppercase;
     }
 
     .right {
@@ -251,79 +285,80 @@
     }
 
     .tag {
-      font-size: 12px;
-      font-weight: 650;
-      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, .08);
-      background: rgba(14, 22, 42, .9);
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .06);
       color: #cfe0ff;
       display: inline-block;
+      white-space: nowrap;
     }
 
     .tag.bad {
-      border-color: rgba(251, 113, 133, .35);
-      background: rgba(42, 16, 24, .85);
-      color: #ffb3c2;
+      border-color: rgba(245, 104, 128, .3);
+      background: rgba(245, 104, 128, .08);
+      color: #ffc1cc;
     }
 
     .tag.good {
-      border-color: rgba(45, 212, 191, .35);
-      background: rgba(13, 42, 34, .85);
-      color: #8ff6e4;
+      border-color: rgba(34, 211, 170, .3);
+      background: rgba(34, 211, 170, .08);
+      color: #86f7e3;
     }
 
     .tag.rec {
-      border-color: rgba(79, 124, 255, .35);
-      background: rgba(27, 35, 56, .85);
+      border-color: rgba(91, 142, 255, .3);
+      background: rgba(91, 142, 255, .08);
       color: #c5d3ff;
     }
 
     .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
       display: inline-block;
       vertical-align: middle;
-      margin-right: 8px;
-      box-shadow: 0 0 0 2px rgba(255, 255, 255, .06);
+      margin-right: 7px;
     }
 
     .chartRow {
       display: flex;
-      gap: 12px;
+      gap: 14px;
       align-items: stretch;
       flex-wrap: wrap;
     }
 
     .donutWrap {
       display: flex;
-      gap: 12px;
+      gap: 14px;
       align-items: center;
       flex-wrap: wrap;
     }
 
     .donut {
-      width: 180px;
-      height: 180px;
+      width: 170px;
+      height: 170px;
       display: grid;
       place-items: center;
       position: relative;
+      flex-shrink: 0;
     }
 
     .donut svg {
-      width: 180px;
-      height: 180px;
+      width: 170px;
+      height: 170px;
       transform: rotate(-90deg);
     }
 
     .donutCenter {
       position: absolute;
-      width: 120px;
-      height: 120px;
-      border-radius: 999px;
-      background: rgba(11, 18, 32, .55);
-      border: 1px solid rgba(255, 255, 255, .08);
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      background: rgba(7, 16, 31, .7);
+      border: 1px solid var(--line);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -334,20 +369,21 @@
 
     .donutCenter .big {
       font-weight: 800;
-      font-size: 14px;
+      font-size: 13px;
+      line-height: 1.2;
     }
 
     .donutCenter .small {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--muted);
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     .legend {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      min-width: 240px;
+      min-width: 200px;
     }
 
     .legItem {
@@ -360,7 +396,7 @@
     .legLeft {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       min-width: 0;
     }
 
@@ -370,6 +406,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      font-size: 13px;
     }
 
     .legVal {
@@ -386,51 +423,54 @@
     }
 
     .bar {
-      height: 10px;
+      height: 8px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, .06);
+      background: rgba(255, 255, 255, .07);
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, .06);
     }
 
     .bar>div {
       height: 100%;
       border-radius: 999px;
+      transition: width .4s ease;
     }
+
 
     .calGrid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 8px;
+      gap: 6px;
       margin-top: 10px;
     }
 
     .calCell {
-      border: 1px solid rgba(255, 255, 255, .08);
-      background: rgba(14, 22, 42, .55);
-      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .03);
+      border-radius: 13px;
       padding: 8px;
-      min-height: 76px;
+      min-height: 72px;
       cursor: pointer;
       user-select: none;
-      transition: filter .12s ease, transform .12s ease;
+      transition: all .15s ease;
     }
 
     .calCell:hover {
-      filter: brightness(1.05);
+      background: rgba(91, 142, 255, .08);
+      border-color: rgba(91, 142, 255, .25);
       transform: translateY(-1px);
     }
 
     .calCell.disabled {
-      opacity: .25;
+      opacity: .2;
       cursor: default;
+      pointer-events: none;
     }
 
     .calTop {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
     }
 
     .calDay {
@@ -440,8 +480,8 @@
     }
 
     .calAmt {
-      font-weight: 750;
-      font-size: 12px;
+      font-weight: 700;
+      font-size: 11px;
     }
 
     .calAmt.good {
@@ -453,14 +493,14 @@
     }
 
     .calMini {
-      margin-top: 8px;
+      margin-top: 6px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
 
     .calMini span {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--muted);
     }
 
@@ -471,55 +511,65 @@
       bottom: 0;
       display: flex;
       justify-content: center;
-      padding: 10px 12px 14px;
-      background: linear-gradient(180deg, rgba(11, 18, 32, 0), rgba(11, 18, 32, .72) 22%, rgba(11, 18, 32, .96));
-      border-top: 1px solid rgba(255, 255, 255, .06);
+      padding: 8px 12px 14px;
+      background: rgba(7, 16, 31, .94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--line);
       z-index: 9999;
     }
 
     .tabbar {
-      width: min(1100px, calc(100% - 24px));
+      width: min(1100px, 100%);
       display: flex;
-      gap: 10px;
+      gap: 6px;
     }
 
     .tab {
       flex: 1;
-      border: 1px solid rgba(255, 255, 255, .06);
-      background: rgba(14, 22, 42, .7);
-      border-radius: 16px;
-      padding: 10px 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      border-radius: 14px;
+      padding: 9px 6px;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       color: var(--muted);
-      font-weight: 700;
+      font-weight: 600;
       font-size: 11px;
       user-select: none;
+      transition: all .15s ease;
+    }
+
+    .tab:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, .05);
     }
 
     .tab.active {
       color: var(--text);
-      border-color: rgba(79, 124, 255, .35);
-      background: rgba(79, 124, 255, .14);
+      border-color: rgba(91, 142, 255, .3);
+      background: linear-gradient(135deg, rgba(91, 142, 255, .14), rgba(124, 92, 255, .09));
     }
 
     .ico {
-      font-size: 16px;
+      font-size: 18px;
       line-height: 1;
     }
 
     .modalBg {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, .55);
+      background: rgba(0, 0, 0, .6);
       display: none;
       align-items: center;
       justify-content: center;
       padding: 14px;
       z-index: 10000;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
     }
 
     .modalBg.show {
@@ -527,32 +577,48 @@
     }
 
     .modal {
-      width: min(600px, 100%);
-      background: rgba(15, 23, 48, .98);
+      width: min(560px, 100%);
+      background: rgba(10, 17, 36, .98);
       border: 1px solid var(--line);
       border-radius: 20px;
       box-shadow: var(--shadow);
       overflow: hidden;
+      animation: modalIn .2s ease;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(.95) translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
     }
 
     .modalTop {
-      padding: 10px 12px;
+      padding: 12px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid rgba(255, 255, 255, .06);
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, .03);
     }
 
     .modalTop strong {
-      font-size: 13px;
-      font-weight: 750;
+      font-size: 14px;
+      font-weight: 700;
     }
 
     .modalBody {
-      padding: 12px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
       gap: 10px;
+      max-height: 75vh;
+      overflow-y: auto;
     }
 
     .grid2 {
@@ -564,8 +630,9 @@
     .modal .actions {
       display: flex;
       gap: 10px;
-      padding: 12px;
-      border-top: 1px solid rgba(255, 255, 255, .06);
+      padding: 12px 14px;
+      border-top: 1px solid var(--line);
+      background: rgba(255, 255, 255, .02);
     }
 
     .toast {
@@ -573,348 +640,85 @@
       left: 50%;
       bottom: 92px;
       transform: translateX(-50%);
-      background: rgba(14, 22, 42, .95);
+      background: rgba(10, 17, 36, .97);
       border: 1px solid var(--line);
-      padding: 10px 12px;
-      border-radius: 14px;
+      padding: 10px 16px;
+      border-radius: 12px;
       display: none;
-      max-width: min(920px, calc(100% - 24px));
+      max-width: min(380px, calc(100% - 24px));
       color: #dbe8ff;
       box-shadow: var(--shadow);
-      font-weight: 650;
+      font-weight: 600;
       font-size: 13px;
       z-index: 10001;
     }
 
     .toast.show {
       display: block;
+      animation: toastIn .2s ease;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
     }
 
     pre {
       white-space: pre-wrap;
-      background: rgba(14, 22, 42, .6);
-      border: 1px solid rgba(255, 255, 255, .06);
-      padding: 10px;
-      border-radius: 14px;
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--line);
+      padding: 12px;
+      border-radius: 13px;
       margin: 10px 0 0;
-      color: #bcd1ff;
+      color: #9bb4e8;
       font-size: 12px;
     }
 
-    @media (max-width: 860px) {
-      .grid {
-        grid-template-columns: repeat(6, 1fr);
-      }
-
-      .tabbar {
-        width: calc(100% - 24px);
-      }
-    }
-
-    /* --- Mobile polish --- */
-    @media (max-width: 640px) {
-      body {
-        padding: 12px;
-        padding-bottom: 110px;
-      }
-
-      .app {
-        border-radius: 18px;
-        min-height: calc(100vh - 24px - 110px);
-      }
-
-      .header {
-        padding: 12px;
-        gap: 10px;
-      }
-
-      .header .left,
-      .header .right {
-        width: 100%;
-      }
-
-      .header .right {
-        justify-content: space-between;
-      }
-
-      .pill {
-        padding: 7px 9px;
-        font-size: 12px;
-      }
-
-      .btn {
-        padding: 10px 12px;
-      }
-
-      .btn.small {
-        padding: 9px 10px;
-      }
-
-      input,
-      select {
-        width: 100%;
-      }
-
-      #search {
-        min-width: 100%;
-      }
-
-      .content {
-        padding: 12px;
-      }
-
-      .grid {
-        grid-template-columns: repeat(6, 1fr);
-      }
-
-      .card {
-        padding: 11px;
-      }
-
-      .chartRow {
-        gap: 10px;
-      }
-
-      .donut {
-        width: 150px;
-        height: 150px;
-      }
-
-      .donut svg {
-        width: 150px;
-        height: 150px;
-      }
-
-      .donutCenter {
-        width: 104px;
-        height: 104px;
-      }
-
-      .legend {
-        min-width: 200px;
-      }
-
-      th,
-      td {
-        padding: 9px 7px;
-      }
-
-      .tabbarWrap {
-        padding: 10px 10px 16px;
-      }
-
-      .tabbar {
-        gap: 8px;
-      }
-
-      .tab {
-        padding: 10px 8px;
-        border-radius: 16px;
-      }
-
-      .ico {
-        font-size: 18px;
-      }
-    }
-
-    @media (max-width: 420px) {
-      .brand h1 {
-        font-size: 13px;
-      }
-
-      .brand small {
-        font-size: 11px;
-      }
-
-      .tab {
-        font-size: 10px;
-        gap: 5px;
-      }
-
-      .tabbar {
-        gap: 7px;
-      }
-
-      .btn {
-        border-radius: 13px;
-      }
-
-      .modal {
-        border-radius: 18px;
-      }
-
-      .grid2 {
-        grid-template-columns: 1fr;
-      }
-
-      .donutWrap {
-        width: 100%;
-      }
-
-      .legend {
-        width: 100%;
-        min-width: 0;
-      }
-    }
-
-    /* Make modals more usable on mobile */
-    @media (max-width: 520px) {
-      .modalBg {
-        padding: 10px;
-      }
-
-      .modal {
-        width: 100%;
-      }
-
-      .modalBody {
-        padding: 10px;
-      }
-
-      .modal .actions {
-        padding: 10px;
-      }
-    }
-
-
-    /* --- Mobile layout fixes (KPI + cards) --- */
-    @media (max-width: 640px) {
-      .card.kpi-exp {
-        grid-column: span 3 !important;
-      }
-
-      .card.kpi-inc {
-        grid-column: span 3 !important;
-      }
-
-      .card.kpi-net {
-        grid-column: span 6 !important;
-      }
-
-      .card.spending {
-        grid-column: span 6 !important;
-      }
-
-      .card.quick {
-        grid-column: span 6 !important;
-      }
-
-      .card.recent {
-        grid-column: span 6 !important;
-      }
-    }
-
-    @media (max-width: 420px) {
-
-      .card.kpi-exp,
-      .card.kpi-inc,
-      .card.kpi-net,
-      .card.spending,
-      .card.quick,
-      .card.recent {
-        grid-column: span 6 !important;
-      }
-    }
-
-
-    /* --- Mobile dashboard: Gider/Gelir yan yana, Net altta --- */
-    @media (max-width: 640px) {
-      .grid {
-        grid-template-columns: repeat(6, 1fr);
-      }
-
-      .card.kpi-exp {
-        grid-column: span 3 !important;
-      }
-
-      .card.kpi-inc {
-        grid-column: span 3 !important;
-      }
-
-      .card.kpi-net {
-        grid-column: span 6 !important;
-      }
-
-      .card.spending,
-      .card.quick,
-      .card.recent {
-        grid-column: span 6 !important;
-      }
-
-      .chartRow {
-        flex-direction: column;
-      }
-
-      .donutWrap {
-        width: 100%;
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .legend {
-        width: 100%;
-        min-width: 0;
-      }
-
-      .donut {
-        width: 160px;
-        height: 160px;
-      }
-
-      .donut svg {
-        width: 160px;
-        height: 160px;
-      }
-    }
-
-    @media (max-width: 420px) {
-
-      .card.kpi-exp,
-      .card.kpi-inc,
-      .card.kpi-net,
-      .card.spending,
-      .card.quick,
-      .card.recent {
-        grid-column: span 6 !important;
-      }
-    }
-
-    /* Compact list rows (Gider/Gelir sayfaları) */
+    /* ── List rows ── */
     .list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       margin-top: 10px;
     }
 
     .rowCard {
-      border: 1px solid rgba(255, 255, 255, .08);
-      background: rgba(14, 22, 42, .55);
-      border-radius: 16px;
-      padding: 10px 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .03);
+      border-radius: 15px;
+      padding: 12px 14px;
       cursor: pointer;
       user-select: none;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      transition: filter .12s ease, transform .12s ease;
+      transition: all .15s ease;
     }
 
     .rowCard:hover {
-      filter: brightness(1.05);
+      background: rgba(255, 255, 255, .06);
       transform: translateY(-1px);
+      border-color: rgba(91, 142, 255, .2);
     }
 
     .rowMain {
       min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
 
     .rowTitle {
-      font-weight: 750;
+      font-weight: 700;
+      font-size: 14px;
       color: #e8f0ff;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -927,94 +731,14 @@
       gap: 8px;
       color: var(--muted);
       font-size: 12px;
-      font-weight: 650;
-    }
-
-    .rowAmt {
-      font-weight: 850;
-      white-space: nowrap;
-    }
-
-
-    /* --- App-like KPI cards + list status badge --- */
-    .kpiCard h2 {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-
-    .kpiCard h2 .ttl {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .kpiCard h2 .ttl .kico {
-      font-size: 16px;
-    }
-
-    .kpiCard .value {
-      font-size: 20px;
-      font-weight: 800;
-    }
-
-    .kpiCard .sub {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 600;
-      display: flex;
-      gap: 10px;
+      font-weight: 500;
       flex-wrap: wrap;
     }
 
-    .chip {
-      border: 1px solid rgba(255, 255, 255, .08);
-      background: rgba(14, 22, 42, .7);
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 12px;
-      font-weight: 650;
-      color: #cfe0ff;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .chip.good {
-      border-color: rgba(45, 212, 191, .28);
-      background: rgba(13, 42, 34, .55);
-      color: #a7fff0;
-    }
-
-    .chip.bad {
-      border-color: rgba(251, 113, 133, .28);
-      background: rgba(42, 16, 24, .55);
-      color: #ffc1cc;
-    }
-
-    .miniPill {
-      border: 1px solid rgba(255, 255, 255, .08);
-      background: rgba(14, 22, 42, .7);
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #cfe0ff;
+    .rowAmt {
+      font-weight: 800;
       white-space: nowrap;
-    }
-
-    .miniPill.paid {
-      border-color: rgba(45, 212, 191, .32);
-      background: rgba(13, 42, 34, .6);
-      color: #86f7e3;
-    }
-
-    .miniPill.unpaid {
-      border-color: rgba(251, 191, 36, .28);
-      background: rgba(44, 35, 14, .55);
-      color: #ffd98a;
+      font-size: 15px;
     }
 
     .rowRight {
@@ -1024,67 +748,315 @@
       gap: 6px;
     }
 
-    @media (max-width: 640px) {
-      .kpiCard .value {
-        font-size: 18px;
-        font-weight: 800;
-      }
+    /* ── KPI Card ── */
+    .kpiCard h2 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .3px;
+      text-transform: uppercase;
+    }
 
-      /* exact mobile layout user requested */
+    .kpiCard h2 .ttl {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .kpiCard h2 .ttl .kico {
+      font-size: 18px;
+    }
+
+    .kpiCard .value {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -.5px;
+      line-height: 1.1;
+    }
+
+    .kpiCard .sub {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    /* ── Chips ── */
+    .chip {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .06);
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #cfe0ff;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .chip.good {
+      border-color: rgba(34, 211, 170, .3);
+      background: rgba(34, 211, 170, .1);
+      color: #86f7e3;
+    }
+
+    .chip.bad {
+      border-color: rgba(245, 104, 128, .3);
+      background: rgba(245, 104, 128, .1);
+      color: #ffc1cc;
+    }
+
+    /* ── Mini Pills ── */
+    .miniPill {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .06);
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #cfe0ff;
+      white-space: nowrap;
+    }
+
+    .miniPill.paid {
+      border-color: rgba(34, 211, 170, .32);
+      background: rgba(34, 211, 170, .1);
+      color: #86f7e3;
+    }
+
+    .miniPill.unpaid {
+      border-color: rgba(251, 191, 36, .28);
+      background: rgba(251, 191, 36, .08);
+      color: #ffd98a;
+    }
+
+
+    /* ── Responsive Breakpoints ── */
+    @media (max-width: 900px) {
       .grid {
         grid-template-columns: repeat(6, 1fr);
       }
+    }
 
-      .card.kpi-exp {
-        grid-column: span 3 !important;
-      }
-
-      .card.kpi-inc {
-        grid-column: span 3 !important;
-      }
-
-      .card.kpi-net {
+    /* Tablet: dashboard KPI side by side */
+    @media (max-width: 860px) {
+      .dashGrid>.card {
         grid-column: span 6 !important;
       }
 
-      .card.spending,
-      .card.quick,
-      .card.recent {
+      .dashGrid>.card.kpi-exp,
+      .dashGrid>.card.kpi-inc {
+        grid-column: span 3 !important;
+      }
+
+      .dashGrid>.card.kpi-net {
         grid-column: span 6 !important;
       }
     }
 
-
-    /* --- Dashboard mobile: force clean vertical stacking to avoid overlap --- */
-    @media (max-width: 680px) {
-      .dashGrid {
-        grid-template-columns: 1fr !important;
+    /* Mobile */
+    @media (max-width: 640px) {
+      body {
+        padding: 0 0 80px;
       }
 
-      .dashGrid>.card {
-        grid-column: 1 / -1 !important;
+      .content {
+        padding: 12px;
+        gap: 10px;
+      }
+
+      .card {
+        padding: 13px;
+        border-radius: 15px;
       }
 
       .kpiCard .value {
-        font-size: 18px !important;
+        font-size: 20px !important;
       }
 
-      .kpiCard h2 {
-        font-size: 13px;
+      .grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+
+      /* Dashboard grid: gider+gelir yan yana, net+diğer full-width */
+      .dashGrid>.card {
+        grid-column: span 6 !important;
+      }
+
+      .dashGrid>.card.kpi-exp,
+      .dashGrid>.card.kpi-inc {
+        grid-column: span 3 !important;
+      }
+
+      .dashGrid>.card.kpi-net {
+        grid-column: span 6 !important;
+      }
+
+      /* Chart */
+      .chartRow {
+        flex-direction: column;
+        gap: 10px;
       }
 
       .donutWrap {
-        width: 100%;
-      }
-
-      .chartRow {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
       }
 
       .legend {
-        width: 100%;
         min-width: 0;
+        flex: 1;
+      }
+
+      .donut {
+        width: 140px;
+        height: 140px;
+      }
+
+      .donut svg {
+        width: 140px;
+        height: 140px;
+      }
+
+      .donutCenter {
+        width: 96px;
+        height: 96px;
+      }
+
+      /* Inputs: prevent iOS zoom */
+      input,
+      select {
+        font-size: 16px !important;
+      }
+
+      /* Table */
+      th,
+      td {
+        padding: 8px 6px;
+        font-size: 12px;
+      }
+
+      /* Tabbar */
+      .tabbarWrap {
+        padding: 6px 8px 12px;
+      }
+
+      .tabbar {
+        gap: 4px;
+      }
+
+      .tab {
+        border-radius: 12px;
+        font-size: 10px;
+        padding: 8px 4px;
+      }
+
+      .ico {
+        font-size: 16px;
+      }
+
+      /* Calendar */
+      .calGrid {
+        gap: 4px;
+      }
+
+      .calCell {
+        padding: 6px;
+        min-height: 58px;
+        border-radius: 10px;
+      }
+
+      .calMini span {
+        font-size: 9px;
+      }
+    }
+
+    /* Small mobile: stack header controls */
+    @media (max-width: 480px) {
+      .header {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .header .left {
+        order: 2;
+        width: 100%;
+      }
+
+      .header .right {
+        order: 1;
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .brand {
+        order: 0;
+      }
+
+      #search {
+        flex: 1;
+        min-width: 100px;
+      }
+
+      .grid2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .tab {
+        font-size: 9px;
+        gap: 4px;
+      }
+
+      .tabbar {
+        gap: 3px;
+      }
+
+      .donutWrap {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    /* Modal: bottom sheet on mobile */
+    @media (max-width: 560px) {
+      .modalBg {
+        align-items: flex-end;
+        padding: 0;
+      }
+
+      .modal {
+        width: 100%;
+        border-radius: 20px 20px 0 0;
+        animation: sheetUp .25s ease;
+        max-height: 92vh;
+        overflow-y: auto;
+      }
+
+      @keyframes sheetUp {
+        from {
+          transform: translateY(100%);
+        }
+
+        to {
+          transform: translateY(0);
+        }
+      }
+
+      .modalBody {
+        max-height: none;
       }
     }
   </style>
@@ -1888,13 +1860,15 @@
 
 
       function renderCompactList(rows) {
-        if (!rows.length) return '<div class="hint">Kayıt yok.</div>';
+        if (!rows.length) return '<div class="hint" style="padding:24px 0;text-align:center;">Bu ay için kayıt yok.</div>';
         return '<div class="list">' + rows.map(function (r) {
           var title = escapeHtml(r.title || "—");
           var cat = escapeHtml(r.category || "Diğer");
+          var dateStr = escapeHtml(String(r.date || "").slice(0, 10) || "—");
           var dot = '<span class="dot" style="background:' + colorForCategory(r.category) + '"></span>';
           var dir = normalizeDir(r);
           var amtColor = dir === "income" ? "var(--good)" : "var(--bad)";
+          var recIcon = r.isRecurring ? ' <span style="color:var(--brand);font-size:10px;">🔄</span>' : '';
           var st = isPaid(r)
             ? '<span class="miniPill paid">' + (dir === "income" ? "Alındı" : "Ödendi") + '</span>'
             : '<span class="miniPill unpaid">' + (dir === "income" ? "Bekliyor" : "Ödenmedi") + '</span>';
@@ -1902,8 +1876,8 @@
           return '' +
             '<div class="rowCard" data-open="item" data-id="' + escapeHtml(r.id) + '">' +
             '<div class="rowMain">' +
-            '<div class="rowTitle">' + title + '</div>' +
-            '<div class="rowMeta">' + dot + '<span>' + cat + '</span></div>' +
+            '<div class="rowTitle">' + title + recIcon + '</div>' +
+            '<div class="rowMeta">' + dot + '<span>' + cat + '</span><span style="opacity:.4;margin:0 2px">•</span><span>' + dateStr + '</span></div>' +
             '</div>' +
             '<div class="rowRight">' +
             '<div class="rowAmt" style="color:' + amtColor + '">' + fmt.format(Number(r.amount || 0)) + '</div>' +
@@ -1912,6 +1886,7 @@
             '</div>';
         }).join("") + '</div>';
       }
+
 
 
       var itemBg = document.getElementById("itemBg");
@@ -2188,26 +2163,24 @@
           if (currentPage === "dashboard") {
             content.innerHTML =
               '<div class="grid dashGrid">' +
-              '<div class="card kpiCard kpi-exp" style="grid-column: span 4;">' +
+              '<div class="card kpiCard kpi-exp" style="grid-column:span 4; border-color:rgba(245,104,128,.25); background:rgba(245,104,128,.04);">' +
               '<h2><span class="ttl"><span class="kico">💸</span><span>Gider</span></span><span class="tag bad">Bu ay</span></h2>' +
-              '<div class="kpi"><div class="value bad">' + fmt.format(k.exp) + '</div><div class="sub"><span class="chip">✅ ' + k.expPaid + '</span><span class="chip bad">⏳ ' + k.expUn + '</span></div></div>' +
+              '<div class="kpi"><div class="value bad">' + fmt.format(k.exp) + '</div><div class="sub"><span class="chip">✅ ' + k.expPaid + ' ödendi</span><span class="chip bad">⏳ ' + k.expUn + ' bekliyor</span></div></div>' +
               '</div>' +
-              '<div class="card kpiCard kpi-inc" style="grid-column: span 4;">' +
+              '<div class="card kpiCard kpi-inc" style="grid-column:span 4; border-color:rgba(34,211,170,.22); background:rgba(34,211,170,.04);">' +
               '<h2><span class="ttl"><span class="kico">💰</span><span>Gelir</span></span><span class="tag good">Bu ay</span></h2>' +
-              '<div class="kpi"><div class="value good">' + fmt.format(k.inc) + '</div><div class="sub"><span class="chip good">✅ ' + k.incPaid + '</span><span class="chip">⏳ ' + k.incUn + '</span></div></div>' +
+              '<div class="kpi"><div class="value good">' + fmt.format(k.inc) + '</div><div class="sub"><span class="chip good">✅ ' + k.incPaid + ' alındı</span><span class="chip">⏳ ' + k.incUn + ' bekliyor</span></div></div>' +
               '</div>' +
-              '<div class="card kpiCard kpi-net" style="grid-column: span 4;">' +
-              '<h2><span class="ttl"><span class="kico">🧾</span><span>Net</span></span><span class="tag">Bu ay</span></h2>' +
+              '<div class="card kpiCard kpi-net" style="grid-column:span 4; border-color:rgba(91,142,255,.25); background:rgba(91,142,255,.04);">' +
+              '<h2><span class="ttl"><span class="kico">🧾</span><span>Net Bakiye</span></span><span class="tag">Bu ay</span></h2>' +
               '<div class="kpi"><div class="value ' + (k.net >= 0 ? 'good' : 'bad') + '">' + fmt.format(k.net) + '</div><div class="sub"><span class="hint">Gelir − Gider</span></div></div>' +
               '</div>' +
               renderSpendingChart(rowsMonth) +
-              '<div class="card" style="grid-column: span 4;">' +
-              '<h2>Kısa</h2>' +
-              '<div class="hint">• Takvim: güne tıkla → detay</div>' +
-              '<div class="hint">• Tekrarlayanlar: ay değişince otomatik gelir</div>' +
-              '<div class="hint">• Kategori renkleri: listede ve grafikte aynı</div>' +
-              '</div>'
-            '</div>';
+              '<div class="card" style="grid-column:span 4; background:linear-gradient(135deg,rgba(91,142,255,.08),rgba(124,92,255,.05)); border-color:rgba(91,142,255,.18);">' +
+              '<h2>💡 Hızlı İpuçları</h2>' +
+              '<div class="hint" style="line-height:1.8;">📆 Takvim: güne tıkla → detay<br>🔄 Tekrarlayanlar: ay değişince otomatik<br>🎨 Kategori renkleri grafikte aynı<br>✏️ Kayıt: listeden tıkla → düzenle</div>' +
+              '</div>' +
+              '</div>';
 
             bindTableActions();
             return;
