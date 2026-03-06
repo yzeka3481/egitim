@@ -439,19 +439,24 @@
     .calGrid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
+      gap: 4px;
       margin-top: 10px;
     }
 
     .calCell {
       border: 1px solid var(--line);
       background: rgba(255, 255, 255, .03);
-      border-radius: 13px;
-      padding: 8px;
-      min-height: 72px;
+      border-radius: 10px;
+      padding: 6px 5px;
+      min-height: 44px;
       cursor: pointer;
       user-select: none;
       transition: all .15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 4px;
     }
 
     .calCell:hover {
@@ -468,40 +473,30 @@
 
     .calTop {
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      gap: 4px;
     }
 
     .calDay {
       font-weight: 700;
       font-size: 12px;
       color: #cfe0ff;
+      text-align: center;
     }
 
-    .calAmt {
-      font-weight: 700;
-      font-size: 11px;
-    }
-
-    .calAmt.good {
-      color: var(--good);
-    }
-
-    .calAmt.bad {
-      color: var(--bad);
-    }
-
-    .calMini {
-      margin-top: 6px;
+    .calDots {
       display: flex;
-      flex-direction: column;
-      gap: 2px;
+      gap: 3px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
     }
 
-    .calMini span {
-      font-size: 10px;
-      color: var(--muted);
+    .calDot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
     }
 
     .tabbarWrap {
@@ -736,7 +731,7 @@
     }
 
     .rowAmt {
-      font-weight: 800;
+      font-weight: 500;
       white-space: nowrap;
       font-size: 15px;
     }
@@ -968,17 +963,17 @@
 
       /* Calendar */
       .calGrid {
-        gap: 4px;
+        gap: 3px;
       }
 
       .calCell {
-        padding: 6px;
-        min-height: 58px;
-        border-radius: 10px;
+        padding: 5px 3px;
+        min-height: 36px;
+        border-radius: 8px;
       }
 
-      .calMini span {
-        font-size: 9px;
+      .calDay {
+        font-size: 10px;
       }
     }
 
@@ -1060,91 +1055,320 @@
       }
     }
 
-    /* ── Calendar mobile: horizontal scroll ── */
+    /* ── Calendar: full-width, no horizontal scroll ── */
     .calWrap {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
+      width: 100%;
     }
 
     .calWrap .calGrid {
-      min-width: 560px;
-      /* ensure 7 columns always readable */
+      min-width: 0;
     }
 
     @media (max-width: 640px) {
       .calWrap .calGrid {
-        min-width: 480px;
-        gap: 3px;
+        min-width: 0;
+        gap: 2px;
       }
 
       .calCell {
-        padding: 5px;
-        min-height: 52px;
-        border-radius: 9px;
+        padding: 4px 2px;
+        min-height: 32px;
+        border-radius: 7px;
       }
 
       .calDay {
-        font-size: 11px;
-      }
-
-      .calAmt {
         font-size: 9px;
       }
 
-      .calMini span {
-        font-size: 8px;
+      .calDot {
+        width: 5px;
+        height: 5px;
       }
     }
 
-    /* ── Light theme ── */
+    /* ── Light theme – full contrast overrides ── */
     [data-theme="light"] {
-      --bg: #f0f4ff;
-      --panel: #e7edf8;
-      --card: rgba(255, 255, 255, .85);
+      --bg: #eef2fb;
+      --panel: #e4eaf5;
+      --card: rgba(255, 255, 255, .92);
       --text: #1a2540;
-      --muted: #6278a8;
+      --muted: #5266a0;
       --line: rgba(0, 0, 0, .1);
       --shadow: 0 8px 32px rgba(0, 0, 0, .12);
+      --brand: #2a5de8;
+      --brand2: #6340e0;
+      --good: #0fa878;
+      --bad: #d93f5c;
     }
 
     [data-theme="light"] body {
       background: var(--bg);
-      background-image:
-        radial-gradient(ellipse 90% 55% at 15% -5%, rgba(91, 142, 255, .12), transparent 60%),
-        radial-gradient(ellipse 70% 50% at 88% 5%, rgba(124, 92, 255, .08), transparent 60%);
-    }
-
-    [data-theme="light"] .card {
-      background: rgba(255, 255, 255, .8);
+      color: var(--text);
+      background-image: radial-gradient(ellipse 90% 55% at 15% -5%, rgba(91, 142, 255, .08), transparent 60%), radial-gradient(ellipse 70% 50% at 88% 5%, rgba(124, 92, 255, .05), transparent 60%);
     }
 
     [data-theme="light"] .header {
-      background: rgba(240, 244, 255, .92);
+      background: rgba(238, 242, 251, .96);
+      border-color: rgba(0, 0, 0, .08);
     }
 
     [data-theme="light"] .tabbarWrap {
-      background: rgba(240, 244, 255, .95);
+      background: rgba(238, 242, 251, .98);
+      border-color: rgba(0, 0, 0, .08);
     }
 
-    [data-theme="light"] input,
-    [data-theme="light"] select {
-      background: rgba(255, 255, 255, .9);
-      color: var(--text);
-    }
-
-    [data-theme="light"] .rowCard {
-      background: rgba(255, 255, 255, .75);
+    [data-theme="light"] .card {
+      background: rgba(255, 255, 255, .88);
     }
 
     [data-theme="light"] .modal {
-      background: rgba(240, 244, 255, .99);
+      background: rgba(245, 248, 255, .99);
     }
 
+    [data-theme="light"] .modalTop {
+      background: rgba(255, 255, 255, .8);
+    }
+
+    [data-theme="light"] .modal .actions {
+      background: rgba(255, 255, 255, .6);
+    }
+
+    /* Buttons */
+    [data-theme="light"] .btn {
+      color: #1a2540;
+      background: rgba(0, 0, 0, .06);
+      border-color: rgba(0, 0, 0, .12);
+    }
+
+    [data-theme="light"] .btn:hover {
+      background: rgba(0, 0, 0, .1);
+    }
+
+    [data-theme="light"] .btn.primary,
+    [data-theme="light"] .btn.danger {
+      color: #fff;
+    }
+
+    /* Pill */
+    [data-theme="light"] .pill {
+      background: rgba(255, 255, 255, .92);
+      color: #1a2540;
+      border-color: rgba(0, 0, 0, .12);
+    }
+
+    /* Row cards */
+    [data-theme="light"] .rowCard {
+      background: rgba(255, 255, 255, .85);
+      border-color: rgba(0, 0, 0, .09);
+    }
+
+    [data-theme="light"] .rowCard.exp-card {
+      background: rgba(217, 63, 92, .06);
+      border-color: rgba(217, 63, 92, .18);
+    }
+
+    [data-theme="light"] .rowCard.inc-card {
+      background: rgba(15, 168, 120, .06);
+      border-color: rgba(15, 168, 120, .18);
+    }
+
+    [data-theme="light"] .rowTitle {
+      color: #1a2540;
+    }
+
+    [data-theme="light"] .rowMeta {
+      color: #5266a0;
+    }
+
+    [data-theme="light"] .rowAmt {
+      color: inherit;
+    }
+
+    /* Inputs & selects */
+    [data-theme="light"] input,
+    [data-theme="light"] select {
+      background: rgba(255, 255, 255, .95);
+      color: #1a2540;
+      border-color: rgba(0, 0, 0, .15);
+    }
+
+    [data-theme="light"] input::placeholder {
+      color: #8899bb;
+    }
+
+    /* Hint, label text */
+    [data-theme="light"] .hint {
+      color: #5266a0;
+    }
+
+    [data-theme="light"] h2 {
+      color: #1a2540;
+    }
+
+    [data-theme="light"] strong {
+      color: #1a2540;
+    }
+
+    [data-theme="light"] .sLabel {
+      color: #1a2540 !important;
+    }
+
+    [data-theme="light"] .sDesc {
+      color: #5266a0 !important;
+    }
+
+    [data-theme="light"] .dLabel {
+      color: #5266a0 !important;
+    }
+
+    [data-theme="light"] .dVal {
+      color: #1a2540 !important;
+    }
+
+    /* Tags & pills */
+    [data-theme="light"] .tag {
+      background: rgba(0, 0, 0, .07);
+      color: #1a2540;
+      border-color: rgba(0, 0, 0, .12);
+    }
+
+    [data-theme="light"] .tag.good {
+      background: rgba(15, 168, 120, .12);
+      color: #0a7a56;
+      border-color: rgba(15, 168, 120, .25);
+    }
+
+    [data-theme="light"] .tag.bad {
+      background: rgba(217, 63, 92, .1);
+      color: #a8284b;
+      border-color: rgba(217, 63, 92, .2);
+    }
+
+    [data-theme="light"] .tag.rec {
+      background: rgba(42, 93, 232, .1);
+      color: #1a4db5;
+      border-color: rgba(42, 93, 232, .2);
+    }
+
+    [data-theme="light"] .miniPill.paid {
+      background: rgba(15, 168, 120, .15);
+      color: #0a7a56;
+    }
+
+    [data-theme="light"] .miniPill.unpaid {
+      background: rgba(217, 63, 92, .12);
+      color: #a8284b;
+    }
+
+    /* KPI */
+    [data-theme="light"] .kpiCard .value {
+      color: #1a2540;
+    }
+
+    [data-theme="light"] .kpiCard .sub {
+      color: #5266a0;
+    }
+
+    [data-theme="light"] .kpiCard h2 {
+      color: #5266a0;
+    }
+
+    /* Settings */
+    [data-theme="light"] .settingsSection {
+      background: rgba(255, 255, 255, .88);
+      border-color: rgba(0, 0, 0, .1);
+    }
+
+    [data-theme="light"] .settingsRow {
+      border-color: rgba(0, 0, 0, .07);
+    }
+
+    [data-theme="light"] .toggleTrack {
+      background: rgba(0, 0, 0, .12);
+      border-color: rgba(0, 0, 0, .15);
+    }
+
+    /* Item detail */
+    [data-theme="light"] .itemDetailRow {
+      border-color: rgba(0, 0, 0, .07);
+    }
+
+    [data-theme="light"] .heroTitle {
+      color: #1a2540;
+    }
+
+    [data-theme="light"] .heroMeta {
+      color: #5266a0;
+    }
+
+    /* Calendar */
+    [data-theme="light"] .calCell {
+      background: rgba(255, 255, 255, .75);
+      border-color: rgba(0, 0, 0, .1);
+    }
+
+    [data-theme="light"] .calDay {
+      color: #1a2540;
+    }
+
+    [data-theme="light"] .calMini span {
+      color: #5266a0;
+    }
+
+    /* Tabs */
+    [data-theme="light"] .tab {
+      color: #5266a0;
+    }
+
+    [data-theme="light"] .tab.active {
+      color: #1a2540;
+      background: rgba(42, 93, 232, .1);
+      border-color: rgba(42, 93, 232, .22);
+    }
+
+    /* pre */
+    [data-theme="light"] pre {
+      background: rgba(0, 0, 0, .05);
+      color: #1a2540;
+      border-color: rgba(0, 0, 0, .1);
+    }
+
+    /* Brand */
     [data-theme="light"] .brand h1 {
-      background: linear-gradient(120deg, #1a2540 30%, #3a6fff 80%);
+      background: linear-gradient(120deg, #1a2540 30%, #2a5de8 80%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+    }
+
+    [data-theme="light"] .brand small {
+      color: #5266a0;
+    }
+
+    /* Chart */
+    [data-theme="light"] .hBarTrack {
+      background: rgba(0, 0, 0, .08);
+    }
+
+    [data-theme="light"] .hBarLabel .hName {
+      color: #1a2540;
+    }
+
+    [data-theme="light"] .hBarLabel .hVal {
+      color: #5266a0;
+    }
+
+    /* List page header */
+    [data-theme="light"] .listPageHeader {
+      border-color: rgba(0, 0, 0, .12);
+    }
+
+    [data-theme="light"] .listPageHeader h2 {
+      color: #1a2540;
+    }
+
+    [data-theme="light"] .listPageHeader .sub {
+      color: #5266a0;
     }
 
     /* ── Settings section card ── */
@@ -1417,6 +1641,8 @@
 
       <div class="right">
         <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
+        <button id="btnPrivacy" class="btn small" title="Para miktarlarını gizle/göster"
+          style="font-size:16px;padding:7px 10px;">👁</button>
         <button id="btnAdd" class="btn primary" style="display:none;">＋ Yeni</button>
         <button id="btnLogout" class="btn" style="display:none;">Çıkış</button>
         <button id="btnLoginOpen" class="btn primary">Giriş</button>
@@ -1555,6 +1781,66 @@
 
   <div id="toast" class="toast"></div>
 
+  <!-- KVKK Popup -->
+  <div id="kvkkBg" class="modalBg">
+    <div class="modal" style="max-height:90vh;overflow:hidden;display:flex;flex-direction:column;">
+      <div class="modalTop">
+        <strong>🔒 Gizlilik Politikası & Aydınlatma Metni</strong>
+        <button id="kvkkClose" class="btn small">✕</button>
+      </div>
+      <div class="modalBody" style="overflow-y:auto;">
+        <h3 style="margin:0 0 8px;font-size:14px;">Kişisel Verilerin Korunması (KVKK)</h3>
+        <p style="font-size:13px;line-height:1.8;color:var(--muted);margin:0 0 12px;">Bu uygulama, 6698 sayılı Kişisel
+          Verilerin Korunması Kanunu (KVKK) kapsamında kişisel verilerinizi işlemektedir. Aşağıda hangi verilerin
+          toplandığı ve nasıl kullanıldığı açıklanmıştır.</p>
+
+        <div class="settingsSection" style="margin-bottom:10px;">
+          <h3>📂 İşlenen Veriler</h3>
+          <p style="font-size:13px;line-height:1.8;margin:0;color:var(--muted);">
+            • E-posta adresi (giriş/kimlik doğrulama)<br>
+            • Finansal kayıt bilgileri: başlık, tutar, kategori, tarih, ödeme durumu<br>
+            • Tekrarlayan ödeme yapılandırmaları
+          </p>
+        </div>
+
+        <div class="settingsSection" style="margin-bottom:10px;">
+          <h3>🎯 Veri İşleme Amacı</h3>
+          <p style="font-size:13px;line-height:1.8;margin:0;color:var(--muted);">
+            Verileriniz yalnızca uygulamanın işlevselliği için kullanılmaktadır. Hiçbir kişisel veri üçüncü taraflara
+            satılmaz veya paylaşılmaz.
+          </p>
+        </div>
+
+        <div class="settingsSection" style="margin-bottom:10px;">
+          <h3>🔐 Veri Güvenliği</h3>
+          <p style="font-size:13px;line-height:1.8;margin:0;color:var(--muted);">
+            Tüm veriler Google Firebase altyapısında şifrelenmiş şekilde saklanır. Firestore güvenlik kuralları
+            sayesinde yalnızca kendi hesabınızdaki verilere erişilebilir.
+          </p>
+        </div>
+
+        <div class="settingsSection" style="margin-bottom:10px;">
+          <h3>🗑️ Veri Silme Hakkı</h3>
+          <p style="font-size:13px;line-height:1.8;margin:0;color:var(--muted);">
+            KVKK kapsamında verilerinizin silinmesini talep edebilirsiniz. Hesabınızı ve tüm kayıtlarınızı uygulamadan
+            veya Firebase Console üzerinden kalıcı olarak silebilirsiniz.
+          </p>
+        </div>
+
+        <div class="settingsSection">
+          <h3>📧 İletişim</h3>
+          <p style="font-size:13px;line-height:1.8;margin:0;color:var(--muted);">
+            Gizlilik ile ilgili sorularınız için uygulamanın geliştiricisiyle iletişime geçebilirsiniz. Veri işleme
+            faaliyetlerine itiraz hakkınız saklıdır.
+          </p>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="kvkkOk" class="btn primary" style="flex:1;">Anladım, Kapat</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1621,6 +1907,8 @@
 
       function $(id) { return document.getElementById(id); }
       var fmt = new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" });
+      var privacyMode = false;
+      function fmtAmt(n) { return privacyMode ? '●●●' : fmt.format(n); }
 
       var CATEGORY_COLORS = {
         "Kira": "#7c9cff", "Market": "#2dd4bf", "Fatura": "#fbbf24", "Ulaşım": "#fb7185", "Eğlence": "#a78bfa",
@@ -1717,8 +2005,9 @@
         // recurring
         var rec = !!row.isRecurring;
         $("mRecurring").checked = rec;
+        var rm = Number(row.recurrenceTotalMonths);
+        $("mRecMonths").value = (rm && rm > 0) ? rm : "";
         $("recBox").style.display = rec ? "grid" : "none";
-        $("mRecMonths").value = (row.recurrenceTotalMonths ? Number(row.recurrenceTotalMonths) : "");
 
         // allow updating template (future months) if recurring
         if (rec && row.recurrenceId) {
@@ -2163,7 +2452,7 @@
             '<div class="hBarItem">' +
             '<div class="hBarLabel">' +
             '<span class="hName"><span class="dot" style="background:' + col + '"></span>' + escapeHtml(x.category) + '</span>' +
-            '<span class="hVal">' + fmt.format(x.amount) + ' <span style="color:var(--muted);font-size:10px;">%' + pctOfTotal + '</span></span>' +
+            '<span class="hVal">' + fmtAmt(x.amount) + ' <span style="color:var(--muted);font-size:10px;">%' + pctOfTotal + '</span></span>' +
             '</div>' +
             '<div class="hBarTrack"><div class="hBarFill" style="width:' + pct + '%;background:' + col + ';opacity:.85;"></div></div>' +
             '</div>';
@@ -2175,7 +2464,7 @@
           '<div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">' +
           '<div class="donut" style="flex-shrink:0;">' +
           svg +
-          '<div class="donutCenter"><div class="big">' + fmt.format(total) + '</div><div class="small">Toplam</div></div>' +
+          '<div class="donutCenter"><div class="big">' + fmtAmt(total) + '</div><div class="small">Toplam</div></div>' +
           '</div>' +
           '<div style="flex:1;min-width:200px;">' +
           '<div class="hBarChart">' + hBars + '</div>' +
@@ -2251,7 +2540,7 @@
             '<div class="rowMeta">' + dot + '<span>' + cat + '</span><span style="opacity:.4;margin:0 2px">•</span><span>' + dateStr + '</span></div>' +
             '</div>' +
             '<div class="rowRight">' +
-            '<div class="rowAmt" style="color:' + amtColor + '">' + fmt.format(Number(r.amount || 0)) + '</div>' +
+            '<div class="rowAmt" style="color:' + amtColor + '">' + fmtAmt(Number(r.amount || 0)) + '</div>' +
             st +
             '</div>' +
             '</div>';
@@ -2288,7 +2577,7 @@
           '<div class="itemDetailCard">' +
           '<div class="itemDetailHero" style="background:' + heroBg + ';border-bottom:1px solid ' + heroBorder + ';">' +
           '<div style="width:48px;height:48px;border-radius:50%;background:' + heroBg + ';border:2px solid ' + heroBorder + ';display:flex;align-items:center;justify-content:center;font-size:22px;">' + (isInc ? '💰' : '💸') + '</div>' +
-          '<div class="heroAmt" style="color:' + heroColor + ';">' + (isInc ? '+' : '-') + fmt.format(Number(row.amount || 0)) + '</div>' +
+          '<div class="heroAmt" style="color:' + heroColor + ';">' + (isInc ? '+' : '-') + fmtAmt(Number(row.amount || 0)) + '</div>' +
           '<div class="heroTitle">' + escapeHtml(row.title || '—') + '</div>' +
           '<div class="heroMeta">' + dateStr + '</div>' +
           '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px;">' + dirTag + paidTag + recTag + '</div>' +
@@ -2309,36 +2598,11 @@
 
       function openEditForRow(row) {
         if (!row) return;
-        // Populate add modal with row values
-        document.getElementById("mDir").value = normalizeDir(row);
-        document.getElementById("mPaid").value = String(!!row.isPaid);
-        document.getElementById("mAmount").value = Number(row.amount || 0);
-        document.getElementById("mDate").value = String(row.date || "").slice(0, 10) || (selectedMonth + "-01");
-
-        fillCategorySelect();
-        var cat = (row.category || "Diğer").trim() || "Diğer";
-        if (PRESET_CATS.includes(cat)) {
-          document.getElementById("mCategorySel").value = cat;
-          document.getElementById("mCategoryOther").style.display = (cat === "Diğer") ? "" : "none";
-          document.getElementById("mCategoryOther").value = "";
-        } else {
-          document.getElementById("mCategorySel").value = "Diğer";
-          document.getElementById("mCategoryOther").style.display = "";
-          document.getElementById("mCategoryOther").value = cat;
-        }
-
-        document.getElementById("mTitle").value = row.title || "";
-
-        // Edit mode: recurring fields locked to avoid creating duplicates
-        document.getElementById("mRecurring").checked = !!row.isRecurring;
-        document.getElementById("mRecurring").disabled = true;
-        document.getElementById("recBox").style.display = "none";
-        document.getElementById("mRecMonths").value = row.recurrenceTotalMonths ? Number(row.recurrenceTotalMonths) : "";
-        document.getElementById("mRecMonths").disabled = true;
-
-        window.__editingId = row.id;
-        document.getElementById("addBg").classList.add("show");
-        toast("Düzenleme modunda: Kaydet ile güncelle.");
+        openAddModalForEdit(row);
+        // Ensure recurring fields are always editable
+        document.getElementById('mRecurring').disabled = false;
+        document.getElementById('mRecMonths').disabled = false;
+        document.getElementById('recBox').style.display = document.getElementById('mRecurring').checked ? 'grid' : 'none';
       }
 
       // item modal events
@@ -2393,9 +2657,9 @@
         $("dayTitle").textContent = dateStr + " • Detay";
         $("dayBody").innerHTML =
           '<div class="grid" style="grid-template-columns:repeat(12,1fr);gap:10px;">' +
-          '<div class="card" style="grid-column:span 4;"><div class="hint">Gelir</div><div class="kpi"><div class="value good">' + fmt.format(inc) + '</div></div></div>' +
-          '<div class="card" style="grid-column:span 4;"><div class="hint">Gider</div><div class="kpi"><div class="value bad">' + fmt.format(exp) + '</div></div></div>' +
-          '<div class="card" style="grid-column:span 4;"><div class="hint">Net</div><div class="kpi"><div class="value ' + (net >= 0 ? 'good' : 'bad') + '">' + fmt.format(net) + '</div></div></div>' +
+          '<div class="card" style="grid-column:span 4;"><div class="hint">Gelir</div><div class="kpi"><div class="value good">' + fmtAmt(inc) + '</div></div></div>' +
+          '<div class="card" style="grid-column:span 4;"><div class="hint">Gider</div><div class="kpi"><div class="value bad">' + fmtAmt(exp) + '</div></div></div>' +
+          '<div class="card" style="grid-column:span 4;"><div class="hint">Net</div><div class="kpi"><div class="value ' + (net >= 0 ? 'good' : 'bad') + '">' + fmtAmt(net) + '</div></div></div>' +
           '</div>' +
           '<div class="hr"></div>' +
           '<div style="overflow:auto;">' + renderTable(dayRows) + '</div>';
@@ -2431,19 +2695,16 @@
         for (var i = 0; i < pad; i++) cells.push('<div class="calCell disabled"></div>');
         for (var day = 1; day <= dim; day++) {
           var v = dayMap.get(day) || { inc: 0, exp: 0 };
-          var net = v.inc - v.exp;
-          var netCls = net >= 0 ? "good" : "bad";
+          var hasInc = v.inc > 0;
+          var hasExp = v.exp > 0;
           var dateStr = selectedMonth + "-" + pad2(day);
+          var dots = '';
+          if (hasInc) dots += '<span class="calDot" style="background:var(--good);"></span>';
+          if (hasExp) dots += '<span class="calDot" style="background:var(--bad);"></span>';
           cells.push(
             '<div class="calCell" data-date="' + dateStr + '">' +
-            '<div class="calTop">' +
-            '<div class="calDay">' + day + '</div>' +
-            '<div class="calAmt ' + netCls + '">' + fmt.format(net) + '</div>' +
-            '</div>' +
-            '<div class="calMini">' +
-            '<span>G: ' + fmt.format(v.inc) + '</span>' +
-            '<span>H: ' + fmt.format(v.exp) + '</span>' +
-            '</div>' +
+            '<div class="calTop"><div class="calDay">' + day + '</div></div>' +
+            (dots ? '<div class="calDots">' + dots + '</div>' : '') +
             '</div>'
           );
         }
@@ -2551,15 +2812,15 @@
               '<div class="grid dashGrid">' +
               '<div class="card kpiCard kpi-exp" style="grid-column:span 4; border-color:rgba(245,104,128,.25); background:rgba(245,104,128,.04);">' +
               '<h2><span class="ttl"><span class="kico">💸</span><span>Gider</span></span><span class="tag bad">Bu ay</span></h2>' +
-              '<div class="kpi"><div class="value bad">' + fmt.format(k.exp) + '</div><div class="sub"><span class="chip">✅ ' + k.expPaid + ' ödendi</span><span class="chip bad">⏳ ' + k.expUn + ' bekliyor</span></div></div>' +
+              '<div class="kpi"><div class="value bad">' + fmtAmt(k.exp) + '</div><div class="sub"><span class="chip">✅ ' + k.expPaid + ' ödendi</span><span class="chip bad">⏳ ' + k.expUn + ' bekliyor</span></div></div>' +
               '</div>' +
               '<div class="card kpiCard kpi-inc" style="grid-column:span 4; border-color:rgba(34,211,170,.22); background:rgba(34,211,170,.04);">' +
               '<h2><span class="ttl"><span class="kico">💰</span><span>Gelir</span></span><span class="tag good">Bu ay</span></h2>' +
-              '<div class="kpi"><div class="value good">' + fmt.format(k.inc) + '</div><div class="sub"><span class="chip good">✅ ' + k.incPaid + ' alındı</span><span class="chip">⏳ ' + k.incUn + ' bekliyor</span></div></div>' +
+              '<div class="kpi"><div class="value good">' + fmtAmt(k.inc) + '</div><div class="sub"><span class="chip good">✅ ' + k.incPaid + ' alındı</span><span class="chip">⏳ ' + k.incUn + ' bekliyor</span></div></div>' +
               '</div>' +
               '<div class="card kpiCard kpi-net" style="grid-column:span 4; border-color:rgba(91,142,255,.25); background:rgba(91,142,255,.04);">' +
               '<h2><span class="ttl"><span class="kico">🧾</span><span>Net Bakiye</span></span><span class="tag">Bu ay</span></h2>' +
-              '<div class="kpi"><div class="value ' + (k.net >= 0 ? 'good' : 'bad') + '">' + fmt.format(k.net) + '</div><div class="sub"><span class="hint">Gelir − Gider</span></div></div>' +
+              '<div class="kpi" style="align-items:center;text-align:center;"><div class="value ' + (k.net >= 0 ? 'good' : 'bad') + '">' + fmtAmt(k.net) + '</div><div class="sub" style="justify-content:center;"><span class="hint">Gelir − Gider</span></div></div>' +
               '</div>' +
               renderSpendingChart(rowsMonth) +
               '<div class="card" style="grid-column:span 4; background:linear-gradient(135deg,rgba(91,142,255,.08),rgba(124,92,255,.05)); border-color:rgba(91,142,255,.18);">' +
@@ -2580,7 +2841,7 @@
               '<div class="card">' +
               '<div class="listPageHeader">' +
               '<h2>💸 Gider</h2>' +
-              '<div class="sub">' + selectedMonth + ' • ' + rowsE.length + ' kayıt • Toplam: <b style="color:var(--bad)">' + fmt.format(expTotal) + '</b></div>' +
+              '<div class="sub">' + selectedMonth + ' • ' + rowsE.length + ' kayıt • Toplam: <span style="color:var(--bad)">' + fmtAmt(expTotal) + '</span></div>' +
               '</div>' +
               renderCompactList(rowsE, "expense") +
               '</div>';
@@ -2595,7 +2856,7 @@
               '<div class="card">' +
               '<div class="listPageHeader">' +
               '<h2>💰 Gelir</h2>' +
-              '<div class="sub">' + selectedMonth + ' • ' + rowsI.length + ' kayıt • Toplam: <b style="color:var(--good)">' + fmt.format(incTotal) + '</b></div>' +
+              '<div class="sub">' + selectedMonth + ' • ' + rowsI.length + ' kayıt • Toplam: <span style="color:var(--good)">' + fmtAmt(incTotal) + '</span></div>' +
               '</div>' +
               renderCompactList(rowsI, "income") +
               '</div>';
@@ -2650,16 +2911,9 @@
               /* Privacy */
               '<div class="settingsSection">' +
               '<h3>🔒 Gizlilik ve KVKK</h3>' +
-              '<div class="hint" style="line-height:1.8;font-size:13px;">' +
-              '<b>Kişisel Verilerin Korunması (KVKK)</b><br>' +
-              'Bu uygulama, finansal kayıtlarınızı Firebase üzerinde şifrelenmiş bir şekilde saklar. Verileriniz yalnızca kendi hesabınıza bağlıdır ve üçüncü taraflarla paylaşılmaz.<br><br>' +
-              '<b>Saklanan Veriler</b><br>' +
-              '• Kayıt başlığı, tutar, kategori, tarih, ödeme durumu<br>' +
-              '• Firebase Authentication e-posta adresi<br><br>' +
-              '<b>Veri Silme</b><br>' +
-              'Hesabınızı sildiğinizde tüm verileriniz Firebase\'den silinir. Dilediğiniz zaman verileri dışa aktarabilir veya silebilirsiniz.<br><br>' +
-              '<b>İletişim</b><br>' +
-              'Sorular için uygulamanın geliştiricisiyle iletişime geçebilirsiniz.' +
+              '<div class="settingsRow">' +
+              '<div class="sLabelWrap"><div class="sLabel">Gizlilik Politikası</div><div class="sDesc">KVKK aydınlatma metnini ve veri politikasını görüntüle</div></div>' +
+              '<button class="btn small" id="btnKvkk">Metni Oku →</button>' +
               '</div>' +
               '</div>' +
 
@@ -2688,6 +2942,11 @@
               bImp.addEventListener('click', function () { fImp.click(); });
               fImp.addEventListener('change', function (e) { importData(e.target.files[0]); fImp.value = ''; });
             }
+
+            /* Bind KVKK button */
+            var bKvkk = document.getElementById('btnKvkk');
+            if (bKvkk) bKvkk.addEventListener('click', openKvkk);
+
             return;
           }
         } catch (e) { console.error(e); toast('Ekran hatası: ' + (e.message || e)); }
@@ -2728,6 +2987,24 @@
         return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
       })();
       fillCategorySelect();
+
+      /* KVKK popup */
+      var kvkkBg = $("kvkkBg");
+      function openKvkk() { kvkkBg.classList.add("show"); }
+      function closeKvkk() { kvkkBg.classList.remove("show"); }
+      $("kvkkClose").addEventListener("click", closeKvkk);
+      $("kvkkOk").addEventListener("click", closeKvkk);
+      kvkkBg.addEventListener("click", function (e) { if (e.target === kvkkBg) closeKvkk(); });
+      window.openKvkk = openKvkk;
+
+      /* Privacy eye toggle */
+      $("btnPrivacy").addEventListener("click", function () {
+        privacyMode = !privacyMode;
+        $("btnPrivacy").style.opacity = privacyMode ? '0.4' : '1';
+        $("btnPrivacy").title = privacyMode ? 'Miktarları göster' : 'Para miktarlarını gizle/göster';
+        renderPage();
+      });
+
       renderPage();
     })();
   </script>
