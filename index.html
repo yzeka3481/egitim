@@ -2658,10 +2658,19 @@
 
         $("dayTitle").textContent = dateStr + " • Detay";
         $("dayBody").innerHTML =
-          '<div class="grid" style="grid-template-columns:repeat(12,1fr);gap:10px;">' +
-          '<div class="card" style="grid-column:span 4;"><div class="hint">Gelir</div><div class="kpi"><div class="value good">' + fmtAmt(inc) + '</div></div></div>' +
-          '<div class="card" style="grid-column:span 4;"><div class="hint">Gider</div><div class="kpi"><div class="value bad">' + fmtAmt(exp) + '</div></div></div>' +
-          '<div class="card" style="grid-column:span 4;"><div class="hint">Net</div><div class="kpi"><div class="value ' + (net >= 0 ? 'good' : 'bad') + '">' + fmtAmt(net) + '</div></div></div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<div class="card" style="flex:1;min-width:80px;padding:10px 12px;">' +
+          '<div class="hint" style="margin-bottom:4px;">💰 Gelir</div>' +
+          '<div style="font-size:clamp(13px,3vw,18px);font-weight:800;color:var(--good);word-break:break-all;line-height:1.2;">' + fmtAmt(inc) + '</div>' +
+          '</div>' +
+          '<div class="card" style="flex:1;min-width:80px;padding:10px 12px;">' +
+          '<div class="hint" style="margin-bottom:4px;">💸 Gider</div>' +
+          '<div style="font-size:clamp(13px,3vw,18px);font-weight:800;color:var(--bad);word-break:break-all;line-height:1.2;">' + fmtAmt(exp) + '</div>' +
+          '</div>' +
+          '<div class="card" style="flex:1;min-width:80px;padding:10px 12px;">' +
+          '<div class="hint" style="margin-bottom:4px;">🧾 Net</div>' +
+          '<div style="font-size:clamp(13px,3vw,18px);font-weight:800;color:' + (net >= 0 ? 'var(--good)' : 'var(--bad)') + ';word-break:break-all;line-height:1.2;">' + fmtAmt(net) + '</div>' +
+          '</div>' +
           '</div>' +
           '<div class="hr"></div>' +
           '<div style="overflow:auto;">' + renderTable(dayRows) + '</div>';
