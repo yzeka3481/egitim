@@ -1841,6 +1841,7 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1867,6 +1868,142 @@
         a.href = url; a.download = 'odeme-takip-' + selectedMonth + '.json';
         a.click(); URL.revokeObjectURL(url);
         toast('JSON indirildi: ' + allRows.length + ' kayıt.');
+      }
+
+      /* ── PDF Export ── */
+      function exportPDF() {
+        if (!user) { toast('Önce giriş yap.'); return; }
+        var rowsMonth = allRows.filter(function (r) { return monthOfDoc(r) === selectedMonth && !isTemplate(r); });
+        if (!rowsMonth.length) { toast('Bu ay için dışa aktaracak kayıt yok.'); return; }
+
+        var jspdf = window.jspdf || (window.jsPDF ? { jsPDF: window.jsPDF } : null);
+        if (!jspdf) { toast('PDF kütüphanesi yüklenemedi.'); return; }
+        var doc = new jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        var pw = 210, ml = 14, mr = 14, cw = pw - ml - mr;
+        var y = 18;
+
+        /* ── Başlık ── */
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(18);
+        doc.setTextColor(30, 40, 80);
+        doc.text('Odeme Takip - Aylik Rapor', ml, y);
+        y += 7;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        doc.setTextColor(100, 120, 160);
+        doc.text('Donem: ' + selectedMonth + '   Olusturma: ' + new Date().toLocaleDateString('tr-TR'), ml, y);
+        y += 5;
+        doc.setDrawColor(200, 210, 235);
+        doc.setLineWidth(0.4);
+        doc.line(ml, y, pw - mr, y);
+        y += 6;
+
+        /* ── KPI özeti ── */
+        var expenses = rowsMonth.filter(function (r) { return normalizeDir(r) === 'expense'; });
+        var incomes = rowsMonth.filter(function (r) { return normalizeDir(r) === 'income'; });
+        var totalExp = expenses.reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
+        var totalInc = incomes.reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
+        var net = totalInc - totalExp;
+        var fmtPdf = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
+
+        var kpiW = (cw - 8) / 3;
+        var kpis = [
+          { label: 'Gider', val: fmtPdf.format(totalExp), r: 220, g: 60, b: 80 },
+          { label: 'Gelir', val: fmtPdf.format(totalInc), r: 20, g: 180, b: 140 },
+          { label: 'Net Bakiye', val: fmtPdf.format(net), r: 60, g: 100, b: 220 }
+        ];
+        kpis.forEach(function (k, i) {
+          var x = ml + i * (kpiW + 4);
+          doc.setFillColor(k.r, k.g, k.b);
+          doc.roundedRect(x, y, kpiW, 16, 3, 3, 'F');
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7);
+          doc.setTextColor(255, 255, 255);
+          doc.text(k.label.toUpperCase(), x + 3, y + 5.5);
+          doc.setFontSize(10);
+          doc.text(k.val, x + 3, y + 13);
+        });
+        y += 22;
+
+        /* ── Tablo ── */
+        function drawTable(title, rows, isIncome) {
+          if (!rows.length) return;
+          doc.setFillColor(isIncome ? 20 : 230, isIncome ? 180 : 60, isIncome ? 140 : 80);
+          doc.roundedRect(ml, y, cw, 8, 2, 2, 'F');
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9);
+          doc.setTextColor(255, 255, 255);
+          doc.text(title + ' (' + rows.length + ' kayit)', ml + 3, y + 5.5);
+          y += 10;
+
+          /* Header row */
+          var cols = [{ w: 22, t: 'Tarih' }, { w: 52, t: 'Baslik' }, { w: 32, t: 'Kategori' }, { w: 28, t: 'Durum' }, { w: cw - 22 - 52 - 32 - 28, t: 'Tutar', r: true }];
+          var xc = ml;
+          doc.setFontSize(7.5);
+          doc.setTextColor(80, 100, 140);
+          doc.setFont('helvetica', 'bold');
+          cols.forEach(function (c) {
+            doc.text(c.t, c.r ? xc + c.w - 1 : xc + 1, y, c.r ? { align: 'right' } : {});
+            xc += c.w;
+          });
+          y += 1;
+          doc.setDrawColor(210, 220, 240);
+          doc.setLineWidth(0.3);
+          doc.line(ml, y, pw - mr, y);
+          y += 3;
+
+          /* Data rows */
+          doc.setFont('helvetica', 'normal');
+          rows.forEach(function (r, idx) {
+            if (y > 270) { doc.addPage(); y = 18; }
+            if (idx % 2 === 0) {
+              doc.setFillColor(245, 248, 255);
+              doc.rect(ml, y - 2.5, cw, 7, 'F');
+            }
+            var paid = isPaid(r) ? (isIncome ? 'Alindi' : 'Odendi') : (isIncome ? 'Bekliyor' : 'Odenmedi');
+            var row = [
+              String(r.date || '').slice(0, 10) || '-',
+              (r.title || '-').substring(0, 28),
+              (r.category || 'Diger').substring(0, 18),
+              paid,
+              fmtPdf.format(Number(r.amount || 0))
+            ];
+            xc = ml;
+            doc.setFontSize(7.5);
+            doc.setTextColor(40, 50, 80);
+            cols.forEach(function (c, ci) {
+              doc.text(row[ci], c.r ? xc + c.w - 1 : xc + 1, y + 2, c.r ? { align: 'right' } : {});
+              xc += c.w;
+            });
+            y += 7;
+          });
+
+          /* Toplam satırı */
+          doc.setDrawColor(180, 200, 230);
+          doc.line(ml, y, pw - mr, y);
+          y += 4;
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(isIncome ? 10 : 180, isIncome ? 150 : 40, isIncome ? 110 : 60);
+          var sumLabel = 'Toplam ' + title + ':';
+          var sumVal = fmtPdf.format(rows.reduce(function (s, r) { return s + Number(r.amount || 0); }, 0));
+          doc.text(sumLabel, ml, y);
+          doc.text(sumVal, pw - mr, y, { align: 'right' });
+          y += 10;
+        }
+
+        drawTable('Giderler', expenses, false);
+        drawTable('Gelirler', incomes, true);
+
+        /* ── Footer ── */
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(160, 175, 210);
+        doc.text('Odeme Takip - otomatik olusturuldu', ml, 290);
+        doc.text(new Date().toLocaleString('tr-TR'), pw - mr, 290, { align: 'right' });
+
+        doc.save('odeme-takip-' + selectedMonth + '.pdf');
+        toast('PDF indirildi: ' + rowsMonth.length + ' kayit.');
       }
 
       /* ── Import ── */
@@ -2912,6 +3049,10 @@
               '<button class="btn small" id="btnImport">↑ JSON</button>' +
               '<input type="file" id="importFile" accept=".json" style="display:none;">' +
               '</div>' +
+              '<div class="settingsRow">' +
+              '<div class="sLabelWrap"><div class="sLabel">Aylık PDF Raporu</div><div class="sDesc">Seçili ayın gelir/gider özetini PDF olarak indir</div></div>' +
+              '<button class="btn small primary" id="btnPdfExport">↓ PDF</button>' +
+              '</div>' +
               '</div>' +
 
               /* Account */
@@ -2953,6 +3094,10 @@
               bImp.addEventListener('click', function () { fImp.click(); });
               fImp.addEventListener('change', function (e) { importData(e.target.files[0]); fImp.value = ''; });
             }
+
+            /* Bind PDF export */
+            var bPdf = document.getElementById('btnPdfExport');
+            if (bPdf) bPdf.addEventListener('click', exportPDF);
 
             /* Bind KVKK button */
             var bKvkk = document.getElementById('btnKvkk');
