@@ -2599,10 +2599,12 @@
       function openEditForRow(row) {
         if (!row) return;
         openAddModalForEdit(row);
+        window.__editingId = row.id;
         // Ensure recurring fields are always editable
         document.getElementById('mRecurring').disabled = false;
         document.getElementById('mRecMonths').disabled = false;
         document.getElementById('recBox').style.display = document.getElementById('mRecurring').checked ? 'grid' : 'none';
+        addBg.classList.add('show');
       }
 
       // item modal events
