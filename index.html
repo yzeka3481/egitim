@@ -979,72 +979,37 @@
       }
     }
 
-    /* Mobile header bar (search + filter second row) */
-    .headerMobileBar {
-      display: none;
-    }
-
-    /* Small mobile: clean single row header */
+    /* Small mobile */
     @media (max-width: 640px) {
       .header {
         flex-wrap: nowrap;
         gap: 6px;
-        padding: 10px 12px;
+        padding: 8px 10px;
       }
       .header .left {
         flex: 1;
         min-width: 0;
+        gap: 5px;
         flex-wrap: nowrap;
-        overflow: hidden;
       }
       .header .right {
         flex-shrink: 0;
+        gap: 5px;
         flex-wrap: nowrap;
-        gap: 6px;
       }
-      .headerHideOnMobile {
-        display: none !important;
-      }
-      .userPillDesktop {
-        display: none !important;
-      }
-      .headerMobileBar {
-        display: flex;
-        gap: 8px;
-        padding: 6px 12px 8px;
-        background: rgba(7,16,31,.88);
-        backdrop-filter: blur(22px);
-        -webkit-backdrop-filter: blur(22px);
-        border-bottom: 1px solid var(--line);
-      }
-      .statusFilterMobile {
-        flex-shrink: 0;
-        font-size: 12px;
-        padding: 6px 8px;
-        border-radius: 10px;
-        border: 1px solid var(--line);
-        background: var(--panel);
-        color: var(--text);
-        max-width: 110px;
-      }
-      .searchMobile {
-        flex: 1;
-        font-size: 13px;
-        padding: 7px 12px;
-        border-radius: 10px;
-        border: 1px solid var(--line);
-        background: var(--panel);
-        color: var(--text);
-        min-width: 0;
-      }
-      .searchMobile::placeholder { color: var(--muted); }
-      #search { flex: 1; min-width: 100px; }
-      .grid2 { grid-template-columns: 1fr; }
-      /* Shrink brand on mobile */
+      /* Email pill gizle */
+      #userPill { display: none !important; }
+      /* Filtre ve arama gizle — bunlar içerik alanında görünür */
+      #statusFilter, #search { display: none !important; }
+      /* Ay nav kompakt */
+      #monthLabel { font-size: 12px; }
+      /* Brand küçült */
       .brand h1 { font-size: 13px; }
-      .brand small { font-size: 11px; }
-      /* Logout butonunu kısalt */
-      #btnLogout::after { content: ''; }
+      .brand small { font-size: 10px; }
+      /* Butonları küçült */
+      #btnAdd { font-size: 12px; padding: 7px 10px; }
+      #btnLogout { font-size: 12px; padding: 7px 10px; }
+      .grid2 { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 420px) {
@@ -1145,16 +1110,6 @@
       background-image: radial-gradient(ellipse 90% 55% at 15% -5%, rgba(91, 142, 255, .08), transparent 60%), radial-gradient(ellipse 70% 50% at 88% 5%, rgba(124, 92, 255, .05), transparent 60%);
     }
 
-    [data-theme="light"] .headerMobileBar {
-      background: rgba(255,255,255,.92);
-      border-color: rgba(0,0,0,.09);
-    }
-    [data-theme="light"] .statusFilterMobile,
-    [data-theme="light"] .searchMobile {
-      background: #f0f4ff;
-      border-color: rgba(0,0,0,.1);
-      color: #1a2540;
-    }
       background: rgba(238, 242, 251, .96);
       border-color: rgba(0, 0, 0, .08);
     }
@@ -1730,33 +1685,22 @@
           <span class="pill"><span>📅</span><span id="monthLabel">—</span></span>
           <button id="btnNext" class="btn small">▶</button>
         </div>
-        <select id="statusFilter" class="headerHideOnMobile">
+        <select id="statusFilter">
           <option value="all">Durum: Hepsi</option>
           <option value="unpaid">Durum: Alınmadı/Ödenmedi</option>
           <option value="paid">Durum: Alındı/Ödendi</option>
         </select>
-        <input id="search" placeholder="Ara (başlık / kategori)" class="headerHideOnMobile" />
+        <input id="search" placeholder="Ara (başlık / kategori)" />
       </div>
-
       <div class="right">
-        <span id="userPill" class="pill userPillDesktop" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
-        <button id="btnPrivacy" class="btn small" title="Para miktarlarını gizle/göster"
-          style="font-size:16px;padding:7px 10px;">👁</button>
+        <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
+        <button id="btnPrivacy" class="btn small" title="Para miktarlarını gizle/göster" style="font-size:16px;padding:7px 10px;">👁</button>
         <button id="btnAdd" class="btn primary" style="display:none;">＋ Yeni</button>
         <button id="btnLogout" class="btn" style="display:none;">Çıkış</button>
         <button id="btnLoginOpen" class="btn primary">Giriş</button>
         <span class="hint" id="topHint"></span>
       </div>
     </header>
-    <!-- Mobil: arama + filtre ikinci satır -->
-    <div class="headerMobileBar" id="headerMobileBar">
-      <select id="statusFilterMobile" class="statusFilterMobile">
-        <option value="all">Durum: Hepsi</option>
-        <option value="unpaid">Ödenmedi</option>
-        <option value="paid">Ödendi</option>
-      </select>
-      <input id="searchMobile" placeholder="Ara..." class="searchMobile" />
-    </div>
     <div id="content" class="content"></div>
   </div>
 
@@ -2674,8 +2618,6 @@
         var showNav = (page === "dashboard" || page === "expense" || page === "income" || page === "calendar");
         var monthNav = document.getElementById("monthNav");
         if (monthNav) monthNav.style.display = showNav ? "" : "none";
-        var mobileBar = document.getElementById("headerMobileBar");
-        if (mobileBar) mobileBar.style.display = (page === "assets" || page === "settings") ? "none" : "";
         renderPage();
       }
       document.querySelectorAll(".tab").forEach(function (tab) {
@@ -2684,22 +2626,8 @@
 
       $("btnPrev").addEventListener("click", function () { selectedMonth = prevMonth(selectedMonth); onMonthChanged(); });
       $("btnNext").addEventListener("click", function () { selectedMonth = nextMonth(selectedMonth); onMonthChanged(); });
-      $("statusFilter").addEventListener("change", function() {
-        $("statusFilterMobile").value = this.value;
-        renderPage();
-      });
-      $("search").addEventListener("input", function() {
-        $("searchMobile").value = this.value;
-        renderPage();
-      });
-      $("statusFilterMobile").addEventListener("change", function() {
-        $("statusFilter").value = this.value;
-        renderPage();
-      });
-      $("searchMobile").addEventListener("input", function() {
-        $("search").value = this.value;
-        renderPage();
-      });
+      $("statusFilter").addEventListener("change", renderPage);
+      $("search").addEventListener("input", renderPage);
 
       var authBg = $("authBg");
       $("btnLoginOpen").addEventListener("click", function () { authBg.classList.add("show"); });
@@ -3791,6 +3719,13 @@
         try {
           $("monthLabel").textContent = selectedMonth;
           var content = $("content");
+
+          // Ay navigasyonu ve mobil bar görünürlüğü — her render'da senkronize et
+          var showNav = (currentPage === "dashboard" || currentPage === "expense" || currentPage === "income" || currentPage === "calendar");
+          var _monthNav = document.getElementById("monthNav");
+          if (_monthNav) _monthNav.style.display = showNav ? "" : "none";
+          var _mobileBar = document.getElementById("headerMobileBar");
+          if (_mobileBar) _mobileBar.style.display = (currentPage === "assets" || currentPage === "settings") ? "none" : "";
 
           if (!user) {
             content.innerHTML =
