@@ -1651,10 +1651,12 @@
     .assetSummaryKpi { flex: 1; min-width: 140px; background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
     .assetSummaryKpi .kLabel { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 6px; }
     .assetSummaryKpi .kVal { font-size: 20px; font-weight: 800; }
-    .rateRow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-    .rateChip { background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px; font-size: 12px; font-weight: 700; color: var(--text); display: flex; flex-direction: column; gap: 2px; min-width: 80px; }
-    .rateChip .rLabel { font-size: 10px; color: var(--muted); font-weight: 600; }
-    .rateChip .rVal { font-size: 13px; font-weight: 800; }
+    .rateRow { display: flex; gap: 5px; flex-wrap: nowrap; overflow-x: auto; margin-top: 8px; padding-bottom: 2px; }
+    .rateRow::-webkit-scrollbar { height: 3px; }
+    .rateRow::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
+    .rateChip { background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 7px; padding: 3px 7px; display: flex; flex-direction: row; align-items: baseline; gap: 4px; white-space: nowrap; flex-shrink: 0; }
+    .rateChip .rLabel { font-size: 9px; color: var(--muted); font-weight: 600; }
+    .rateChip .rVal { font-size: 11px; font-weight: 800; color: var(--text); }
     .rateChip.gold { border-color: rgba(251,191,36,.3); background: rgba(251,191,36,.07); }
     .rateChip.usd  { border-color: rgba(91,142,255,.3); background: rgba(91,142,255,.07); }
     .rateChip.eur  { border-color: rgba(34,211,170,.25); background: rgba(34,211,170,.06); }
@@ -2176,7 +2178,7 @@
         tr: {
           appTitle: 'Ödeme Takip',
           dashboard: 'Dashboard', expense: 'Gider', income: 'Gelir', calendar: 'Takvim', assets: 'Varlıklar', settings: 'Ayarlar',
-          newEntry: 'Yeni Kayıt', editEntry: 'Kayıt Düzenle', save: 'Kaydet', cancel: 'Vazgeç',
+          newEntry: 'Yeni', editEntry: 'Kayıt Düzenle', save: 'Kaydet', cancel: 'Vazgeç',
           login: 'Giriş Yap', register: 'Kayıt Ol', logout: 'Çıkış', loginBtn: 'Giriş',
           paid: 'Alındı/Ödendi', unpaid: 'Alınmadı/Ödenmedi', paidShort: 'Ödendi', unpaidShort: 'Ödenmedi',
           received: 'Alındı', notReceived: 'Alınmadı', waiting: 'Bekliyor',
@@ -3552,9 +3554,9 @@
 
         // Döviz + altın fiyat chipleri
         var rateChips = '' +
-          (assetRates.GOLD_GRAM_TRY    ? '<div class="rateChip gold"><span class="rLabel">Gram Altın 24K</span><span class="rVal">' + fmtTRY(assetRates.GOLD_GRAM_TRY) + '</span></div>' : '') +
-          (assetRates.GOLD_GRAM_22_TRY ? '<div class="rateChip gold"><span class="rLabel">Gram Altın 22K</span><span class="rVal">' + fmtTRY(assetRates.GOLD_GRAM_22_TRY) + '</span></div>' : '') +
-          (assetRates.SILVER_GRAM_TRY  ? '<div class="rateChip" style="border-color:rgba(148,163,184,.3);background:rgba(148,163,184,.07);"><span class="rLabel">Gram Gümüş</span><span class="rVal">' + fmtTRY(assetRates.SILVER_GRAM_TRY) + '</span></div>' : '') +
+          (assetRates.GOLD_GRAM_TRY    ? '<div class="rateChip gold"><span class="rLabel">Altın 24K</span><span class="rVal">' + fmtTRY(assetRates.GOLD_GRAM_TRY) + '</span></div>' : '') +
+          (assetRates.GOLD_GRAM_22_TRY ? '<div class="rateChip gold"><span class="rLabel">Altın 22K</span><span class="rVal">' + fmtTRY(assetRates.GOLD_GRAM_22_TRY) + '</span></div>' : '') +
+          (assetRates.SILVER_GRAM_TRY  ? '<div class="rateChip" style="border-color:rgba(148,163,184,.3);background:rgba(148,163,184,.07);"><span class="rLabel">Gümüş</span><span class="rVal">' + fmtTRY(assetRates.SILVER_GRAM_TRY) + '</span></div>' : '') +
           (assetRates.USD_TRY ? '<div class="rateChip usd"><span class="rLabel">USD/TRY</span><span class="rVal">' + fmtTRY(assetRates.USD_TRY) + '</span></div>' : '') +
           (assetRates.EUR_TRY ? '<div class="rateChip eur"><span class="rLabel">EUR/TRY</span><span class="rVal">' + fmtTRY(assetRates.EUR_TRY) + '</span></div>' : '') +
           (assetRates.GBP_TRY ? '<div class="rateChip gbp"><span class="rLabel">GBP/TRY</span><span class="rVal">' + fmtTRY(assetRates.GBP_TRY) + '</span></div>' : '');
