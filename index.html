@@ -3384,27 +3384,46 @@
         var btn = document.getElementById('btnAssetRefresh');
         if (btn) { btn.disabled = true; btn.textContent = t('assetRefreshing'); }
 
-        // open.er-api: base=TRY → rates.USD/EUR/GBP/XAU hepsi tek istekte geliyor
+        // Döviz: open.er-api — anlık, ücretsiz, CORS yok
         var p_fx = fetch('https://open.er-api.com/v6/latest/TRY')
-          .then(function(r) { return r.json(); });
+          .then(function(r) { return r.json(); })
+          .catch(function() { return null; });
 
-        return p_fx
-          .then(function(fx) {
+        // Altın + Gümüş: metals.live — allorigins CORS proxy ile
+        var p_metals = fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://metals.live/v1/spot'))
+          .then(function(r) { return r.json(); })
+          .catch(function() { return null; });
+
+        return Promise.all([p_fx, p_metals])
+          .then(function(res) {
+            var fx = res[0];
+            var metals = res[1];
+
+            // Döviz kurları
             if (fx && fx.rates) {
               assetRates.USD_TRY = fx.rates.USD ? 1 / fx.rates.USD : null;
               assetRates.EUR_TRY = fx.rates.EUR ? 1 / fx.rates.EUR : null;
               assetRates.GBP_TRY = fx.rates.GBP ? 1 / fx.rates.GBP : null;
-              // XAU = 1 troy ounce altın (24 ayar saf)
-              if (fx.rates.XAU && assetRates.USD_TRY) {
-                var tryPerOunceGold = 1 / fx.rates.XAU;
-                assetRates.GOLD_GRAM_TRY = tryPerOunceGold / 31.1035;
-              }
-              // XAG = 1 troy ounce gümüş
-              if (fx.rates.XAG && assetRates.USD_TRY) {
-                var tryPerOunceSilver = 1 / fx.rates.XAG;
-                assetRates.SILVER_GRAM_TRY = tryPerOunceSilver / 31.1035;
+            }
+
+            // Altın ve gümüş USD spot fiyatı
+            // metals.live formatı: [{gold: 3300.5, silver: 33.2, ...}] veya {gold:..., silver:...}
+            var goldUsd = null, silverUsd = null;
+            if (metals) {
+              var m = Array.isArray(metals) ? metals[0] : metals;
+              if (m) {
+                if (m.gold)   goldUsd   = Number(m.gold);
+                if (m.silver) silverUsd = Number(m.silver);
               }
             }
+
+            if (goldUsd && assetRates.USD_TRY) {
+              assetRates.GOLD_GRAM_TRY = (goldUsd / 31.1035) * assetRates.USD_TRY;
+            }
+            if (silverUsd && assetRates.USD_TRY) {
+              assetRates.SILVER_GRAM_TRY = (silverUsd / 31.1035) * assetRates.USD_TRY;
+            }
+
             assetRates.lastFetch = new Date();
             localStorage.setItem('assetRates', JSON.stringify(assetRates));
             toast(t('assetRefreshOk'));
