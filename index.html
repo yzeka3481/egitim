@@ -1739,10 +1739,14 @@
         <div class="grid2">
           <select id="assetType">
             <option value="cash">💵 Nakit / Banka</option>
-            <option value="gold_gram">🥇 Altın (gram)</option>
-            <option value="gold_quarter">🥇 Çeyrek Altın</option>
-            <option value="gold_half">🥇 Yarım Altın</option>
-            <option value="gold_full">🥇 Tam Altın</option>
+            <option value="gold_gram_24">🥇 Altın 24 Ayar (gram)</option>
+            <option value="gold_gram_22">🥇 Altın 22 Ayar (gram)</option>
+            <option value="gold_quarter_24">🥇 Çeyrek Altın 24 Ayar</option>
+            <option value="gold_quarter_22">🥇 Çeyrek Altın 22 Ayar</option>
+            <option value="gold_half_24">🥇 Yarım Altın 24 Ayar</option>
+            <option value="gold_half_22">🥇 Yarım Altın 22 Ayar</option>
+            <option value="gold_full_24">🥇 Tam Altın 24 Ayar</option>
+            <option value="gold_full_22">🥇 Tam Altın 22 Ayar</option>
             <option value="usd">🇺🇸 Dolar (USD)</option>
             <option value="eur">🇪🇺 Euro (EUR)</option>
             <option value="gbp">🇬🇧 Sterlin (GBP)</option>
@@ -2236,10 +2240,12 @@
           assetRefreshing: 'Güncelleniyor...', assetRefreshOk: 'Fiyatlar güncellendi.',
           assetRefreshErr: 'Fiyat alınamadı:', assetDeleteConfirm: 'Bu varlık silinsin mi?',
           assetNoItems: 'Henüz varlık eklenmedi.',
-          assetType_cash: 'Nakit / Banka', assetType_gold_gram: 'Altın (gram)',
-          assetType_gold_quarter: 'Çeyrek Altın', assetType_gold_half: 'Yarım Altın',
-          assetType_gold_full: 'Tam Altın', assetType_usd: 'Dolar (USD)',
-          assetType_eur: 'Euro (EUR)', assetType_gbp: 'Sterlin (GBP)', assetType_other: 'Diğer',
+          assetType_cash: 'Nakit / Banka',
+          assetType_gold_gram_24: 'Altın 24 Ayar (gram)', assetType_gold_gram_22: 'Altın 22 Ayar (gram)',
+          assetType_gold_quarter_24: 'Çeyrek Altın 24 Ayar', assetType_gold_quarter_22: 'Çeyrek Altın 22 Ayar',
+          assetType_gold_half_24: 'Yarım Altın 24 Ayar', assetType_gold_half_22: 'Yarım Altın 22 Ayar',
+          assetType_gold_full_24: 'Tam Altın 24 Ayar', assetType_gold_full_22: 'Tam Altın 22 Ayar',
+          assetType_usd: 'Dolar (USD)', assetType_eur: 'Euro (EUR)', assetType_gbp: 'Sterlin (GBP)', assetType_other: 'Diğer',
           assetModalAdd: 'Varlık Ekle', assetModalEdit: 'Varlık Düzenle',
           assetValueHintLive: 'Birim değer boş bırakılırsa canlı fiyat kullanılır.',
           assetValueHintManual: 'Girdiğin değer kullanılacak (canlı fiyat yok).',
@@ -2310,10 +2316,12 @@
           assetRefreshing: 'Refreshing...', assetRefreshOk: 'Prices updated.',
           assetRefreshErr: 'Could not fetch prices:', assetDeleteConfirm: 'Delete this asset?',
           assetNoItems: 'No assets added yet.',
-          assetType_cash: 'Cash / Bank', assetType_gold_gram: 'Gold (gram)',
-          assetType_gold_quarter: 'Quarter Gold Coin', assetType_gold_half: 'Half Gold Coin',
-          assetType_gold_full: 'Full Gold Coin', assetType_usd: 'US Dollar (USD)',
-          assetType_eur: 'Euro (EUR)', assetType_gbp: 'British Pound (GBP)', assetType_other: 'Other',
+          assetType_cash: 'Cash / Bank',
+          assetType_gold_gram_24: 'Gold 24K (gram)', assetType_gold_gram_22: 'Gold 22K (gram)',
+          assetType_gold_quarter_24: 'Quarter Gold Coin 24K', assetType_gold_quarter_22: 'Quarter Gold Coin 22K',
+          assetType_gold_half_24: 'Half Gold Coin 24K', assetType_gold_half_22: 'Half Gold Coin 22K',
+          assetType_gold_full_24: 'Full Gold Coin 24K', assetType_gold_full_22: 'Full Gold Coin 22K',
+          assetType_usd: 'US Dollar (USD)', assetType_eur: 'Euro (EUR)', assetType_gbp: 'British Pound (GBP)', assetType_other: 'Other',
           assetModalAdd: 'Add Asset', assetModalEdit: 'Edit Asset',
           assetValueHintLive: 'Leave unit value empty to use live price.',
           assetValueHintManual: 'Your entered value will be used (no live price).',
@@ -3352,56 +3360,54 @@
 
       /* Asset type metadata */
       var ASSET_META = {
-        cash:         { icon: '💵', color: '#60a5fa', bg: 'rgba(96,165,250,.12)' },
-        gold_gram:    { icon: '🥇', color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
-        gold_quarter: { icon: '🥇', color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
-        gold_half:    { icon: '🥇', color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
-        gold_full:    { icon: '🥇', color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
-        usd:          { icon: '🇺🇸', color: '#5b8eff', bg: 'rgba(91,142,255,.12)' },
-        eur:          { icon: '🇪🇺', color: '#22d3aa', bg: 'rgba(34,211,170,.10)' },
-        gbp:          { icon: '🇬🇧', color: '#a78bfa', bg: 'rgba(167,139,250,.12)' },
-        other:        { icon: '📦', color: '#9ca3af', bg: 'rgba(156,163,175,.1)'  }
+        cash:           { icon: '💵', color: '#60a5fa', bg: 'rgba(96,165,250,.12)' },
+        gold_gram_24:   { icon: '🥇', color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
+        gold_gram_22:   { icon: '🥇', color: '#f59e0b', bg: 'rgba(245,158,11,.12)' },
+        gold_quarter_24:{ icon: '🥇', color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
+        gold_quarter_22:{ icon: '🥇', color: '#f59e0b', bg: 'rgba(245,158,11,.12)' },
+        gold_half_24:   { icon: '🥇', color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
+        gold_half_22:   { icon: '🥇', color: '#f59e0b', bg: 'rgba(245,158,11,.12)' },
+        gold_full_24:   { icon: '🥇', color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
+        gold_full_22:   { icon: '🥇', color: '#f59e0b', bg: 'rgba(245,158,11,.12)' },
+        usd:            { icon: '🇺🇸', color: '#5b8eff', bg: 'rgba(91,142,255,.12)' },
+        eur:            { icon: '🇪🇺', color: '#22d3aa', bg: 'rgba(34,211,170,.10)' },
+        gbp:            { icon: '🇬🇧', color: '#a78bfa', bg: 'rgba(167,139,250,.12)' },
+        other:          { icon: '📦', color: '#9ca3af', bg: 'rgba(156,163,175,.1)'  }
       };
 
-      /* Gram altın ağırlıkları (standart Türk altın sikkeleri) */
-      var GOLD_GRAMS = { gold_gram: 1, gold_quarter: 1.75, gold_half: 3.5, gold_full: 7.0 };
+      /* Gram ağırlıkları × ayar saflık oranı */
+      var GOLD_GRAMS = {
+        gold_gram_24:    1      * 1,          // 1g × 24/24
+        gold_gram_22:    1      * (22/24),    // 1g × 22/24
+        gold_quarter_24: 1.75   * 1,
+        gold_quarter_22: 1.75   * (22/24),
+        gold_half_24:    3.5    * 1,
+        gold_half_22:    3.5    * (22/24),
+        gold_full_24:    7.0    * 1,
+        gold_full_22:    7.0    * (22/24),
+      };
 
       /* ── Fiyat çekme ── */
       function fetchRates() {
         var btn = document.getElementById('btnAssetRefresh');
         if (btn) { btn.disabled = true; btn.textContent = t('assetRefreshing'); }
 
-        // open.er-api.com — anlık kur, ücretsiz, CORS yok, key yok
+        // open.er-api: base=TRY → rates.USD/EUR/GBP/XAU hepsi tek istekte geliyor
         var p_fx = fetch('https://open.er-api.com/v6/latest/TRY')
           .then(function(r) { return r.json(); });
 
-        // Altın: allorigins proxy ile metals.live
-        var goldUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://metals.live/v1/spot/gold');
-        var p_gold = fetch(goldUrl)
-          .then(function(r) { return r.json(); })
-          .catch(function() { return null; });
-
-        return Promise.all([p_fx, p_gold])
-          .then(function(res) {
-            var fx = res[0], gold = res[1];
-
-            // open.er-api: base=TRY, rates.USD = 1 TRY kaç USD → tersini al
+        return p_fx
+          .then(function(fx) {
             if (fx && fx.rates) {
               assetRates.USD_TRY = fx.rates.USD ? 1 / fx.rates.USD : null;
               assetRates.EUR_TRY = fx.rates.EUR ? 1 / fx.rates.EUR : null;
               assetRates.GBP_TRY = fx.rates.GBP ? 1 / fx.rates.GBP : null;
+              // XAU = 1 troy ounce altın, gram için 31.1035'e böl
+              if (fx.rates.XAU) {
+                var tryPerOunce = 1 / fx.rates.XAU;
+                assetRates.GOLD_GRAM_TRY = tryPerOunce / 31.1035;
+              }
             }
-
-            // metals.live: [{price: 3300}]
-            var goldUsd = null;
-            if (gold) {
-              if (Array.isArray(gold) && gold[0] && gold[0].price) goldUsd = gold[0].price;
-              else if (gold.price) goldUsd = gold.price;
-            }
-            if (goldUsd && assetRates.USD_TRY) {
-              assetRates.GOLD_GRAM_TRY = (goldUsd / 31.1035) * assetRates.USD_TRY;
-            }
-
             assetRates.lastFetch = new Date();
             localStorage.setItem('assetRates', JSON.stringify(assetRates));
             toast(t('assetRefreshOk'));
@@ -3621,7 +3627,7 @@
         var type = document.getElementById('assetType').value;
         var manualVal = document.getElementById('assetValue').value;
         var hint = document.getElementById('assetValueHint');
-        var liveTypes = ['gold_gram','gold_quarter','gold_half','gold_full','usd','eur','gbp'];
+        var liveTypes = ['gold_gram_24','gold_gram_22','gold_quarter_24','gold_quarter_22','gold_half_24','gold_half_22','gold_full_24','gold_full_22','usd','eur','gbp'];
         var isLiveType = liveTypes.indexOf(type) > -1 || (type === 'cash' && document.getElementById('assetCurrency').value !== 'TRY');
         if (hint) hint.textContent = (isLiveType && !manualVal) ? t('assetValueHintLive') : t('assetValueHintManual');
       }
