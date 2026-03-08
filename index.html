@@ -977,36 +977,72 @@
       }
     }
 
-    /* Small mobile: stack header controls */
-    @media (max-width: 480px) {
+    /* Mobile header bar (search + filter second row) */
+    .headerMobileBar {
+      display: none;
+    }
+
+    /* Small mobile: clean single row header */
+    @media (max-width: 640px) {
       .header {
-        flex-wrap: wrap;
-        gap: 8px;
+        flex-wrap: nowrap;
+        gap: 6px;
+        padding: 10px 12px;
       }
-
       .header .left {
-        order: 2;
-        width: 100%;
-      }
-
-      .header .right {
-        order: 1;
-        width: 100%;
-        justify-content: flex-end;
-      }
-
-      .brand {
-        order: 0;
-      }
-
-      #search {
         flex: 1;
-        min-width: 100px;
+        min-width: 0;
+        flex-wrap: nowrap;
+        overflow: hidden;
       }
-
-      .grid2 {
-        grid-template-columns: 1fr;
+      .header .right {
+        flex-shrink: 0;
+        flex-wrap: nowrap;
+        gap: 6px;
       }
+      .headerHideOnMobile {
+        display: none !important;
+      }
+      .userPillDesktop {
+        display: none !important;
+      }
+      .headerMobileBar {
+        display: flex;
+        gap: 8px;
+        padding: 6px 12px 8px;
+        background: rgba(7,16,31,.88);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        border-bottom: 1px solid var(--line);
+      }
+      .statusFilterMobile {
+        flex-shrink: 0;
+        font-size: 12px;
+        padding: 6px 8px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--text);
+        max-width: 110px;
+      }
+      .searchMobile {
+        flex: 1;
+        font-size: 13px;
+        padding: 7px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--text);
+        min-width: 0;
+      }
+      .searchMobile::placeholder { color: var(--muted); }
+      #search { flex: 1; min-width: 100px; }
+      .grid2 { grid-template-columns: 1fr; }
+      /* Shrink brand on mobile */
+      .brand h1 { font-size: 13px; }
+      .brand small { font-size: 11px; }
+      /* Logout butonunu kısalt */
+      #btnLogout::after { content: ''; }
     }
 
     @media (max-width: 420px) {
@@ -1107,7 +1143,16 @@
       background-image: radial-gradient(ellipse 90% 55% at 15% -5%, rgba(91, 142, 255, .08), transparent 60%), radial-gradient(ellipse 70% 50% at 88% 5%, rgba(124, 92, 255, .05), transparent 60%);
     }
 
-    [data-theme="light"] .header {
+    [data-theme="light"] .headerMobileBar {
+      background: rgba(255,255,255,.92);
+      border-color: rgba(0,0,0,.09);
+    }
+    [data-theme="light"] .statusFilterMobile,
+    [data-theme="light"] .searchMobile {
+      background: #f0f4ff;
+      border-color: rgba(0,0,0,.1);
+      color: #1a2540;
+    }
       background: rgba(238, 242, 251, .96);
       border-color: rgba(0, 0, 0, .08);
     }
@@ -1681,18 +1726,16 @@
         <button id="btnPrev" class="btn small">◀</button>
         <span class="pill"><span>📅</span><span id="monthLabel">—</span></span>
         <button id="btnNext" class="btn small">▶</button>
-
-        <select id="statusFilter">
+        <select id="statusFilter" class="headerHideOnMobile">
           <option value="all">Durum: Hepsi</option>
           <option value="unpaid">Durum: Alınmadı/Ödenmedi</option>
           <option value="paid">Durum: Alındı/Ödendi</option>
         </select>
-
-        <input id="search" placeholder="Ara (başlık / kategori)" />
+        <input id="search" placeholder="Ara (başlık / kategori)" class="headerHideOnMobile" />
       </div>
 
       <div class="right">
-        <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
+        <span id="userPill" class="pill userPillDesktop" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
         <button id="btnPrivacy" class="btn small" title="Para miktarlarını gizle/göster"
           style="font-size:16px;padding:7px 10px;">👁</button>
         <button id="btnAdd" class="btn primary" style="display:none;">＋ Yeni</button>
@@ -1701,6 +1744,15 @@
         <span class="hint" id="topHint"></span>
       </div>
     </header>
+    <!-- Mobil: arama + filtre ikinci satır -->
+    <div class="headerMobileBar" id="headerMobileBar">
+      <select id="statusFilterMobile" class="statusFilterMobile">
+        <option value="all">Durum: Hepsi</option>
+        <option value="unpaid">Ödenmedi</option>
+        <option value="paid">Ödendi</option>
+      </select>
+      <input id="searchMobile" placeholder="Ara..." class="searchMobile" />
+    </div>
     <div id="content" class="content"></div>
   </div>
 
@@ -2207,8 +2259,8 @@
           filterAll: 'Durum: Hepsi', filterUnpaid: 'Durum: Alınmadı/Ödenmedi', filterPaid: 'Durum: Alındı/Ödendi',
           searchPlaceholder: 'Ara (başlık / kategori)',
           quickTips: '💡 Hızlı İpuçları',
-          quickTipsBody: '📆 Takvim: Güne Tıkla → Detay<br>🔄 Tekrarlayanlar: Ay Değişince Otomatik<br>🎨 Kategori Renkleri Grafikte Aynı<br>✏️ Kayıt: Listeden Tıkla → Düzenle',
-          spendingTitle: '💳 Nereye Ne Harcadım?', spendingEmpty: 'Bu Ay Gider Kaydı Yok.',
+          quickTipsBody: '📆 Takvim: güne tıkla → detay<br>🔄 Tekrarlayanlar: ay değişince otomatik<br>🎨 Kategori renkleri grafikte aynı<br>✏️ Kayıt: listeden tıkla → düzenle',
+          spendingTitle: '💳 Nereye ne harcadım?', spendingEmpty: 'Bu ay gider kaydı yok.',
           cat_Kira: 'Kira', cat_Market: 'Market', cat_Fatura: 'Fatura', cat_Ulasim: 'Ulaşım', cat_Eglence: 'Eğlence',
           cat_Saglik: 'Sağlık', cat_Egitim: 'Eğitim', cat_Yemek: 'Yemek', cat_Giyim: 'Giyim', cat_Kredi: 'Kredi/Kart',
           cat_Nakit: 'Nakit', cat_Diger: 'Diğer',
@@ -2233,7 +2285,7 @@
           assetsTitle: 'Mal Varlıklarım', addAsset: '＋ Varlık Ekle', assetName: 'Varlık Adı',
           assetType: 'Tür', assetAmount: 'Miktar', assetValue: 'Birim Değer', assetNote: 'Not',
           assetTotal: 'Toplam Değer', assetNetWorth: 'Net Servet', assetLivePrice: 'Canlı Fiyat',
-          assetLastUpdate: 'Son güncelleme', assetRefresh: '🔄 Güncelle',
+          assetLastUpdate: 'Son güncelleme', assetRefresh: '🔄 Fiyatları Güncelle',
           assetRefreshing: 'Güncelleniyor...', assetRefreshOk: 'Fiyatlar güncellendi.',
           assetRefreshErr: 'Fiyat alınamadı:', assetDeleteConfirm: 'Bu varlık silinsin mi?',
           assetNoItems: 'Henüz varlık eklenmedi.',
@@ -2622,8 +2674,22 @@
 
       $("btnPrev").addEventListener("click", function () { selectedMonth = prevMonth(selectedMonth); onMonthChanged(); });
       $("btnNext").addEventListener("click", function () { selectedMonth = nextMonth(selectedMonth); onMonthChanged(); });
-      $("statusFilter").addEventListener("change", renderPage);
-      $("search").addEventListener("input", renderPage);
+      $("statusFilter").addEventListener("change", function() {
+        $("statusFilterMobile").value = this.value;
+        renderPage();
+      });
+      $("search").addEventListener("input", function() {
+        $("searchMobile").value = this.value;
+        renderPage();
+      });
+      $("statusFilterMobile").addEventListener("change", function() {
+        $("statusFilter").value = this.value;
+        renderPage();
+      });
+      $("searchMobile").addEventListener("input", function() {
+        $("search").value = this.value;
+        renderPage();
+      });
 
       var authBg = $("authBg");
       $("btnLoginOpen").addEventListener("click", function () { authBg.classList.add("show"); });
