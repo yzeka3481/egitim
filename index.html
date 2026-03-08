@@ -3347,8 +3347,12 @@
 
       var assetRates = {
         USD_TRY: null, EUR_TRY: null, GBP_TRY: null,
-        GOLD_GRAM_TRY: null,
-        SILVER_GRAM_TRY: null,
+        GOLD_GRAM_TRY: null,      // Gram Altın 24 ayar
+        GOLD_GRAM_22_TRY: null,   // 22 Ayar Bilezik (gram)
+        GOLD_QUARTER_TRY: null,   // Çeyrek Altın
+        GOLD_HALF_TRY: null,      // Yarım Altın
+        GOLD_FULL_TRY: null,      // Tam Altın
+        SILVER_GRAM_TRY: null,    // Gümüş gram
         lastFetch: null
       };
       var allAssets = [];
@@ -3412,20 +3416,18 @@
               assetRates.GBP_TRY = fx.rates.GBP ? 1 / fx.rates.GBP : null;
             }
 
-            // collectapi goldPrice formatı:
-            // { success: true, result: [ {name:"Gram Altın", buying:"...", selling:"..."}, ... ] }
+            // collectapi goldPrice — isim eşleştirme (API Türkçe isim kullanıyor)
             if (gold && gold.success && gold.result) {
               gold.result.forEach(function(item) {
-                var name = (item.name || '').toLowerCase();
-                // Alış fiyatını kullan, nokta/virgül normalize et
-                var price = parseFloat((item.buying || item.selling || '0').replace(',', '.'));
+                var name = (item.name || '').trim();
+                var price = item.buying ? Number(item.buying) : 0;
                 if (!price) return;
-                if (name.indexOf('gram') > -1 && name.indexOf('altin') > -1) {
-                  assetRates.GOLD_GRAM_TRY = price;
-                }
-                if (name.indexOf('gümüş') > -1 || name.indexOf('gumus') > -1 || name.indexOf('silver') > -1) {
-                  assetRates.SILVER_GRAM_TRY = price;
-                }
+                if (name === 'Gram Altın')       assetRates.GOLD_GRAM_TRY    = price; // 24 ayar
+                if (name === '22 Ayar Bilezik')  assetRates.GOLD_GRAM_22_TRY = price; // 22 ayar gram
+                if (name === 'Çeyrek Altın')     assetRates.GOLD_QUARTER_TRY = price;
+                if (name === 'Yarım Altın')      assetRates.GOLD_HALF_TRY    = price;
+                if (name === 'Tam Altın')        assetRates.GOLD_FULL_TRY    = price;
+                if (name === 'Gümüş')            assetRates.SILVER_GRAM_TRY  = price;
               });
             }
 
@@ -3448,11 +3450,15 @@
           var saved = localStorage.getItem('assetRates');
           if (saved) {
             var parsed = JSON.parse(saved);
-            assetRates.USD_TRY = parsed.USD_TRY || null;
-            assetRates.EUR_TRY = parsed.EUR_TRY || null;
-            assetRates.GBP_TRY = parsed.GBP_TRY || null;
-            assetRates.GOLD_GRAM_TRY = parsed.GOLD_GRAM_TRY || null;
-            assetRates.SILVER_GRAM_TRY = parsed.SILVER_GRAM_TRY || null;
+            assetRates.USD_TRY          = parsed.USD_TRY          || null;
+            assetRates.EUR_TRY          = parsed.EUR_TRY          || null;
+            assetRates.GBP_TRY          = parsed.GBP_TRY          || null;
+            assetRates.GOLD_GRAM_TRY    = parsed.GOLD_GRAM_TRY    || null;
+            assetRates.GOLD_GRAM_22_TRY = parsed.GOLD_GRAM_22_TRY || null;
+            assetRates.GOLD_QUARTER_TRY = parsed.GOLD_QUARTER_TRY || null;
+            assetRates.GOLD_HALF_TRY    = parsed.GOLD_HALF_TRY    || null;
+            assetRates.GOLD_FULL_TRY    = parsed.GOLD_FULL_TRY    || null;
+            assetRates.SILVER_GRAM_TRY  = parsed.SILVER_GRAM_TRY  || null;
             assetRates.lastFetch = parsed.lastFetch ? new Date(parsed.lastFetch) : null;
           }
         } catch(e) {}
@@ -3493,9 +3499,13 @@
           return { total: qty * unitG, isLive: true, unitTRY: unitG };
         }
 
-        if (type === 'silver_gram' && assetRates.SILVER_GRAM_TRY) {
-          return { total: qty * assetRates.SILVER_GRAM_TRY, isLive: true, unitTRY: assetRates.SILVER_GRAM_TRY };
-        }
+        // Direkt API fiyatları (collectapi — en doğru)
+        if (type === 'gold_gram_24' && assetRates.GOLD_GRAM_TRY)    return { total: qty * assetRates.GOLD_GRAM_TRY,    isLive: true, unitTRY: assetRates.GOLD_GRAM_TRY };
+        if (type === 'gold_gram_22' && assetRates.GOLD_GRAM_22_TRY) return { total: qty * assetRates.GOLD_GRAM_22_TRY, isLive: true, unitTRY: assetRates.GOLD_GRAM_22_TRY };
+        if (type === 'gold_quarter' && assetRates.GOLD_QUARTER_TRY) return { total: qty * assetRates.GOLD_QUARTER_TRY, isLive: true, unitTRY: assetRates.GOLD_QUARTER_TRY };
+        if (type === 'gold_half'    && assetRates.GOLD_HALF_TRY)    return { total: qty * assetRates.GOLD_HALF_TRY,    isLive: true, unitTRY: assetRates.GOLD_HALF_TRY };
+        if (type === 'gold_full'    && assetRates.GOLD_FULL_TRY)    return { total: qty * assetRates.GOLD_FULL_TRY,    isLive: true, unitTRY: assetRates.GOLD_FULL_TRY };
+        if (type === 'silver_gram'  && assetRates.SILVER_GRAM_TRY)  return { total: qty * assetRates.SILVER_GRAM_TRY,  isLive: true, unitTRY: assetRates.SILVER_GRAM_TRY };
 
         // Fallback: manuel değer yok, canlı fiyat yok
         return { total: 0, isLive: false, unitTRY: 0 };
@@ -3539,8 +3549,9 @@
 
         // Döviz + altın fiyat chipleri
         var rateChips = '' +
-          (assetRates.GOLD_GRAM_TRY ? '<div class="rateChip gold"><span class="rLabel">Gram Altın 24K</span><span class="rVal">' + fmtTRY(assetRates.GOLD_GRAM_TRY) + '</span></div>' : '') +
-          (assetRates.SILVER_GRAM_TRY ? '<div class="rateChip" style="border-color:rgba(148,163,184,.3);background:rgba(148,163,184,.07);"><span class="rLabel">Gram Gümüş</span><span class="rVal">' + fmtTRY(assetRates.SILVER_GRAM_TRY) + '</span></div>' : '') +
+          (assetRates.GOLD_GRAM_TRY    ? '<div class="rateChip gold"><span class="rLabel">Gram Altın 24K</span><span class="rVal">' + fmtTRY(assetRates.GOLD_GRAM_TRY) + '</span></div>' : '') +
+          (assetRates.GOLD_GRAM_22_TRY ? '<div class="rateChip gold"><span class="rLabel">Gram Altın 22K</span><span class="rVal">' + fmtTRY(assetRates.GOLD_GRAM_22_TRY) + '</span></div>' : '') +
+          (assetRates.SILVER_GRAM_TRY  ? '<div class="rateChip" style="border-color:rgba(148,163,184,.3);background:rgba(148,163,184,.07);"><span class="rLabel">Gram Gümüş</span><span class="rVal">' + fmtTRY(assetRates.SILVER_GRAM_TRY) + '</span></div>' : '') +
           (assetRates.USD_TRY ? '<div class="rateChip usd"><span class="rLabel">USD/TRY</span><span class="rVal">' + fmtTRY(assetRates.USD_TRY) + '</span></div>' : '') +
           (assetRates.EUR_TRY ? '<div class="rateChip eur"><span class="rLabel">EUR/TRY</span><span class="rVal">' + fmtTRY(assetRates.EUR_TRY) + '</span></div>' : '') +
           (assetRates.GBP_TRY ? '<div class="rateChip gbp"><span class="rLabel">GBP/TRY</span><span class="rVal">' + fmtTRY(assetRates.GBP_TRY) + '</span></div>' : '');
