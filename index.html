@@ -3380,50 +3380,29 @@
       };
 
       /* ── Fiyat çekme ── */
+      // Cloud Function endpoint — deploy sonrası aktif olur
       function fetchRates() {
         var btn = document.getElementById('btnAssetRefresh');
         if (btn) { btn.disabled = true; btn.textContent = t('assetRefreshing'); }
 
-        // Döviz: open.er-api — anlık, ücretsiz, CORS yok
-        var p_fx = fetch('https://open.er-api.com/v6/latest/TRY')
+        // Döviz + Altın + Gümüş: hepsi tek API'den, CORS yok, key yok
+        // XAU = altın (troy ounce), XAG = gümüş (troy ounce)
+        var pairs = 'USDTRY,EURTRY,GBPTRY,XAUTRY,XAGTRY';
+        var p = fetch('https://freeforexapi.com/api/live?pairs=' + pairs)
           .then(function(r) { return r.json(); })
           .catch(function() { return null; });
 
-        // Altın + Gümüş: metals.live — allorigins CORS proxy ile
-        var p_metals = fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://metals.live/v1/spot'))
-          .then(function(r) { return r.json(); })
-          .catch(function() { return null; });
-
-        return Promise.all([p_fx, p_metals])
-          .then(function(res) {
-            var fx = res[0];
-            var metals = res[1];
-
-            // Döviz kurları
-            if (fx && fx.rates) {
-              assetRates.USD_TRY = fx.rates.USD ? 1 / fx.rates.USD : null;
-              assetRates.EUR_TRY = fx.rates.EUR ? 1 / fx.rates.EUR : null;
-              assetRates.GBP_TRY = fx.rates.GBP ? 1 / fx.rates.GBP : null;
+        return p
+          .then(function(data) {
+            if (data && data.rates) {
+              var r = data.rates;
+              if (r.USDTRY) assetRates.USD_TRY = r.USDTRY.rate;
+              if (r.EURTRY) assetRates.EUR_TRY = r.EURTRY.rate;
+              if (r.GBPTRY) assetRates.GBP_TRY = r.GBPTRY.rate;
+              // XAU/TRY = 1 troy ounce altın TL fiyatı → gram için 31.1035'e böl
+              if (r.XAUTRY) assetRates.GOLD_GRAM_TRY = r.XAUTRY.rate / 31.1035;
+              if (r.XAGTRY) assetRates.SILVER_GRAM_TRY = r.XAGTRY.rate / 31.1035;
             }
-
-            // Altın ve gümüş USD spot fiyatı
-            // metals.live formatı: [{gold: 3300.5, silver: 33.2, ...}] veya {gold:..., silver:...}
-            var goldUsd = null, silverUsd = null;
-            if (metals) {
-              var m = Array.isArray(metals) ? metals[0] : metals;
-              if (m) {
-                if (m.gold)   goldUsd   = Number(m.gold);
-                if (m.silver) silverUsd = Number(m.silver);
-              }
-            }
-
-            if (goldUsd && assetRates.USD_TRY) {
-              assetRates.GOLD_GRAM_TRY = (goldUsd / 31.1035) * assetRates.USD_TRY;
-            }
-            if (silverUsd && assetRates.USD_TRY) {
-              assetRates.SILVER_GRAM_TRY = (silverUsd / 31.1035) * assetRates.USD_TRY;
-            }
-
             assetRates.lastFetch = new Date();
             localStorage.setItem('assetRates', JSON.stringify(assetRates));
             toast(t('assetRefreshOk'));
