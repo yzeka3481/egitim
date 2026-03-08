@@ -3371,34 +3371,34 @@
         var btn = document.getElementById('btnAssetRefresh');
         if (btn) { btn.disabled = true; btn.textContent = t('assetRefreshing'); }
 
-        // Her birini direkt TRY karşısında çek — en doğru yöntem
-        var base = 'https://api.frankfurter.app/latest?to=TRY&from=';
-        var p_usd = fetch(base + 'USD').then(function(r){ return r.json(); });
-        var p_eur = fetch(base + 'EUR').then(function(r){ return r.json(); });
-        var p_gbp = fetch(base + 'GBP').then(function(r){ return r.json(); });
+        // open.er-api.com — anlık kur, ücretsiz, CORS yok, key yok
+        var p_fx = fetch('https://open.er-api.com/v6/latest/TRY')
+          .then(function(r) { return r.json(); });
 
-        // Altın: metals.live CORS sorunu var, allorigins proxy ile aş
+        // Altın: allorigins proxy ile metals.live
         var goldUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://metals.live/v1/spot/gold');
         var p_gold = fetch(goldUrl)
-          .then(function(r){ return r.json(); })
-          .catch(function(){ return null; });
+          .then(function(r) { return r.json(); })
+          .catch(function() { return null; });
 
-        return Promise.all([p_usd, p_eur, p_gbp, p_gold])
+        return Promise.all([p_fx, p_gold])
           .then(function(res) {
-            var usd = res[0], eur = res[1], gbp = res[2], gold = res[3];
+            var fx = res[0], gold = res[1];
 
-            if (usd && usd.rates && usd.rates.TRY) assetRates.USD_TRY = usd.rates.TRY;
-            if (eur && eur.rates && eur.rates.TRY) assetRates.EUR_TRY = eur.rates.TRY;
-            if (gbp && gbp.rates && gbp.rates.TRY) assetRates.GBP_TRY = gbp.rates.TRY;
+            // open.er-api: base=TRY, rates.USD = 1 TRY kaç USD → tersini al
+            if (fx && fx.rates) {
+              assetRates.USD_TRY = fx.rates.USD ? 1 / fx.rates.USD : null;
+              assetRates.EUR_TRY = fx.rates.EUR ? 1 / fx.rates.EUR : null;
+              assetRates.GBP_TRY = fx.rates.GBP ? 1 / fx.rates.GBP : null;
+            }
 
-            // metals.live: [{price: 3300}] veya {price: 3300}
+            // metals.live: [{price: 3300}]
             var goldUsd = null;
             if (gold) {
               if (Array.isArray(gold) && gold[0] && gold[0].price) goldUsd = gold[0].price;
               else if (gold.price) goldUsd = gold.price;
             }
             if (goldUsd && assetRates.USD_TRY) {
-              // 1 troy ounce = 31.1035 gram
               assetRates.GOLD_GRAM_TRY = (goldUsd / 31.1035) * assetRates.USD_TRY;
             }
 
