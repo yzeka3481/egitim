@@ -179,6 +179,8 @@
       background: #0d1829;
     }
 
+    .monthNav { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
     .header .left {
       display: flex;
       gap: 10px;
@@ -1723,9 +1725,11 @@
           <h1>Ödeme Takip</h1>
           <small id="subline">Dashboard</small>
         </div>
-        <button id="btnPrev" class="btn small">◀</button>
-        <span class="pill"><span>📅</span><span id="monthLabel">—</span></span>
-        <button id="btnNext" class="btn small">▶</button>
+        <div class="monthNav" id="monthNav">
+          <button id="btnPrev" class="btn small">◀</button>
+          <span class="pill"><span>📅</span><span id="monthLabel">—</span></span>
+          <button id="btnNext" class="btn small">▶</button>
+        </div>
         <select id="statusFilter" class="headerHideOnMobile">
           <option value="all">Durum: Hepsi</option>
           <option value="unpaid">Durum: Alınmadı/Ödenmedi</option>
@@ -2285,7 +2289,7 @@
           assetsTitle: 'Mal Varlıklarım', addAsset: '＋ Varlık Ekle', assetName: 'Varlık Adı',
           assetType: 'Tür', assetAmount: 'Miktar', assetValue: 'Birim Değer', assetNote: 'Not',
           assetTotal: 'Toplam Değer', assetNetWorth: 'Net Servet', assetLivePrice: 'Canlı Fiyat',
-          assetLastUpdate: 'Son güncelleme', assetRefresh: '🔄 Fiyatları Güncelle',
+          assetLastUpdate: 'Son güncelleme', assetRefresh: '🔄 Güncelle',
           assetRefreshing: 'Güncelleniyor...', assetRefreshOk: 'Fiyatlar güncellendi.',
           assetRefreshErr: 'Fiyat alınamadı:', assetDeleteConfirm: 'Bu varlık silinsin mi?',
           assetNoItems: 'Henüz varlık eklenmedi.',
@@ -2360,7 +2364,7 @@
           assetsTitle: 'My Assets', addAsset: '＋ Add Asset', assetName: 'Asset Name',
           assetType: 'Type', assetAmount: 'Amount', assetValue: 'Unit Value', assetNote: 'Note',
           assetTotal: 'Total Value', assetNetWorth: 'Net Worth', assetLivePrice: 'Live Price',
-          assetLastUpdate: 'Last updated', assetRefresh: '🔄 Refresh Prices',
+          assetLastUpdate: 'Last updated', assetRefresh: '🔄 Refresh',
           assetRefreshing: 'Refreshing...', assetRefreshOk: 'Prices updated.',
           assetRefreshErr: 'Could not fetch prices:', assetDeleteConfirm: 'Delete this asset?',
           assetNoItems: 'No assets added yet.',
@@ -2666,6 +2670,12 @@
           t.classList.toggle("active", t.getAttribute("data-page") === page);
         });
         $("subline").textContent = t(page === "dashboard" ? "dashboard" : page === "expense" ? "expense" : page === "income" ? "income" : page === "calendar" ? "calendar" : page === "assets" ? "assets" : "settings");
+        // Ay navigasyonu sadece ilgili sayfalarda görünsün
+        var showNav = (page === "dashboard" || page === "expense" || page === "income" || page === "calendar");
+        var monthNav = document.getElementById("monthNav");
+        if (monthNav) monthNav.style.display = showNav ? "" : "none";
+        var mobileBar = document.getElementById("headerMobileBar");
+        if (mobileBar) mobileBar.style.display = (page === "assets" || page === "settings") ? "none" : "";
         renderPage();
       }
       document.querySelectorAll(".tab").forEach(function (tab) {
