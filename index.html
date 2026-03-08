@@ -1886,12 +1886,12 @@
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(18);
         doc.setTextColor(30, 40, 80);
-        doc.text('Odeme Takip - Aylik Rapor', ml, y);
+        doc.text(t('pdfTitle'), ml, y);
         y += 7;
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(11);
         doc.setTextColor(100, 120, 160);
-        doc.text('Donem: ' + selectedMonth + '   Olusturma: ' + new Date().toLocaleDateString('tr-TR'), ml, y);
+        doc.text(t('pdfPeriod') + ' ' + selectedMonth + '   ' + t('pdfCreated') + ' ' + new Date().toLocaleDateString(currentLang === 'en' ? 'en-US' : 'tr-TR'), ml, y);
         y += 5;
         doc.setDrawColor(200, 210, 235);
         doc.setLineWidth(0.4);
@@ -1908,9 +1908,9 @@
 
         var kpiW = (cw - 8) / 3;
         var kpis = [
-          { label: 'Gider', val: fmtPdf.format(totalExp), r: 220, g: 60, b: 80 },
-          { label: 'Gelir', val: fmtPdf.format(totalInc), r: 20, g: 180, b: 140 },
-          { label: 'Net Bakiye', val: fmtPdf.format(net), r: 60, g: 100, b: 220 }
+          { label: t('expense'), val: fmtPdf.format(totalExp), r: 220, g: 60, b: 80 },
+          { label: t('income'), val: fmtPdf.format(totalInc), r: 20, g: 180, b: 140 },
+          { label: t('netBalance'), val: fmtPdf.format(net), r: 60, g: 100, b: 220 }
         ];
         kpis.forEach(function (k, i) {
           var x = ml + i * (kpiW + 4);
@@ -1937,7 +1937,7 @@
           y += 10;
 
           /* Header row */
-          var cols = [{ w: 22, t: 'Tarih' }, { w: 52, t: 'Baslik' }, { w: 32, t: 'Kategori' }, { w: 28, t: 'Durum' }, { w: cw - 22 - 52 - 32 - 28, t: 'Tutar', r: true }];
+          var cols = [{ w: 22, t: t('pdfDate') }, { w: 52, t: t('pdfTitle2') }, { w: 32, t: t('pdfCategory') }, { w: 28, t: t('pdfStatus') }, { w: cw - 22 - 52 - 32 - 28, t: t('pdfAmount'), r: true }];
           var xc = ml;
           doc.setFontSize(7.5);
           doc.setTextColor(80, 100, 140);
@@ -1960,13 +1960,13 @@
               doc.setFillColor(245, 248, 255);
               doc.rect(ml, y - 2.5, cw, 7, 'F');
             }
-            var paid = isPaid(r) ? (isIncome ? 'Alindi' : 'Odendi') : (isIncome ? 'Bekliyor' : 'Odenmedi');
+            var paid = isPaid(r) ? (isIncome ? t('pdfReceived') : t('pdfPaid')) : (isIncome ? t('pdfWaiting') : t('pdfUnpaid'));
             var row = [
               String(r.date || '').slice(0, 10) || '-',
               (r.title || '-').substring(0, 28),
-              (r.category || 'Diger').substring(0, 18),
+              (getCatName(r.category) || t('cat_Diger')).substring(0, 18),
               paid,
-              fmtPdf.format(Number(r.amount || 0))
+              fmtAmt(Number(r.amount || 0)).replace('₺', 'TL').replace('€', 'EUR').replace('$', 'USD')
             ];
             xc = ml;
             doc.setFontSize(7.5);
@@ -1988,19 +1988,19 @@
           var sumLabel = 'Toplam ' + title + ':';
           var sumVal = fmtPdf.format(rows.reduce(function (s, r) { return s + Number(r.amount || 0); }, 0));
           doc.text(sumLabel, ml, y);
-          doc.text(sumVal, pw - mr, y, { align: 'right' });
+          doc.text(sumVal.replace('₺', 'TL').replace('€', 'EUR').replace('$', 'USD'), pw - mr, y, { align: 'right' });
           y += 10;
         }
 
-        drawTable('Giderler', expenses, false);
-        drawTable('Gelirler', incomes, true);
+        drawTable(t('pdfExpenses'), expenses, false);
+        drawTable(t('pdfIncomes'), incomes, true);
 
         /* ── Footer ── */
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7);
         doc.setTextColor(160, 175, 210);
-        doc.text('Odeme Takip - otomatik olusturuldu', ml, 290);
-        doc.text(new Date().toLocaleString('tr-TR'), pw - mr, 290, { align: 'right' });
+        doc.text(t('pdfFooter'), ml, 290);
+        doc.text(new Date().toLocaleString(currentLang === 'en' ? 'en-US' : 'tr-TR'), pw - mr, 290, { align: 'right' });
 
         doc.save('odeme-takip-' + selectedMonth + '.pdf');
         toast('PDF indirildi: ' + rowsMonth.length + ' kayit.');
@@ -2110,6 +2110,9 @@
           quickTips: '💡 Hızlı İpuçları',
           quickTipsBody: '📆 Takvim: güne tıkla → detay<br>🔄 Tekrarlayanlar: ay değişince otomatik<br>🎨 Kategori renkleri grafikte aynı<br>✏️ Kayıt: listeden tıkla → düzenle',
           spendingTitle: '💳 Nereye ne harcadım?', spendingEmpty: 'Bu ay gider kaydı yok.',
+          cat_Kira: 'Kira', cat_Market: 'Market', cat_Fatura: 'Fatura', cat_Ulasim: 'Ulaşım', cat_Eglence: 'Eğlence',
+          cat_Saglik: 'Sağlık', cat_Egitim: 'Eğitim', cat_Yemek: 'Yemek', cat_Giyim: 'Giyim', cat_Kredi: 'Kredi/Kart',
+          cat_Nakit: 'Nakit', cat_Diger: 'Diğer',
           loginTitle: 'Giriş / Kayıt', loginHint: 'Dosyada <b>firebaseConfig</b> alanını kendi projenle doldur.',
           loginErr: 'E-posta/şifre gir.', notLoggedIn: 'Önce giriş yap.', startHint: 'Sağ üstten <b>Giriş</b> butonuna bas.',
           startTitle: 'Başlamak için giriş yap',
@@ -2157,6 +2160,9 @@
           quickTips: '💡 Quick Tips',
           quickTipsBody: '📆 Calendar: click a day → details<br>🔄 Recurring: auto-generated on month change<br>🎨 Category colors match the chart<br>✏️ Record: click in list → edit',
           spendingTitle: '💳 Where did I spend?', spendingEmpty: 'No expense records this month.',
+          cat_Kira: 'Rent', cat_Market: 'Groceries', cat_Fatura: 'Bills', cat_Ulasim: 'Transport', cat_Eglence: 'Entertainment',
+          cat_Saglik: 'Health', cat_Egitim: 'Education', cat_Yemek: 'Dining', cat_Giyim: 'Clothing', cat_Kredi: 'Credit/Card',
+          cat_Nakit: 'Cash', cat_Diger: 'Other',
           loginTitle: 'Sign In / Sign Up', loginHint: 'Fill in the <b>firebaseConfig</b> field in the file with your project.',
           loginErr: 'Enter email/password.', notLoggedIn: 'Please log in first.', startHint: 'Tap the <b>Login</b> button on the top right.',
           startTitle: 'Log in to get started',
@@ -2245,6 +2251,14 @@
         "Nakit": "#93c5fd", "Diğer": "#9ca3af"
       };
       var PRESET_CATS = ["Kira", "Market", "Fatura", "Ulaşım", "Yemek", "Eğlence", "Sağlık", "Eğitim", "Giyim", "Kredi/Kart", "Nakit", "Diğer"];
+      function getCatKey(trName) {
+        var map = { "Kira": "cat_Kira", "Market": "cat_Market", "Fatura": "cat_Fatura", "Ulaşım": "cat_Ulasim", "Eğlence": "cat_Eglence", "Sağlık": "cat_Saglik", "Eğitim": "cat_Egitim", "Yemek": "cat_Yemek", "Giyim": "cat_Giyim", "Kredi/Kart": "cat_Kredi", "Nakit": "cat_Nakit", "Diğer": "cat_Diger" };
+        return map[trName];
+      }
+      function getCatName(trName) {
+        var k = getCatKey(trName);
+        return k ? t(k) : trName;
+      }
       function colorForCategory(cat) {
         cat = (cat || "Diğer").trim() || "Diğer";
         return CATEGORY_COLORS[cat] || CATEGORY_COLORS["Diğer"];
@@ -2449,7 +2463,7 @@
       var addBg = $("addBg");
       function fillCategorySelect() {
         var sel = $("mCategorySel");
-        sel.innerHTML = PRESET_CATS.map(function (c) { return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; }).join("");
+        sel.innerHTML = PRESET_CATS.map(function (c) { return '<option value="' + escapeHtml(c) + '">' + escapeHtml(getCatName(c)) + '</option>'; }).join("");
         sel.value = "Market";
         $("mCategoryOther").style.display = "none";
       }
@@ -2780,7 +2794,7 @@
           return '' +
             '<div class="hBarItem">' +
             '<div class="hBarLabel">' +
-            '<span class="hName"><span class="dot" style="background:' + col + '"></span>' + escapeHtml(x.category) + '</span>' +
+            '<span class="hName"><span class="dot" style="background:' + col + '"></span>' + escapeHtml(getCatName(x.category)) + '</span>' +
             '<span class="hVal">' + fmtAmt(x.amount) + ' <span style="color:var(--muted);font-size:10px;">%' + pctOfTotal + '</span></span>' +
             '</div>' +
             '<div class="hBarTrack"><div class="hBarFill" style="width:' + pct + '%;background:' + col + ';opacity:.85;"></div></div>' +
@@ -2818,13 +2832,14 @@
           '</tr></thead><tbody>';
 
         var body = rows.map(function (r) {
-          var dir = normalizeDir(r);
-          var t = dir === "income" ? '<span class="tag good">Gelir</span>' : '<span class="tag bad">Gider</span>';
-          var s = isPaid(r) ? '<span class="tag good">Alındı/Ödendi</span>' : '<span class="tag">Alınmadı</span>';
-          var rec = isRecurring(r) ? '<span class="tag rec">Aylık</span>' : '<span class="tag">—</span>';
+          var t_gelir = t('income_tag');
+          var t_gider = t('expense_tag');
+          var t = dir === "income" ? '<span class="tag good">' + t_gelir + '</span>' : '<span class="tag bad">' + t_gider + '</span>';
+          var s = isPaid(r) ? '<span class="tag good">' + t('paid') + '</span>' : '<span class="tag">' + t('unpaid') + '</span>';
+          var rec = isRecurring(r) ? '<span class="tag rec">' + t('monthly') + '</span>' : '<span class="tag">—</span>';
           var amtColor = dir === "income" ? "var(--good)" : "var(--bad)";
           var title = escapeHtml(r.title || "—");
-          var cat = escapeHtml(r.category || "Diğer");
+          var cat = escapeHtml(getCatName(r.category || "Diğer"));
           var dot = '<span class="dot" style="background:' + colorForCategory(r.category) + '"></span>';
 
           return '' +
@@ -2833,13 +2848,13 @@
             '<td>' + t + '</td>' +
             '<td><div style="font-weight:650">' + title + '</div></td>' +
             '<td>' + dot + '<span>' + cat + '</span></td>' +
-            '<td class="right nowrap" style="font-weight:750;color:' + amtColor + '">' + fmt.format(Number(r.amount || 0)) + '</td>' +
+            '<td class="right nowrap" style="font-weight:750;color:' + amtColor + '">' + fmtAmt(Number(r.amount || 0)) + '</td>' +
             '<td>' + s + '</td>' +
             '<td>' + rec + '</td>' +
             '<td class="right nowrap">' +
-            '<button class="btn small" data-act="edit" data-id="' + escapeHtml(r.id) + '">Düzenle</button> ' +
-            '<button class="btn small" data-act="toggle" data-id="' + escapeHtml(r.id) + '">' + (isPaid(r) ? "Geri Al" : "Alındı/Ödendi") + '</button> ' +
-            '<button class="btn small danger" data-act="del" data-id="' + escapeHtml(r.id) + '">Sil</button>' +
+            '<button class="btn small" data-act="edit" data-id="' + escapeHtml(r.id) + '">' + t('edit') + '</button> ' +
+            '<button class="btn small" data-act="toggle" data-id="' + escapeHtml(r.id) + '">' + (isPaid(r) ? t('undo') : (dir === "income" ? t('markReceived') : t('markPaid'))) + '</button> ' +
+            '<button class="btn small danger" data-act="del" data-id="' + escapeHtml(r.id) + '">' + t('del') + '</button>' +
             '</td>' +
             '</tr>';
         }).join("");
@@ -2851,7 +2866,7 @@
         if (!rows.length) return '<div class="hint" style="padding:24px 0;text-align:center;">Bu ay için kayıt yok.</div>';
         return '<div class="list">' + rows.map(function (r) {
           var title = escapeHtml(r.title || '—');
-          var cat = escapeHtml(r.category || 'Diğer');
+          var cat = escapeHtml(getCatName(r.category || 'Diğer'));
           var dateStr = escapeHtml(String(r.date || '').slice(0, 10) || '—');
           var dot = '<span class="dot" style="background:' + colorForCategory(r.category) + '"></span>';
           var rowDir = normalizeDir(r);
@@ -2859,8 +2874,8 @@
           var cardCls = rowDir === 'income' ? 'inc-card' : 'exp-card';
           var recIcon = r.isRecurring ? ' <span style="color:var(--brand);font-size:10px;">🔄</span>' : '';
           var st = isPaid(r)
-            ? '<span class="miniPill paid">' + (rowDir === 'income' ? 'Alındı' : 'Ödendi') + '</span>'
-            : '<span class="miniPill unpaid">' + (rowDir === 'income' ? 'Bekliyor' : 'Ödenmedi') + '</span>';
+            ? '<span class="miniPill paid">' + (rowDir === 'income' ? t('received') : t('paidShort')) + '</span>'
+            : '<span class="miniPill unpaid">' + (rowDir === 'income' ? t('waiting') : t('unpaidShort')) + '</span>';
 
           return '' +
             '<div class="rowCard ' + cardCls + '" data-open="item" data-id="' + escapeHtml(r.id) + '">' +
@@ -2892,11 +2907,11 @@
         var heroColor = isInc ? 'var(--good)' : 'var(--bad)';
         var heroBg = isInc ? 'rgba(34,211,170,.08)' : 'rgba(245,104,128,.08)';
         var heroBorder = isInc ? 'rgba(34,211,170,.2)' : 'rgba(245,104,128,.2)';
-        var dirLabel = isInc ? 'Gelir' : 'Gider';
+        var dirLabel = isInc ? t('income_tag') : t('expense_tag');
         var dirTag = isInc ? '<span class="tag good">' + dirLabel + '</span>' : '<span class="tag bad">' + dirLabel + '</span>';
-        var paidLabel = isPaid(row) ? (isInc ? 'Alındı ✅' : 'Ödendi ✅') : (isInc ? 'Alınmadı ⏳' : 'Ödenmedi ⏳');
+        var paidLabel = isPaid(row) ? (isInc ? t('received') + ' ✅' : t('paidShort') + ' ✅') : (isInc ? t('notReceived') + ' ⏳' : t('unpaidShort') + ' ⏳');
         var paidTag = isPaid(row) ? '<span class="tag good">' + paidLabel + '</span>' : '<span class="tag" style="border-color:rgba(251,191,36,.3);color:#ffd98a;">' + paidLabel + '</span>';
-        var recTag = isRecurring(row) ? '<span class="tag rec">🔄 Aylık Tekrar</span>' : '';
+        var recTag = isRecurring(row) ? '<span class="tag rec">🔄 ' + t('monthly') + '</span>' : '';
         var catColor = colorForCategory(row.category);
         var dot = '<span class="dot" style="background:' + catColor + ';width:12px;height:12px;"></span>';
         var dateStr = escapeHtml(String(row.date || '').slice(0, 10) || '—');
@@ -2912,15 +2927,15 @@
           '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px;">' + dirTag + paidTag + recTag + '</div>' +
           '</div>' +
           '<div class="itemDetailRows">' +
-          '<div class="itemDetailRow"><span class="dLabel">📁 Kategori</span><span class="dVal">' + dot + escapeHtml(row.category || 'Diğer') + '</span></div>' +
-          '<div class="itemDetailRow"><span class="dLabel">📅 Tarih</span><span class="dVal">' + dateStr + '</span></div>' +
-          (row.note ? '<div class="itemDetailRow"><span class="dLabel">📝 Not</span><span class="dVal" style="max-width:200px;text-align:right;font-size:12px;">' + escapeHtml(row.note) + '</span></div>' : '') +
-          (isRecurring(row) && row.recurrenceTotalMonths ? '<div class="itemDetailRow"><span class="dLabel">🔄 Süre</span><span class="dVal">' + Number(row.recurrenceTotalMonths) + ' ay</span></div>' : '') +
+          '<div class="itemDetailRow"><span class="dLabel">📁 ' + t('category') + '</span><span class="dVal">' + dot + escapeHtml(getCatName(row.category || 'Diğer')) + '</span></div>' +
+          '<div class="itemDetailRow"><span class="dLabel">📅 ' + t('date') + '</span><span class="dVal">' + dateStr + '</span></div>' +
+          (row.note ? '<div class="itemDetailRow"><span class="dLabel">📝 ' + t('note') + '</span><span class="dVal" style="max-width:200px;text-align:right;font-size:12px;">' + escapeHtml(row.note) + '</span></div>' : '') +
+          (isRecurring(row) && row.recurrenceTotalMonths ? '<div class="itemDetailRow"><span class="dLabel">🔄 ' + t('duration') + '</span><span class="dVal">' + Number(row.recurrenceTotalMonths) + ' ' + t('months') + '</span></div>' : '') +
           '</div>' +
           '</div>';
 
         var btn = document.getElementById('itemTogglePaid');
-        btn.textContent = isPaid(row) ? 'Geri Al' : (isInc ? 'Alındı İşaretle' : 'Ödendi İşaretle');
+        btn.textContent = isPaid(row) ? t('undo') : (isInc ? t('markReceived') : t('markPaid'));
 
         itemBg.classList.add('show');
       }
@@ -2985,19 +3000,19 @@
         var inc = dayRows.filter(function (r) { return normalizeDir(r) === "income"; }).reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
         var net = inc - exp;
 
-        $("dayTitle").textContent = dateStr + " • Detay";
+        $("dayTitle").textContent = dateStr + " • " + t('dayDetail');
         $("dayBody").innerHTML =
           '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
           '<div class="card" style="flex:1;min-width:80px;padding:10px 12px;">' +
-          '<div class="hint" style="margin-bottom:4px;">💰 Gelir</div>' +
+          '<div class="hint" style="margin-bottom:4px;">💰 ' + t('income') + '</div>' +
           '<div style="font-size:clamp(13px,3vw,18px);font-weight:800;color:var(--good);word-break:break-all;line-height:1.2;">' + fmtAmt(inc) + '</div>' +
           '</div>' +
           '<div class="card" style="flex:1;min-width:80px;padding:10px 12px;">' +
-          '<div class="hint" style="margin-bottom:4px;">💸 Gider</div>' +
+          '<div class="hint" style="margin-bottom:4px;">💸 ' + t('expense') + '</div>' +
           '<div style="font-size:clamp(13px,3vw,18px);font-weight:800;color:var(--bad);word-break:break-all;line-height:1.2;">' + fmtAmt(exp) + '</div>' +
           '</div>' +
           '<div class="card" style="flex:1;min-width:80px;padding:10px 12px;">' +
-          '<div class="hint" style="margin-bottom:4px;">🧾 Net</div>' +
+          '<div class="hint" style="margin-bottom:4px;">🧾 ' + t('netBalance') + '</div>' +
           '<div style="font-size:clamp(13px,3vw,18px);font-weight:800;color:' + (net >= 0 ? 'var(--good)' : 'var(--bad)') + ';word-break:break-all;line-height:1.2;">' + fmtAmt(net) + '</div>' +
           '</div>' +
           '</div>' +
@@ -3055,9 +3070,11 @@
       function bindCalendarClicks() {
         var wrap = document.getElementById("calCells");
         if (!wrap) return;
-        var calWrap = wrap.closest ? wrap.closest('.calWrap') : null;
-        wrap.querySelectorAll(".calCell[data-date]").forEach(function (cell) {
-          cell.addEventListener("click", function () { openDayDetail(cell.getAttribute("data-date")); });
+        wrap.addEventListener("click", function (e) {
+          var cell = e.target.closest(".calCell[data-date]");
+          if (cell && !cell.classList.contains("disabled")) {
+            openDayDetail(cell.getAttribute("data-date"));
+          }
         });
       }
 
