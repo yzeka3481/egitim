@@ -1623,7 +1623,7 @@
     <header class="header">
       <div class="left">
         <div class="brand">
-          <h1>Ödeme Takip</h1>
+          <h1 id="appTitleText">Ödeme Takip</h1>
           <small id="subline">Dashboard</small>
         </div>
         <button id="btnPrev" class="btn small">◀</button>
@@ -2116,6 +2116,7 @@
           loginTitle: 'Giriş / Kayıt', loginHint: 'Dosyada <b>firebaseConfig</b> alanını kendi projenle doldur.',
           loginErr: 'E-posta/şifre gir.', notLoggedIn: 'Önce giriş yap.', startHint: 'Sağ üstten <b>Giriş</b> butonuna bas.',
           startTitle: 'Başlamak için giriş yap',
+          appTitle: 'Ödeme Takip', overview: 'Genel',
           jsonDownloaded: 'JSON indirildi:', pdfDownloaded: 'PDF indirildi:', imported: 'kayıt içe aktarıldı.',
           skipped: 'geçersiz satır atlandı', noData: 'Dışa aktaracak veri yok.', noMonthData: 'Bu ay için dışa aktaracak kayıt yok.',
           updated: 'Güncellendi.', deleted: 'Silindi.', confirmDelete: 'Silinsin mi?',
@@ -2166,6 +2167,7 @@
           loginTitle: 'Sign In / Sign Up', loginHint: 'Fill in the <b>firebaseConfig</b> field in the file with your project.',
           loginErr: 'Enter email/password.', notLoggedIn: 'Please log in first.', startHint: 'Tap the <b>Login</b> button on the top right.',
           startTitle: 'Log in to get started',
+          appTitle: 'Payment Tracker', overview: 'Overview',
           jsonDownloaded: 'JSON downloaded:', pdfDownloaded: 'PDF downloaded:', imported: 'records imported.',
           skipped: 'invalid rows skipped', noData: 'No data to export.', noMonthData: 'No records for this month to export.',
           updated: 'Updated.', deleted: 'Deleted.', confirmDelete: 'Delete this entry?',
@@ -2204,8 +2206,14 @@
           var page = tab.getAttribute('data-page');
           var ico = tab.querySelector('.ico');
           var icoHtml = ico ? ico.outerHTML : '';
-          tab.innerHTML = icoHtml + t(page);
+          var pageName = (page === 'dashboard') ? t('overview') : t(page);
+          tab.innerHTML = icoHtml + pageName;
         });
+        // App Title
+        var appT = document.getElementById('appTitleText');
+        if (appT) appT.textContent = t('appTitle');
+        var subLine = document.getElementById('subline');
+        if (subLine) subLine.textContent = (currentPage === 'dashboard') ? t('overview') : t(currentPage);
         // Status filter
         var sf = document.getElementById('statusFilter');
         if (sf) {
@@ -2243,6 +2251,8 @@
         // Auth modal
         var btnLogin = document.getElementById('btnLogin'); if (btnLogin) btnLogin.textContent = t('login');
         var btnRegister = document.getElementById('btnRegister'); if (btnRegister) btnRegister.textContent = t('register');
+        var itemEditBtn = document.getElementById('itemEdit'); if (itemEditBtn) itemEditBtn.textContent = t('edit');
+        var itemDeleteBtn = document.getElementById('itemDelete'); if (itemDeleteBtn) itemDeleteBtn.textContent = t('del');
       }
 
       var CATEGORY_COLORS = {
@@ -2417,11 +2427,7 @@
         document.querySelectorAll(".tab").forEach(function (t) {
           t.classList.toggle("active", t.getAttribute("data-page") === page);
         });
-        $("subline").textContent =
-          page === "dashboard" ? "Dashboard" :
-            page === "expense" ? "Gider" :
-              page === "income" ? "Gelir" :
-                page === "calendar" ? "Takvim" : "Ayarlar";
+        $("subline").textContent = (page === "dashboard") ? t('overview') : t(page);
         renderPage();
       }
       document.querySelectorAll(".tab").forEach(function (tab) {
@@ -2778,7 +2784,7 @@
 
       function renderSpendingChart(rows) {
         var cats = groupExpensesByCategory(rows);
-        if (!cats.length) return '<div class="card spending" style="grid-column:span 8;"><h2>💳 Harcama Analizi</h2><div class="hint" style="padding:16px 0;text-align:center;">Bu ay gider kaydı yok.</div></div>';
+        if (!cats.length) return '<div class="card spending" style="grid-column:span 8;"><h2>💳 ' + t('spendingTitle') + '</h2><div class="hint" style="padding:16px 0;text-align:center;">' + t('spendingEmpty') + '</div></div>';
         var total = cats.reduce(function (s, x) { return s + x.amount; }, 0);
         var max = cats[0].amount || 1;
 
@@ -2803,11 +2809,11 @@
 
         return '' +
           '<div class="card spending" style="grid-column:span 8;">' +
-          '<h2>💳 Nereye ne harcadım?</h2>' +
+          '<h2>' + t('spendingTitle') + '</h2>' +
           '<div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">' +
           '<div class="donut" style="flex-shrink:0;">' +
           svg +
-          '<div class="donutCenter"><div class="big">' + fmtAmt(total) + '</div><div class="small">Toplam</div></div>' +
+          '<div class="donutCenter"><div class="big">' + fmtAmt(total) + '</div><div class="small">' + t('total') + '</div></div>' +
           '</div>' +
           '<div style="flex:1;min-width:200px;">' +
           '<div class="hBarChart">' + hBars + '</div>' +
