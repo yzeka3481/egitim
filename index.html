@@ -1623,7 +1623,7 @@
     <header class="header">
       <div class="left">
         <div class="brand">
-          <h1 id="appTitleText">Ödeme Takip</h1>
+          <h1>Ödeme Takip</h1>
           <small id="subline">Dashboard</small>
         </div>
         <button id="btnPrev" class="btn small">◀</button>
@@ -1710,7 +1710,7 @@
         </div>
 
         <div class="grid2">
-          <input id="mAmount" type="number" step="0.01" placeholder="Tutar (₺)" />
+          <input id="mAmount" type="number" step="0.01" placeholder="Amount" />
           <input id="mDate" type="date" />
         </div>
 
@@ -1860,24 +1860,24 @@
 
       /* ── Export ── */
       function exportData() {
-        if (!user || !allRows.length) { toast('Dışa aktaracak veri yok.'); return; }
+        if (!user || !allRows.length) { toast(t('noData')); return; }
         var data = JSON.stringify(allRows, null, 2);
         var blob = new Blob([data], { type: 'application/json' });
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
         a.href = url; a.download = 'odeme-takip-' + selectedMonth + '.json';
         a.click(); URL.revokeObjectURL(url);
-        toast('JSON indirildi: ' + allRows.length + ' kayıt.');
+        toast(t('jsonDownloaded') + ' ' + allRows.length + ' ' + t('entries') + '.');
       }
 
       /* ── PDF Export ── */
       function exportPDF() {
-        if (!user) { toast('Önce giriş yap.'); return; }
+        if (!user) { toast(t('notLoggedIn')); return; }
         var rowsMonth = allRows.filter(function (r) { return monthOfDoc(r) === selectedMonth && !isTemplate(r); });
-        if (!rowsMonth.length) { toast('Bu ay için dışa aktaracak kayıt yok.'); return; }
+        if (!rowsMonth.length) { toast(t('noMonthData')); return; }
 
         var jspdf = window.jspdf || (window.jsPDF ? { jsPDF: window.jsPDF } : null);
-        if (!jspdf) { toast('PDF kütüphanesi yüklenemedi.'); return; }
+        if (!jspdf) { toast(t('saveErr') + ' PDF lib.'); return; }
         var doc = new jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
         var pw = 210, ml = 14, mr = 14, cw = pw - ml - mr;
         var y = 18;
@@ -1933,7 +1933,7 @@
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(9);
           doc.setTextColor(255, 255, 255);
-          doc.text(title + ' (' + rows.length + ' kayit)', ml + 3, y + 5.5);
+          doc.text(title + ' (' + rows.length + ' ' + t('entries') + ')', ml + 3, y + 5.5);
           y += 10;
 
           /* Header row */
@@ -2003,7 +2003,7 @@
         doc.text(new Date().toLocaleString(currentLang === 'en' ? 'en-US' : 'tr-TR'), pw - mr, 290, { align: 'right' });
 
         doc.save('odeme-takip-' + selectedMonth + '.pdf');
-        toast('PDF indirildi: ' + rowsMonth.length + ' kayit.');
+        toast(t('pdfDownloaded') + ' ' + rowsMonth.length + ' ' + t('entries') + '.');
       }
 
       /* ── Import ── */
@@ -2050,12 +2050,12 @@
             });
             batch.commit()
               .then(function () {
-                var msg = count + ' kayıt içe aktarıldı.';
-                if (skipped > 0) msg += ' (' + skipped + ' geçersiz satır atlandı)';
+                var msg = count + ' ' + t('imported');
+                if (skipped > 0) msg += ' (' + skipped + ' ' + t('skipped') + ')';
                 toast(msg);
               })
-              .catch(function (err) { toast('Hata: ' + err.message); });
-          } catch (ex) { toast('JSON okunamıyor: ' + ex.message); }
+              .catch(function (err) { toast(t('saveErr') + ' ' + err.message); });
+          } catch (ex) { toast(t('saveErr') + ' JSON: ' + ex.message); }
         };
         reader.readAsText(file);
       }
@@ -2076,6 +2076,7 @@
       /* ── i18n ── */
       var LANG = {
         tr: {
+          appTitle: 'Ödeme Takip',
           dashboard: 'Dashboard', expense: 'Gider', income: 'Gelir', calendar: 'Takvim', settings: 'Ayarlar',
           newEntry: 'Yeni Kayıt', editEntry: 'Kayıt Düzenle', save: 'Kaydet', cancel: 'Vazgeç',
           login: 'Giriş Yap', register: 'Kayıt Ol', logout: 'Çıkış', loginBtn: 'Giriş',
@@ -2113,10 +2114,16 @@
           cat_Kira: 'Kira', cat_Market: 'Market', cat_Fatura: 'Fatura', cat_Ulasim: 'Ulaşım', cat_Eglence: 'Eğlence',
           cat_Saglik: 'Sağlık', cat_Egitim: 'Eğitim', cat_Yemek: 'Yemek', cat_Giyim: 'Giyim', cat_Kredi: 'Kredi/Kart',
           cat_Nakit: 'Nakit', cat_Diger: 'Diğer',
-          loginTitle: 'Giriş / Kayıt', loginHint: 'Dosyada <b>firebaseConfig</b> alanını kendi projenle doldur.',
+          calDays: ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'],
+          emailPlaceholder: 'E-posta', passwordPlaceholder: 'Şifre',
           loginErr: 'E-posta/şifre gir.', notLoggedIn: 'Önce giriş yap.', startHint: 'Sağ üstten <b>Giriş</b> butonuna bas.',
           startTitle: 'Başlamak için giriş yap',
-          appTitle: 'Ödeme Takip', overview: 'Genel',
+          hideAmounts: 'Para miktarlarını gizle', showAmounts: 'Para miktarlarını göster',
+          savedOk: 'Kaydedildi.', recurSaved: 'Tekrarlayan kaydedildi.', recurAdded: 'Tekrarlayanlar eklendi:',
+          updatedOk: 'Güncellendi.', deletedOk: 'Silindi.', statusUpdated: 'Durum güncellendi.',
+          enterAmount: 'Tutar gir.', enterDate: 'Tarih seç.', enterRecMonths: 'Tekrarlayan için ay sayısı gir.',
+          saveErr: 'Kaydetme hatası:', updateErr: 'Güncelleme hatası:', opErr: 'İşlem hatası:',
+          readErr: 'Okuma hatası:', dataErr: 'Veri okunamadı. Rules/index kontrol et.',
           jsonDownloaded: 'JSON indirildi:', pdfDownloaded: 'PDF indirildi:', imported: 'kayıt içe aktarıldı.',
           skipped: 'geçersiz satır atlandı', noData: 'Dışa aktaracak veri yok.', noMonthData: 'Bu ay için dışa aktaracak kayıt yok.',
           updated: 'Güncellendi.', deleted: 'Silindi.', confirmDelete: 'Silinsin mi?',
@@ -2127,6 +2134,7 @@
           pdfPaid: 'Odendi', pdfUnpaid: 'Odenmedi', pdfReceived: 'Alindi', pdfWaiting: 'Bekliyor',
         },
         en: {
+          appTitle: 'Payment Tracker',
           dashboard: 'Dashboard', expense: 'Expenses', income: 'Income', calendar: 'Calendar', settings: 'Settings',
           newEntry: 'New Entry', editEntry: 'Edit Entry', save: 'Save', cancel: 'Cancel',
           login: 'Sign In', register: 'Sign Up', logout: 'Logout', loginBtn: 'Login',
@@ -2164,10 +2172,17 @@
           cat_Kira: 'Rent', cat_Market: 'Groceries', cat_Fatura: 'Bills', cat_Ulasim: 'Transport', cat_Eglence: 'Entertainment',
           cat_Saglik: 'Health', cat_Egitim: 'Education', cat_Yemek: 'Dining', cat_Giyim: 'Clothing', cat_Kredi: 'Credit/Card',
           cat_Nakit: 'Cash', cat_Diger: 'Other',
+          calDays: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
           loginTitle: 'Sign In / Sign Up', loginHint: 'Fill in the <b>firebaseConfig</b> field in the file with your project.',
+          emailPlaceholder: 'Email', passwordPlaceholder: 'Password',
           loginErr: 'Enter email/password.', notLoggedIn: 'Please log in first.', startHint: 'Tap the <b>Login</b> button on the top right.',
           startTitle: 'Log in to get started',
-          appTitle: 'Payment Tracker', overview: 'Overview',
+          hideAmounts: 'Hide amounts', showAmounts: 'Show amounts',
+          savedOk: 'Saved.', recurSaved: 'Recurring entry saved.', recurAdded: 'Recurring entries added:',
+          updatedOk: 'Updated.', deletedOk: 'Deleted.', statusUpdated: 'Status updated.',
+          enterAmount: 'Enter amount.', enterDate: 'Select a date.', enterRecMonths: 'Enter number of months for recurring.',
+          saveErr: 'Save error:', updateErr: 'Update error:', opErr: 'Operation error:',
+          readErr: 'Read error:', dataErr: 'Could not read data. Check Rules/index.',
           jsonDownloaded: 'JSON downloaded:', pdfDownloaded: 'PDF downloaded:', imported: 'records imported.',
           skipped: 'invalid rows skipped', noData: 'No data to export.', noMonthData: 'No records for this month to export.',
           updated: 'Updated.', deleted: 'Deleted.', confirmDelete: 'Delete this entry?',
@@ -2200,20 +2215,18 @@
 
       /* ── Apply language to static HTML elements ── */
       function applyLang() {
+        // Brand title
+        var brandH1 = document.querySelector('.brand h1');
+        if (brandH1) brandH1.textContent = t('appTitle');
+
         // Tab bar
         var tabs = document.querySelectorAll('.tab[data-page]');
         tabs.forEach(function (tab) {
           var page = tab.getAttribute('data-page');
           var ico = tab.querySelector('.ico');
           var icoHtml = ico ? ico.outerHTML : '';
-          var pageName = (page === 'dashboard') ? t('overview') : t(page);
-          tab.innerHTML = icoHtml + pageName;
+          tab.innerHTML = icoHtml + t(page);
         });
-        // App Title
-        var appT = document.getElementById('appTitleText');
-        if (appT) appT.textContent = t('appTitle');
-        var subLine = document.getElementById('subline');
-        if (subLine) subLine.textContent = (currentPage === 'dashboard') ? t('overview') : t(currentPage);
         // Status filter
         var sf = document.getElementById('statusFilter');
         if (sf) {
@@ -2235,11 +2248,32 @@
         if (mTitle) mTitle.placeholder = t('titlePlaceholder');
         var mCategoryOther = document.getElementById('mCategoryOther');
         if (mCategoryOther) mCategoryOther.placeholder = t('otherCatPlaceholder');
-        var mRecSpan = document.querySelector('#mRecurring + span, label span');
+        // Recurring label span
         var recLabelSpan = document.querySelector('label span[style*="font-weight:650"]');
-        if (recLabelSpan && recLabelSpan.textContent.includes('Tekrar')) recLabelSpan.textContent = t('recurring');
-        var mRecHint = document.getElementById('mRecMonths');
-        if (mRecHint) mRecHint.placeholder = t('monthsQ');
+        if (recLabelSpan) recLabelSpan.textContent = t('recurring');
+        // Recurring hint text node
+        var recHintDivs = document.querySelectorAll('#addBg .hint');
+        recHintDivs.forEach(function(el) {
+          if (el.textContent.includes('Ay bazında') || el.textContent.includes('Auto-generated')) {
+            el.textContent = t('recurringHint');
+          }
+          if (el.textContent.includes('Girdiğin ay') || el.textContent.includes('Including the starting')) {
+            el.textContent = t('monthsHint');
+          }
+        });
+        // Series update label
+        var seriesSpan = document.querySelector('#seriesRow span[style*="font-weight:650"]');
+        if (seriesSpan) seriesSpan.textContent = t('seriesUpdate');
+        // Schema hint
+        var schemaHint = document.querySelector('#addBg .modalBody > .hint');
+        if (schemaHint) schemaHint.innerHTML = t('schemaHint') + ' <b>userId, type(incoming/payment), isPaid, isRecurring, recurrenceId</b>';
+        var mRecMonths = document.getElementById('mRecMonths');
+        if (mRecMonths) mRecMonths.placeholder = t('monthsQ');
+        // Add modal title (only when not currently editing)
+        if (!window.__editingId) {
+          var addTitle = document.getElementById('addTitle');
+          if (addTitle) addTitle.textContent = t('newEntry');
+        }
         // Buttons
         var addSave = document.getElementById('addSave'); if (addSave) addSave.textContent = t('save');
         var addCancel = document.getElementById('addCancel'); if (addCancel) addCancel.textContent = t('cancel');
@@ -2247,12 +2281,29 @@
         var kvkkOk = document.getElementById('kvkkOk'); if (kvkkOk) kvkkOk.textContent = t('close');
         var btnLoginOpen = document.getElementById('btnLoginOpen'); if (btnLoginOpen) btnLoginOpen.textContent = t('loginBtn');
         var btnLogout = document.getElementById('btnLogout'); if (btnLogout) btnLogout.textContent = t('logout');
-        var btnAdd = document.getElementById('btnAdd'); if (btnAdd) btnAdd.textContent = '＋ ' + t('newEntry').split(' ')[0];
+        var btnAdd = document.getElementById('btnAdd'); if (btnAdd) btnAdd.innerHTML = '＋ ' + t('newEntry');
+        // Privacy button
+        var btnPrivacy = document.getElementById('btnPrivacy');
+        if (btnPrivacy) btnPrivacy.title = privacyMode ? t('showAmounts') : t('hideAmounts');
         // Auth modal
+        var authModalTitle = document.querySelector('#authBg .modalTop strong');
+        if (authModalTitle) authModalTitle.textContent = t('loginTitle');
+        var authHint = document.querySelector('#authBg .hint:not(#authErr)');
+        if (authHint) authHint.innerHTML = t('loginHint');
+        var aEmail = document.getElementById('aEmail'); if (aEmail) aEmail.placeholder = t('emailPlaceholder');
+        var aPass = document.getElementById('aPass'); if (aPass) aPass.placeholder = t('passwordPlaceholder');
         var btnLogin = document.getElementById('btnLogin'); if (btnLogin) btnLogin.textContent = t('login');
         var btnRegister = document.getElementById('btnRegister'); if (btnRegister) btnRegister.textContent = t('register');
-        var itemEditBtn = document.getElementById('itemEdit'); if (itemEditBtn) itemEditBtn.textContent = t('edit');
-        var itemDeleteBtn = document.getElementById('itemDelete'); if (itemDeleteBtn) itemDeleteBtn.textContent = t('del');
+        // Item modal static buttons
+        var itemEdit = document.getElementById('itemEdit'); if (itemEdit) itemEdit.textContent = t('edit');
+        var itemDelete = document.getElementById('itemDelete'); if (itemDelete) itemDelete.textContent = t('del');
+        var itemTitle = document.getElementById('itemTitle'); if (itemTitle && !itemTitle.textContent.trim()) itemTitle.textContent = t('recordDetail');
+        var dayTitleEl = document.getElementById('dayTitle'); if (dayTitleEl && !dayTitleEl.textContent.includes('•')) dayTitleEl.textContent = t('dayDetail');
+        // Item modal toggle paid button (only when modal not open)
+        var itemToggle = document.getElementById('itemTogglePaid');
+        var _itemBg = document.getElementById('itemBg');
+        if (itemToggle && _itemBg && !_itemBg.classList.contains('show')) itemToggle.textContent = t('markPaid');
+        // Item modal edit/delete already set above
       }
 
       var CATEGORY_COLORS = {
@@ -2326,7 +2377,7 @@
       function openAddModalForCreate() {
         editingId = null;
         editingRow = null;
-        $("addTitle").textContent = "Yeni Kayıt";
+        $("addTitle").textContent = t('newEntry');
         $("mSeriesUpdate").checked = false;
         $("seriesRow").style.display = "none";
       }
@@ -2334,7 +2385,7 @@
       function openAddModalForEdit(row) {
         editingId = row.id;
         editingRow = row;
-        $("addTitle").textContent = "Kayıt Düzenle";
+        $("addTitle").textContent = t('editEntry');
         $("mDir").value = (normalizeDir(row) === "income") ? "income" : "expense";
         $("mPaid").value = String(!!row.isPaid);
         $("mAmount").value = Number(row.amount || 0) || "";
@@ -2381,7 +2432,7 @@
         if (!act || !id) return;
 
         if (!user) {
-          toast("Önce giriş yap.");
+          toast(t('notLoggedIn'));
           return;
         }
 
@@ -2392,15 +2443,15 @@
 
         if (act === "toggle") {
           ref.update({ isPaid: !isPaid(row), updatedAt: serverTs() })
-            .then(function () { toast("Güncellendi."); renderPage(); })
-            .catch(function (err) { console.error(err); toast("İşlem hatası: " + (err.code || err.message)); });
+            .then(function () { toast(t('updatedOk')); renderPage(); })
+            .catch(function (err) { console.error(err); toast(t('opErr') + " " + (err.code || err.message)); });
         }
 
         if (act === "del") {
-          if (!confirm("Silinsin mi?")) return;
+          if (!confirm(t('confirmDelete'))) return;
           ref.delete()
-            .then(function () { toast("Silindi."); renderPage(); })
-            .catch(function (err) { console.error(err); toast("İşlem hatası: " + (err.code || err.message)); });
+            .then(function () { toast(t('deletedOk')); renderPage(); })
+            .catch(function (err) { console.error(err); toast(t('opErr') + " " + (err.code || err.message)); });
         }
 
         if (act === "edit") {
@@ -2419,7 +2470,7 @@
         db = firebase.firestore();
       } catch (e) {
         console.error(e);
-        toast("Firebase config eksik/yanlış. firebaseConfig'i doldur.");
+        toast("Firebase config error. Fill in firebaseConfig.");
       }
 
       function setActiveTab(page) {
@@ -2427,7 +2478,7 @@
         document.querySelectorAll(".tab").forEach(function (t) {
           t.classList.toggle("active", t.getAttribute("data-page") === page);
         });
-        $("subline").textContent = (page === "dashboard") ? t('overview') : t(page);
+        $("subline").textContent = t(page === "dashboard" ? "dashboard" : page === "expense" ? "expense" : page === "income" ? "income" : page === "calendar" ? "calendar" : "settings");
         renderPage();
       }
       document.querySelectorAll(".tab").forEach(function (tab) {
@@ -2449,7 +2500,7 @@
       $("btnLogin").addEventListener("click", function () {
         var email = $("aEmail").value.trim();
         var pass = $("aPass").value;
-        if (!email || !pass) return showAuthErr("E-posta/şifre gir.");
+        if (!email || !pass) return showAuthErr(t('loginErr'));
         auth.signInWithEmailAndPassword(email, pass)
           .then(function () { hideAuthErr(); authBg.classList.remove("show"); })
           .catch(function (e) { console.error(e); showAuthErr(e.code || e.message); });
@@ -2458,7 +2509,7 @@
       $("btnRegister").addEventListener("click", function () {
         var email = $("aEmail").value.trim();
         var pass = $("aPass").value;
-        if (!email || !pass) return showAuthErr("E-posta/şifre gir.");
+        if (!email || !pass) return showAuthErr(t('loginErr'));
         auth.createUserWithEmailAndPassword(email, pass)
           .then(function () { hideAuthErr(); authBg.classList.remove("show"); })
           .catch(function (e) { console.error(e); showAuthErr(e.code || e.message); });
@@ -2479,7 +2530,7 @@
       $("mRecurring").addEventListener("change", function () { $("recBox").style.display = $("mRecurring").checked ? "grid" : "none"; });
 
       $("btnAdd").addEventListener("click", function () {
-        if (!user) return toast("Önce giriş yap.");
+        if (!user) return toast(t('notLoggedIn'));
         $("mDir").value = "expense";
         $("mPaid").value = "false";
         $("mAmount").value = "";
@@ -2530,9 +2581,9 @@
           var recurringE = $("mRecurring").checked;
           var recMonthsE = Number($("mRecMonths").value);
 
-          if (!amountE || amountE <= 0) return toast("Tutar gir.");
-          if (!dateE) return toast("Tarih seç.");
-          if (recurringE && (!recMonthsE || recMonthsE < 1)) return toast("Tekrarlayan için ay sayısı gir.");
+          if (!amountE || amountE <= 0) return toast(t('enterAmount'));
+          if (!dateE) return toast(t('enterDate'));
+          if (recurringE && (!recMonthsE || recMonthsE < 1)) return toast(t('enterRecMonths'));
 
           var payloadE = {
             amount: amountE,
@@ -2566,11 +2617,11 @@
             .then(function () {
               addBg.classList.remove("show");
               editingId = null; editingRow = null;
-              toast("Güncellendi.");
+              toast(t('updatedOk'));
             })
             .catch(function (err) {
               console.error(err);
-              toast("Güncelleme hatası: " + (err.code || err.message));
+              toast(t('updateErr') + " " + (err.code || err.message));
             });
 
           return;
@@ -2585,9 +2636,9 @@
         var recurring = $("mRecurring").checked;
         var recMonths = Number($("mRecMonths").value);
 
-        if (!amount || amount <= 0) return toast("Tutar gir.");
-        if (!date) return toast("Tarih seç.");
-        if (recurring && (!recMonths || recMonths < 1)) return toast("Tekrarlayan için ay sayısı gir.");
+        if (!amount || amount <= 0) return toast(t('enterAmount'));
+        if (!date) return toast(t('enterDate'));
+        if (recurring && (!recMonths || recMonths < 1)) return toast(t('enterRecMonths'));
 
         var month = date.slice(0, 7);
         // If editing, update existing document (do not re-generate recurring)
@@ -2605,14 +2656,14 @@
           };
           ref.update(payload).then(function () {
             addBg.classList.remove("show");
-            toast("Güncellendi.");
+            toast(t('updatedOk'));
             window.__editingId = null;
             // unlock recurring fields back for new entries
             document.getElementById("mRecurring").disabled = false;
             document.getElementById("mRecMonths").disabled = false;
           }).catch(function (e) {
             console.error(e);
-            toast("Güncelleme hatası: " + (e.code || e.message));
+            toast(t('updateErr') + " " + (e.code || e.message));
           });
           return;
         }
@@ -2653,12 +2704,12 @@
             })
             .then(function () {
               addBg.classList.remove("show");
-              toast("Tekrarlayan kaydedildi."); renderPage();
+              toast(t('recurSaved')); renderPage();
               return generateRecurringForMonth(month);
             })
             .catch(function (e) {
               console.error(e);
-              toast("Kaydetme hatası: " + (e.code || e.message));
+              toast(t('saveErr') + " " + (e.code || e.message));
             });
 
           return;
@@ -2682,10 +2733,10 @@
           updatedAt: serverTs()
         }).then(function () {
           addBg.classList.remove("show");
-          toast("Kaydedildi."); renderPage();
+          toast(t('savedOk')); renderPage();
         }).catch(function (e) {
           console.error(e);
-          toast("Kaydetme hatası: " + (e.code || e.message));
+          toast(t('saveErr') + " " + (e.code || e.message));
         });
       });
 
@@ -2707,8 +2758,8 @@
           generateRecurringForMonth(selectedMonth).then(renderPage).catch(function () { renderPage(); });
         }, function (err) {
           console.error(err);
-          $("topHint").textContent = "Okuma hatası: " + (err.code || err.message);
-          toast("Veri okunamadı. Rules/index kontrol et.");
+          $("topHint").textContent = t('readErr') + " " + (err.code || err.message);
+          toast(t('dataErr'));
         });
       }
 
@@ -2784,7 +2835,7 @@
 
       function renderSpendingChart(rows) {
         var cats = groupExpensesByCategory(rows);
-        if (!cats.length) return '<div class="card spending" style="grid-column:span 8;"><h2>💳 ' + t('spendingTitle') + '</h2><div class="hint" style="padding:16px 0;text-align:center;">' + t('spendingEmpty') + '</div></div>';
+        if (!cats.length) return '<div class="card spending" style="grid-column:span 8;"><h2>' + t('spendingTitle') + '</h2><div class="hint" style="padding:16px 0;text-align:center;">' + t('spendingEmpty') + '</div></div>';
         var total = cats.reduce(function (s, x) { return s + x.amount; }, 0);
         var max = cats[0].amount || 1;
 
@@ -2823,18 +2874,18 @@
       }
 
       function renderTable(rows) {
-        if (!rows.length) return '<div class="hint">Kayıt yok.</div>';
+        if (!rows.length) return '<div class="hint">' + t('noRecord') + '</div>';
 
         var head =
           '<table><thead><tr>' +
-          '<th class="nowrap">Tarih</th>' +
-          '<th>Tür</th>' +
-          '<th>Başlık</th>' +
-          '<th>Kategori</th>' +
-          '<th class="right nowrap">Tutar</th>' +
-          '<th>Durum</th>' +
-          '<th>Tekrar</th>' +
-          '<th class="right">İşlem</th>' +
+          '<th class="nowrap">' + t('date') + '</th>' +
+          '<th>' + t('expense') + '/' + t('income') + '</th>' +
+          '<th>' + t('titlePlaceholder').split(' ')[0] + '</th>' +
+          '<th>' + t('category') + '</th>' +
+          '<th class="right nowrap">' + t('pdfAmount') + '</th>' +
+          '<th>' + t('pdfStatus') + '</th>' +
+          '<th>' + t('recurring').split(' ')[0] + '</th>' +
+          '<th class="right">—</th>' +
           '</tr></thead><tbody>';
 
         var body = rows.map(function (r) {
@@ -2869,7 +2920,7 @@
       }
 
       function renderCompactList(rows, dir) {
-        if (!rows.length) return '<div class="hint" style="padding:24px 0;text-align:center;">Bu ay için kayıt yok.</div>';
+        if (!rows.length) return '<div class="hint" style="padding:24px 0;text-align:center;">' + t('noRecordMonth') + '</div>';
         return '<div class="list">' + rows.map(function (r) {
           var title = escapeHtml(r.title || '—');
           var cat = escapeHtml(getCatName(r.category || 'Diğer'));
@@ -2966,8 +3017,8 @@
         var row = allRows.find(function (r) { return r.id === itemRowId; });
         if (!row) return;
         db.collection("payments").doc(itemRowId).update({ isPaid: !isPaid(row), updatedAt: serverTs() })
-          .then(function () { toast("Durum güncellendi."); })
-          .catch(function (e) { console.error(e); toast("İşlem hatası: " + (e.code || e.message)); });
+          .then(function () { toast(t('statusUpdated')); })
+          .catch(function (e) { console.error(e); toast(t('opErr') + " " + (e.code || e.message)); });
       });
 
       document.getElementById("itemEdit").addEventListener("click", function () {
@@ -2980,10 +3031,10 @@
 
       document.getElementById("itemDelete").addEventListener("click", function () {
         if (!user || !itemRowId) return;
-        if (!confirm("Silinsin mi?")) return;
+        if (!confirm(t('confirmDelete'))) return;
         db.collection("payments").doc(itemRowId).delete()
-          .then(function () { toast("Silindi."); closeItemModal(); })
-          .catch(function (e) { console.error(e); toast("İşlem hatası: " + (e.code || e.message)); });
+          .then(function () { toast(t('deletedOk')); closeItemModal(); })
+          .catch(function (e) { console.error(e); toast(t('opErr') + " " + (e.code || e.message)); });
       });
 
       // event delegation for compact lists
@@ -3047,7 +3098,7 @@
           else x.exp += Number(r.amount || 0);
         });
 
-        var labels = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+        var labels = LANG[currentLang] && LANG[currentLang].calDays ? LANG[currentLang].calDays : ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
         var head = '<div class="calGrid">' + labels.map(function (l) {
           return '<div class="hint" style="text-align:center;font-weight:650">' + l + '</div>';
         }).join("") + '</div>';
@@ -3150,7 +3201,7 @@
           });
         });
 
-        return chain.then(function () { if (created > 0) toast("Tekrarlayanlar eklendi: " + created); });
+        return chain.then(function () { if (created > 0) toast(t('recurAdded') + " " + created); });
       }
 
       function renderPage() {
@@ -3348,7 +3399,7 @@
 
             return;
           }
-        } catch (e) { console.error(e); toast('Ekran hatası: ' + (e.message || e)); }
+        } catch (e) { console.error(e); toast(t('saveErr') + ' ' + (e.message || e)); }
       }
 
       auth.onAuthStateChanged(function (u) {
@@ -3375,9 +3426,9 @@
         $("userEmail").textContent = user.email || "—";
         $("topHint").textContent = "";
 
+        $("btnPrivacy").title = t('hideAmounts');
         startListener();
         renderPage();
-        setTimeout(renderPage, 0);
       });
 
       $("monthLabel").textContent = selectedMonth;
@@ -3401,7 +3452,7 @@
       $("btnPrivacy").addEventListener("click", function () {
         privacyMode = !privacyMode;
         $("btnPrivacy").style.opacity = privacyMode ? '0.4' : '1';
-        $("btnPrivacy").title = privacyMode ? 'Miktarları göster' : 'Para miktarlarını gizle/göster';
+        $("btnPrivacy").title = privacyMode ? t('showAmounts') : t('hideAmounts');
         renderPage();
       });
 
