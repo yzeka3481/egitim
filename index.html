@@ -1615,6 +1615,60 @@
       border-radius: 999px;
       transition: width .5s cubic-bezier(.4, 0, .2, 1);
     }
+    /* ── Assets page ── */
+    .assetGrid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+    .assetCard {
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all .15s ease;
+      user-select: none;
+      position: relative;
+    }
+    .assetCard:hover { background: rgba(255,255,255,.07); transform: translateY(-1px); border-color: rgba(91,142,255,.22); }
+    .assetIcon { font-size: 26px; flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+    .assetInfo { flex: 1; min-width: 0; }
+    .assetLabel { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .assetSub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .assetRight { text-align: right; flex-shrink: 0; }
+    .assetVal { font-size: 15px; font-weight: 800; }
+    .assetRaw { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .assetLiveBadge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: rgba(34,211,170,.12); color: #86f7e3; border: 1px solid rgba(34,211,170,.25); white-space: nowrap; }
+    .assetManualBadge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: rgba(251,191,36,.1); color: #ffd98a; border: 1px solid rgba(251,191,36,.22); }
+    .assetDelBtn { position: absolute; top: 10px; right: 10px; opacity: 0; transition: opacity .15s; }
+    .assetCard:hover .assetDelBtn { opacity: 1; }
+    .assetSummaryCard { grid-column: span 12; }
+    .assetSummaryRow { display: flex; gap: 14px; flex-wrap: wrap; }
+    .assetSummaryKpi { flex: 1; min-width: 140px; background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+    .assetSummaryKpi .kLabel { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 6px; }
+    .assetSummaryKpi .kVal { font-size: 20px; font-weight: 800; }
+    .rateRow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .rateChip { background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px; font-size: 12px; font-weight: 700; color: var(--text); display: flex; flex-direction: column; gap: 2px; min-width: 80px; }
+    .rateChip .rLabel { font-size: 10px; color: var(--muted); font-weight: 600; }
+    .rateChip .rVal { font-size: 13px; font-weight: 800; }
+    .rateChip.gold { border-color: rgba(251,191,36,.3); background: rgba(251,191,36,.07); }
+    .rateChip.usd  { border-color: rgba(91,142,255,.3); background: rgba(91,142,255,.07); }
+    .rateChip.eur  { border-color: rgba(34,211,170,.25); background: rgba(34,211,170,.06); }
+    .rateChip.gbp  { border-color: rgba(167,139,250,.3); background: rgba(167,139,250,.07); }
+    .refreshBtn { margin-left: auto; }
+    [data-theme="light"] .assetCard { background: rgba(255,255,255,.85); border-color: rgba(0,0,0,.09); }
+    [data-theme="light"] .assetCard:hover { background: rgba(255,255,255,.97); }
+    [data-theme="light"] .assetSummaryKpi { background: rgba(255,255,255,.85); border-color: rgba(0,0,0,.09); }
+    [data-theme="light"] .rateChip { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.1); }
+    @media (max-width: 640px) {
+      .assetGrid { grid-template-columns: repeat(6, 1fr); }
+      .assetCard { grid-column: span 6 !important; }
+      .assetSummaryCard { grid-column: span 6 !important; }
+    }
   </style>
 </head>
 
@@ -1666,8 +1720,51 @@
       <div class="tab" data-page="calendar">
         <div class="ico">📆</div>Takvim
       </div>
+      <div class="tab" data-page="assets">
+        <div class="ico">🏦</div>Varlıklar
+      </div>
       <div class="tab" data-page="settings">
         <div class="ico">⚙️</div>Ayarlar
+      </div>
+    </div>
+  </div>
+
+  <div id="assetBg" class="modalBg">
+    <div class="modal">
+      <div class="modalTop">
+        <strong id="assetModalTitle">Varlık Ekle</strong>
+        <button id="assetClose" class="btn small">✕</button>
+      </div>
+      <div class="modalBody">
+        <div class="grid2">
+          <select id="assetType">
+            <option value="cash">💵 Nakit / Banka</option>
+            <option value="gold_gram">🥇 Altın (gram)</option>
+            <option value="gold_quarter">🥇 Çeyrek Altın</option>
+            <option value="gold_half">🥇 Yarım Altın</option>
+            <option value="gold_full">🥇 Tam Altın</option>
+            <option value="usd">🇺🇸 Dolar (USD)</option>
+            <option value="eur">🇪🇺 Euro (EUR)</option>
+            <option value="gbp">🇬🇧 Sterlin (GBP)</option>
+            <option value="other">📦 Diğer</option>
+          </select>
+          <select id="assetCurrency">
+            <option value="TRY">₺ TRY</option>
+            <option value="USD">$ USD</option>
+            <option value="EUR">€ EUR</option>
+          </select>
+        </div>
+        <input id="assetName" placeholder="İsim (örn: Ziraat Bankası, Kapalıçarşı Altını)" />
+        <div class="grid2">
+          <input id="assetAmount" type="number" step="any" min="0" placeholder="Miktar" />
+          <input id="assetValue" type="number" step="any" min="0" placeholder="Birim değer (opsiyonel)" />
+        </div>
+        <div class="hint" id="assetValueHint">Birim değer boş bırakılırsa canlı fiyat kullanılır.</div>
+        <input id="assetNote" placeholder="Not (opsiyonel)" />
+      </div>
+      <div class="actions">
+        <button id="assetSave" class="btn primary" style="flex:1;">Kaydet</button>
+        <button id="assetCancel" class="btn" style="flex:1;">Vazgeç</button>
       </div>
     </div>
   </div>
@@ -2077,7 +2174,7 @@
       var LANG = {
         tr: {
           appTitle: 'Ödeme Takip',
-          dashboard: 'Dashboard', expense: 'Gider', income: 'Gelir', calendar: 'Takvim', settings: 'Ayarlar',
+          dashboard: 'Dashboard', expense: 'Gider', income: 'Gelir', calendar: 'Takvim', assets: 'Varlıklar', settings: 'Ayarlar',
           newEntry: 'Yeni Kayıt', editEntry: 'Kayıt Düzenle', save: 'Kaydet', cancel: 'Vazgeç',
           login: 'Giriş Yap', register: 'Kayıt Ol', logout: 'Çıkış', loginBtn: 'Giriş',
           paid: 'Alındı/Ödendi', unpaid: 'Alınmadı/Ödenmedi', paidShort: 'Ödendi', unpaidShort: 'Ödenmedi',
@@ -2132,10 +2229,25 @@
           pdfDate: 'Tarih', pdfTitle2: 'Baslik', pdfCategory: 'Kategori', pdfStatus: 'Durum', pdfAmount: 'Tutar',
           pdfFooter: 'Odeme Takip - otomatik olusturuldu',
           pdfPaid: 'Odendi', pdfUnpaid: 'Odenmedi', pdfReceived: 'Alindi', pdfWaiting: 'Bekliyor',
+          assetsTitle: 'Mal Varlıklarım', addAsset: '＋ Varlık Ekle', assetName: 'Varlık Adı',
+          assetType: 'Tür', assetAmount: 'Miktar', assetValue: 'Birim Değer', assetNote: 'Not',
+          assetTotal: 'Toplam Değer', assetNetWorth: 'Net Servet', assetLivePrice: 'Canlı Fiyat',
+          assetLastUpdate: 'Son güncelleme', assetRefresh: '🔄 Fiyatları Güncelle',
+          assetRefreshing: 'Güncelleniyor...', assetRefreshOk: 'Fiyatlar güncellendi.',
+          assetRefreshErr: 'Fiyat alınamadı:', assetDeleteConfirm: 'Bu varlık silinsin mi?',
+          assetNoItems: 'Henüz varlık eklenmedi.',
+          assetType_cash: 'Nakit / Banka', assetType_gold_gram: 'Altın (gram)',
+          assetType_gold_quarter: 'Çeyrek Altın', assetType_gold_half: 'Yarım Altın',
+          assetType_gold_full: 'Tam Altın', assetType_usd: 'Dolar (USD)',
+          assetType_eur: 'Euro (EUR)', assetType_gbp: 'Sterlin (GBP)', assetType_other: 'Diğer',
+          assetModalAdd: 'Varlık Ekle', assetModalEdit: 'Varlık Düzenle',
+          assetValueHintLive: 'Birim değer boş bırakılırsa canlı fiyat kullanılır.',
+          assetValueHintManual: 'Girdiğin değer kullanılacak (canlı fiyat yok).',
+          assetCurrency: 'Para Birimi', optional: 'opsiyonel',
         },
         en: {
           appTitle: 'Payment Tracker',
-          dashboard: 'Dashboard', expense: 'Expenses', income: 'Income', calendar: 'Calendar', settings: 'Settings',
+          dashboard: 'Dashboard', expense: 'Expenses', income: 'Income', calendar: 'Calendar', assets: 'Assets', settings: 'Settings',
           newEntry: 'New Entry', editEntry: 'Edit Entry', save: 'Save', cancel: 'Cancel',
           login: 'Sign In', register: 'Sign Up', logout: 'Logout', loginBtn: 'Login',
           paid: 'Received/Paid', unpaid: 'Not Received/Unpaid', paidShort: 'Paid', unpaidShort: 'Unpaid',
@@ -2191,6 +2303,21 @@
           pdfDate: 'Date', pdfTitle2: 'Title', pdfCategory: 'Category', pdfStatus: 'Status', pdfAmount: 'Amount',
           pdfFooter: 'Payment Tracker - auto generated',
           pdfPaid: 'Paid', pdfUnpaid: 'Unpaid', pdfReceived: 'Received', pdfWaiting: 'Pending',
+          assetsTitle: 'My Assets', addAsset: '＋ Add Asset', assetName: 'Asset Name',
+          assetType: 'Type', assetAmount: 'Amount', assetValue: 'Unit Value', assetNote: 'Note',
+          assetTotal: 'Total Value', assetNetWorth: 'Net Worth', assetLivePrice: 'Live Price',
+          assetLastUpdate: 'Last updated', assetRefresh: '🔄 Refresh Prices',
+          assetRefreshing: 'Refreshing...', assetRefreshOk: 'Prices updated.',
+          assetRefreshErr: 'Could not fetch prices:', assetDeleteConfirm: 'Delete this asset?',
+          assetNoItems: 'No assets added yet.',
+          assetType_cash: 'Cash / Bank', assetType_gold_gram: 'Gold (gram)',
+          assetType_gold_quarter: 'Quarter Gold Coin', assetType_gold_half: 'Half Gold Coin',
+          assetType_gold_full: 'Full Gold Coin', assetType_usd: 'US Dollar (USD)',
+          assetType_eur: 'Euro (EUR)', assetType_gbp: 'British Pound (GBP)', assetType_other: 'Other',
+          assetModalAdd: 'Add Asset', assetModalEdit: 'Edit Asset',
+          assetValueHintLive: 'Leave unit value empty to use live price.',
+          assetValueHintManual: 'Your entered value will be used (no live price).',
+          assetCurrency: 'Currency', optional: 'optional',
         }
       };
       var currentLang = localStorage.getItem('lang') || 'tr';
@@ -2303,7 +2430,12 @@
         var itemToggle = document.getElementById('itemTogglePaid');
         var _itemBg = document.getElementById('itemBg');
         if (itemToggle && _itemBg && !_itemBg.classList.contains('show')) itemToggle.textContent = t('markPaid');
-        // Item modal edit/delete already set above
+        // Asset modal
+        var assetSaveEl = document.getElementById('assetSave'); if (assetSaveEl) assetSaveEl.textContent = t('save');
+        var assetCancelEl = document.getElementById('assetCancel'); if (assetCancelEl) assetCancelEl.textContent = t('cancel');
+        var assetNameEl = document.getElementById('assetName'); if (assetNameEl) assetNameEl.placeholder = t('assetName') + ' (örn: Ziraat, Kapalıçarşı)';
+        var assetAmountEl = document.getElementById('assetAmount'); if (assetAmountEl) assetAmountEl.placeholder = t('assetAmount');
+        var assetNoteEl = document.getElementById('assetNote'); if (assetNoteEl) assetNoteEl.placeholder = t('note');
       }
 
       var CATEGORY_COLORS = {
@@ -2478,7 +2610,7 @@
         document.querySelectorAll(".tab").forEach(function (t) {
           t.classList.toggle("active", t.getAttribute("data-page") === page);
         });
-        $("subline").textContent = t(page === "dashboard" ? "dashboard" : page === "expense" ? "expense" : page === "income" ? "income" : page === "calendar" ? "calendar" : "settings");
+        $("subline").textContent = t(page === "dashboard" ? "dashboard" : page === "expense" ? "expense" : page === "income" ? "income" : page === "calendar" ? "calendar" : page === "assets" ? "assets" : "settings");
         renderPage();
       }
       document.querySelectorAll(".tab").forEach(function (tab) {
@@ -3205,6 +3337,341 @@
         return chain.then(function () { if (created > 0) toast(t('recurAdded') + " " + created); });
       }
 
+      /* ══════════════════════════════════════════
+         MAL VARLIKLARI — Assets Module
+      ══════════════════════════════════════════ */
+
+      var assetRates = {
+        USD_TRY: null, EUR_TRY: null, GBP_TRY: null,
+        GOLD_GRAM_TRY: null,  // gram altın TL
+        lastFetch: null
+      };
+      var allAssets = [];
+      var assetUnsub = null;
+      var assetEditId = null;
+
+      /* Asset type metadata */
+      var ASSET_META = {
+        cash:         { icon: '💵', color: '#60a5fa', bg: 'rgba(96,165,250,.12)' },
+        gold_gram:    { icon: '🥇', color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
+        gold_quarter: { icon: '🥇', color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
+        gold_half:    { icon: '🥇', color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
+        gold_full:    { icon: '🥇', color: '#fbbf24', bg: 'rgba(251,191,36,.12)' },
+        usd:          { icon: '🇺🇸', color: '#5b8eff', bg: 'rgba(91,142,255,.12)' },
+        eur:          { icon: '🇪🇺', color: '#22d3aa', bg: 'rgba(34,211,170,.10)' },
+        gbp:          { icon: '🇬🇧', color: '#a78bfa', bg: 'rgba(167,139,250,.12)' },
+        other:        { icon: '📦', color: '#9ca3af', bg: 'rgba(156,163,175,.1)'  }
+      };
+
+      /* Gram altın ağırlıkları (standart Türk altın sikkeleri) */
+      var GOLD_GRAMS = { gold_gram: 1, gold_quarter: 1.75, gold_half: 3.5, gold_full: 7.0 };
+
+      /* ── Fiyat çekme ── */
+      function fetchRates() {
+        var btn = document.getElementById('btnAssetRefresh');
+        if (btn) { btn.disabled = true; btn.textContent = t('assetRefreshing'); }
+
+        var usdPromise = fetch('https://api.frankfurter.app/latest?from=USD&to=TRY,EUR,GBP')
+          .then(function(r) { return r.json(); });
+
+        var goldUsdPromise = fetch('https://api.metals.live/v1/spot/gold')
+          .then(function(r) { return r.json(); })
+          .catch(function() {
+            // Fallback: goldapi.io alternatif yoksa XAU/USD'yi frankfurter ile alınamaz,
+            // metals.live başarısız olursa son bilinen değeri koru
+            return null;
+          });
+
+        return Promise.all([usdPromise, goldUsdPromise])
+          .then(function(results) {
+            var fx = results[0];
+            var goldData = results[1];
+
+            if (fx && fx.rates) {
+              var usdTry = fx.rates.TRY || null;
+              assetRates.USD_TRY = usdTry;
+              assetRates.EUR_TRY = usdTry && fx.rates.EUR ? usdTry / fx.rates.EUR : null;
+              assetRates.GBP_TRY = usdTry && fx.rates.GBP ? usdTry / fx.rates.GBP : null;
+            }
+
+            // metals.live: [{price: 3300.5}]
+            if (goldData && Array.isArray(goldData) && goldData[0] && goldData[0].price) {
+              var goldUsd = goldData[0].price; // troy ounce USD
+              var gramUsd = goldUsd / 31.1035; // 1 troy ounce = 31.1035 gram
+              assetRates.GOLD_GRAM_TRY = assetRates.USD_TRY ? gramUsd * assetRates.USD_TRY : null;
+            } else if (goldData && goldData.price) {
+              var goldUsd2 = goldData.price;
+              var gramUsd2 = goldUsd2 / 31.1035;
+              assetRates.GOLD_GRAM_TRY = assetRates.USD_TRY ? gramUsd2 * assetRates.USD_TRY : null;
+            }
+
+            assetRates.lastFetch = new Date();
+            localStorage.setItem('assetRates', JSON.stringify(assetRates));
+            toast(t('assetRefreshOk'));
+          })
+          .catch(function(err) {
+            toast(t('assetRefreshErr') + ' ' + (err.message || err));
+          })
+          .finally(function() {
+            if (btn) { btn.disabled = false; btn.textContent = t('assetRefresh'); }
+            if (currentPage === 'assets') renderPage();
+          });
+      }
+
+      /* Kaydedilmiş fiyatları yükle */
+      function loadCachedRates() {
+        try {
+          var saved = localStorage.getItem('assetRates');
+          if (saved) {
+            var parsed = JSON.parse(saved);
+            assetRates.USD_TRY = parsed.USD_TRY || null;
+            assetRates.EUR_TRY = parsed.EUR_TRY || null;
+            assetRates.GBP_TRY = parsed.GBP_TRY || null;
+            assetRates.GOLD_GRAM_TRY = parsed.GOLD_GRAM_TRY || null;
+            assetRates.lastFetch = parsed.lastFetch ? new Date(parsed.lastFetch) : null;
+          }
+        } catch(e) {}
+      }
+      loadCachedRates();
+
+      /* ── Bir varlığın TRY değerini hesapla ── */
+      function calcAssetTRY(asset) {
+        var qty = Number(asset.amount || 0);
+        var manualUnit = Number(asset.manualValue || 0);
+        var type = asset.type || 'cash';
+        var cur  = asset.currency || 'TRY';
+
+        // Manuel değer girilmişse önce onu kullan
+        if (manualUnit > 0) {
+          // Para cinsi dönüşümü
+          var unitTRY = manualUnit;
+          if (cur === 'USD' && assetRates.USD_TRY) unitTRY = manualUnit * assetRates.USD_TRY;
+          else if (cur === 'EUR' && assetRates.EUR_TRY) unitTRY = manualUnit * assetRates.EUR_TRY;
+          else if (cur === 'GBP' && assetRates.GBP_TRY) unitTRY = manualUnit * assetRates.GBP_TRY;
+          return { total: qty * unitTRY, isLive: false, unitTRY: unitTRY };
+        }
+
+        // Canlı fiyat ile hesapla
+        if (type === 'cash') {
+          if (cur === 'USD' && assetRates.USD_TRY) return { total: qty * assetRates.USD_TRY, isLive: true, unitTRY: assetRates.USD_TRY };
+          if (cur === 'EUR' && assetRates.EUR_TRY) return { total: qty * assetRates.EUR_TRY, isLive: true, unitTRY: assetRates.EUR_TRY };
+          if (cur === 'GBP' && assetRates.GBP_TRY) return { total: qty * assetRates.GBP_TRY, isLive: true, unitTRY: assetRates.GBP_TRY };
+          return { total: qty, isLive: false, unitTRY: 1 }; // TRY nakit
+        }
+        if (type === 'usd' && assetRates.USD_TRY) return { total: qty * assetRates.USD_TRY, isLive: true, unitTRY: assetRates.USD_TRY };
+        if (type === 'eur' && assetRates.EUR_TRY) return { total: qty * assetRates.EUR_TRY, isLive: true, unitTRY: assetRates.EUR_TRY };
+        if (type === 'gbp' && assetRates.GBP_TRY) return { total: qty * assetRates.GBP_TRY, isLive: true, unitTRY: assetRates.GBP_TRY };
+
+        var grams = GOLD_GRAMS[type];
+        if (grams && assetRates.GOLD_GRAM_TRY) {
+          var unitG = grams * assetRates.GOLD_GRAM_TRY;
+          return { total: qty * unitG, isLive: true, unitTRY: unitG };
+        }
+
+        // Fallback: manuel değer yok, canlı fiyat yok
+        return { total: 0, isLive: false, unitTRY: 0 };
+      }
+
+      /* ── Fiyat chip formatı ── */
+      function fmtTRY(n) {
+        if (!n) return '—';
+        return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 2 }).format(n);
+      }
+
+      /* ── Firestore listener başlat ── */
+      function startAssetListener() {
+        if (!user || !db) return;
+        if (assetUnsub) { assetUnsub(); assetUnsub = null; }
+        assetUnsub = db.collection('assets').where('userId', '==', user.uid)
+          .onSnapshot(function(snap) {
+            allAssets = snap.docs.map(function(d) { var o = d.data(); o.id = d.id; return o; });
+            if (currentPage === 'assets') renderPage();
+          }, function(err) { console.error(err); });
+      }
+
+      /* ── Varlıklar sayfasını render et ── */
+      function renderAssetsPage() {
+        var content = $('content');
+        var fmt = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 });
+
+        // Net servet hesapla
+        var netWorth = 0;
+        var hasUnknown = false;
+        allAssets.forEach(function(a) {
+          var r = calcAssetTRY(a);
+          netWorth += r.total;
+          if (!r.total && Number(a.amount) > 0) hasUnknown = true;
+        });
+
+        // Güncelleme zamanı
+        var lastUpd = assetRates.lastFetch
+          ? (t('assetLastUpdate') + ': ' + assetRates.lastFetch.toLocaleTimeString(currentLang === 'en' ? 'en-US' : 'tr-TR'))
+          : (t('assetLastUpdate') + ': —');
+
+        // Döviz + altın fiyat chipleri
+        var rateChips = '' +
+          (assetRates.GOLD_GRAM_TRY ? '<div class="rateChip gold"><span class="rLabel">Gram Altın</span><span class="rVal">' + fmtTRY(assetRates.GOLD_GRAM_TRY) + '</span></div>' : '') +
+          (assetRates.USD_TRY ? '<div class="rateChip usd"><span class="rLabel">USD/TRY</span><span class="rVal">' + fmtTRY(assetRates.USD_TRY) + '</span></div>' : '') +
+          (assetRates.EUR_TRY ? '<div class="rateChip eur"><span class="rLabel">EUR/TRY</span><span class="rVal">' + fmtTRY(assetRates.EUR_TRY) + '</span></div>' : '') +
+          (assetRates.GBP_TRY ? '<div class="rateChip gbp"><span class="rLabel">GBP/TRY</span><span class="rVal">' + fmtTRY(assetRates.GBP_TRY) + '</span></div>' : '');
+        if (!rateChips) rateChips = '<span class="hint">' + t('assetRefreshErr').replace(':', '') + ' — ' + t('assetRefresh') + '</span>';
+
+        // Özet kart
+        var summaryHtml =
+          '<div class="card assetSummaryCard">' +
+          '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">' +
+          '<h2 style="margin:0;font-size:15px;font-weight:800;">' + t('assetsTitle') + '</h2>' +
+          '<button id="btnAssetRefresh" class="btn small refreshBtn">' + t('assetRefresh') + '</button>' +
+          '<button id="btnAssetAdd" class="btn small primary">＋ ' + t('addAsset').replace('＋ ','') + '</button>' +
+          '</div>' +
+          '<div class="assetSummaryRow">' +
+          '<div class="assetSummaryKpi"><div class="kLabel">' + t('assetNetWorth') + '</div><div class="kVal" style="color:var(--brand)">' + (netWorth ? fmt.format(netWorth) : '—') + '</div></div>' +
+          '<div class="assetSummaryKpi"><div class="kLabel">' + t('total') + ' Varlık</div><div class="kVal">' + allAssets.length + '</div></div>' +
+          '</div>' +
+          '<div class="rateRow" style="margin-top:12px;">' + rateChips + '</div>' +
+          '<div class="hint" style="margin-top:6px;font-size:11px;">' + lastUpd + '</div>' +
+          '</div>';
+
+        // Varlık kartları
+        var cardsHtml = '';
+        if (!allAssets.length) {
+          cardsHtml = '<div class="card" style="grid-column:span 12;text-align:center;padding:32px;"><div style="font-size:32px;margin-bottom:12px;">🏦</div><div class="hint">' + t('assetNoItems') + '</div></div>';
+        } else {
+          // Türe göre grupla: önce altın, sonra döviz, sonra nakit, sonra diğer
+          var sorted = allAssets.slice().sort(function(a,b) {
+            var order = {gold_full:0,gold_half:1,gold_quarter:2,gold_gram:3,usd:4,eur:5,gbp:6,cash:7,other:8};
+            return (order[a.type]||9) - (order[b.type]||9);
+          });
+          cardsHtml = sorted.map(function(asset) {
+            var meta = ASSET_META[asset.type] || ASSET_META.other;
+            var result = calcAssetTRY(asset);
+            var qty = Number(asset.amount || 0);
+            var typeLabel = t('assetType_' + (asset.type || 'other'));
+            var badge = result.isLive
+              ? '<span class="assetLiveBadge">● CANLI</span>'
+              : '<span class="assetManualBadge">✎ Manuel</span>';
+            var unitStr = result.unitTRY ? ' · ' + fmtTRY(result.unitTRY) + '/birim' : '';
+            var subText = typeLabel + (asset.currency && asset.currency !== 'TRY' ? ' · ' + asset.currency : '') + unitStr;
+            var totalStr = result.total ? fmt.format(result.total) : '—';
+            var rawStr = qty + (asset.type === 'cash' ? ' ' + (asset.currency || 'TRY') : ' ' + typeLabel.split(' ')[0]);
+            return '' +
+              '<div class="assetCard" style="grid-column:span 6;" data-asset-id="' + escapeHtml(asset.id) + '">' +
+              '<div class="assetIcon" style="background:' + meta.bg + ';">' + meta.icon + '</div>' +
+              '<div class="assetInfo">' +
+              '<div class="assetLabel">' + escapeHtml(asset.name || typeLabel) + '</div>' +
+              '<div class="assetSub">' + escapeHtml(subText) + (asset.note ? ' · ' + escapeHtml(asset.note) : '') + '</div>' +
+              '</div>' +
+              '<div class="assetRight">' +
+              '<div class="assetVal" style="color:' + meta.color + '">' + (privacyMode ? '●●●' : totalStr) + '</div>' +
+              '<div class="assetRaw">' + (privacyMode ? '●●' : rawStr) + '</div>' +
+              '<div style="margin-top:4px;">' + badge + '</div>' +
+              '</div>' +
+              '<button class="btn small danger assetDelBtn" data-asset-del="' + escapeHtml(asset.id) + '">🗑</button>' +
+              '</div>';
+          }).join('');
+        }
+
+        content.innerHTML = '<div class="assetGrid">' + summaryHtml + cardsHtml + '</div>';
+
+        // Event binding
+        var refreshBtn = document.getElementById('btnAssetRefresh');
+        if (refreshBtn) refreshBtn.addEventListener('click', fetchRates);
+
+        var addBtn = document.getElementById('btnAssetAdd');
+        if (addBtn) addBtn.addEventListener('click', function() { openAssetModal(null); });
+
+        // Karta tıkla → düzenle
+        document.querySelectorAll('.assetCard[data-asset-id]').forEach(function(el) {
+          el.addEventListener('click', function(e) {
+            if (e.target.closest('[data-asset-del]')) return;
+            var id = el.getAttribute('data-asset-id');
+            var asset = allAssets.find(function(a) { return a.id === id; });
+            if (asset) openAssetModal(asset);
+          });
+        });
+
+        // Sil butonları
+        document.querySelectorAll('[data-asset-del]').forEach(function(btn) {
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!confirm(t('assetDeleteConfirm'))) return;
+            var id = btn.getAttribute('data-asset-del');
+            db.collection('assets').doc(id).delete()
+              .then(function() { toast(t('deletedOk')); })
+              .catch(function(err) { toast(t('opErr') + ' ' + (err.message || err)); });
+          });
+        });
+
+      }
+
+      /* ── Asset modal aç/kapat ── */
+      var assetBg = document.getElementById('assetBg');
+
+      function openAssetModal(asset) {
+        assetEditId = asset ? asset.id : null;
+        document.getElementById('assetModalTitle').textContent = asset ? t('assetModalEdit') : t('assetModalAdd');
+        document.getElementById('assetType').value = asset ? (asset.type || 'cash') : 'cash';
+        document.getElementById('assetCurrency').value = asset ? (asset.currency || 'TRY') : 'TRY';
+        document.getElementById('assetName').value = asset ? (asset.name || '') : '';
+        document.getElementById('assetAmount').value = asset ? (asset.amount || '') : '';
+        document.getElementById('assetValue').value = asset ? (asset.manualValue || '') : '';
+        document.getElementById('assetNote').value = asset ? (asset.note || '') : '';
+        updateAssetValueHint();
+        assetBg.classList.add('show');
+      }
+
+      function updateAssetValueHint() {
+        var type = document.getElementById('assetType').value;
+        var manualVal = document.getElementById('assetValue').value;
+        var hint = document.getElementById('assetValueHint');
+        var liveTypes = ['gold_gram','gold_quarter','gold_half','gold_full','usd','eur','gbp'];
+        var isLiveType = liveTypes.indexOf(type) > -1 || (type === 'cash' && document.getElementById('assetCurrency').value !== 'TRY');
+        if (hint) hint.textContent = (isLiveType && !manualVal) ? t('assetValueHintLive') : t('assetValueHintManual');
+      }
+
+      document.getElementById('assetType').addEventListener('change', updateAssetValueHint);
+      document.getElementById('assetCurrency').addEventListener('change', updateAssetValueHint);
+      document.getElementById('assetValue').addEventListener('input', updateAssetValueHint);
+
+      document.getElementById('assetClose').addEventListener('click', function() { assetBg.classList.remove('show'); });
+      document.getElementById('assetCancel').addEventListener('click', function() { assetBg.classList.remove('show'); });
+      assetBg.addEventListener('click', function(e) { if (e.target === assetBg) assetBg.classList.remove('show'); });
+
+      document.getElementById('assetSave').addEventListener('click', function() {
+        if (!user) return toast(t('notLoggedIn'));
+        var type = document.getElementById('assetType').value;
+        var currency = document.getElementById('assetCurrency').value;
+        var name = document.getElementById('assetName').value.trim();
+        var amount = Number(document.getElementById('assetAmount').value);
+        var manualValue = Number(document.getElementById('assetValue').value) || 0;
+        var note = document.getElementById('assetNote').value.trim();
+
+        if (!amount || amount <= 0) return toast(t('enterAmount'));
+
+        var payload = {
+          userId: user.uid,
+          type: type,
+          currency: currency,
+          name: name || t('assetType_' + type),
+          amount: amount,
+          manualValue: manualValue || null,
+          note: note || '',
+          updatedAt: serverTs()
+        };
+
+        var p = assetEditId
+          ? db.collection('assets').doc(assetEditId).set(payload, { merge: true })
+          : (function() { payload.createdAt = serverTs(); return db.collection('assets').add(payload); })();
+
+        p.then(function() {
+          assetBg.classList.remove('show');
+          toast(assetEditId ? t('updatedOk') : t('savedOk'));
+          assetEditId = null;
+        }).catch(function(err) {
+          toast(t('saveErr') + ' ' + (err.message || err));
+        });
+      });
+
       function renderPage() {
         try {
           $("monthLabel").textContent = selectedMonth;
@@ -3287,6 +3754,11 @@
               renderCalendar(rowsMonth) +
               '</div>';
             bindCalendarClicks();
+            return;
+          }
+
+          if (currentPage === "assets") {
+            renderAssetsPage();
             return;
           }
 
@@ -3415,7 +3887,9 @@
           $("userEmail").textContent = "";
           $("topHint").textContent = "";
           allRows = [];
+          allAssets = [];
           if (unsub) { unsub(); unsub = null; }
+          if (assetUnsub) { assetUnsub(); assetUnsub = null; }
           renderPage();
           return;
         }
@@ -3429,6 +3903,7 @@
 
         $("btnPrivacy").title = t('hideAmounts');
         startListener();
+        startAssetListener();
         renderPage();
       });
 
