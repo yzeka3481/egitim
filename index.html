@@ -2014,17 +2014,46 @@
           try {
             var rows = JSON.parse(e.target.result);
             if (!Array.isArray(rows)) throw new Error('Geçersiz format');
+            var VALID_TYPES = ['incoming', 'payment'];
             var batch = db.batch();
             var count = 0;
+            var skipped = 0;
             rows.forEach(function (r) {
-              if (!r.title) return;
+              // Zorunlu alan ve tip kontrolleri
+              var title = typeof r.title === 'string' ? r.title.trim().slice(0, 200) : '';
+              var amount = Number(r.amount);
+              if (!title) { skipped++; return; }
+              if (!isFinite(amount) || amount <= 0 || amount > 999999999) { skipped++; return; }
+
+              // Yalnızca izin verilen alanları whitelist ile al
+              var obj = {
+                userId: user.uid,                                                        // her zaman giriş yapan kullanıcı
+                title: title,
+                amount: amount,
+                category: typeof r.category === 'string' ? r.category.trim().slice(0, 100) || 'Diğer' : 'Diğer',
+                date: typeof r.date === 'string' ? r.date.slice(0, 10) : '',
+                type: VALID_TYPES.includes(r.type) ? r.type : 'payment',
+                isPaid: !!r.isPaid,
+                isRecurring: !!r.isRecurring,
+                isTemplate: !!r.isTemplate,
+                recurrenceId: typeof r.recurrenceId === 'string' ? r.recurrenceId.slice(0, 64) : null,
+                recurrenceStart: typeof r.recurrenceStart === 'string' ? r.recurrenceStart.slice(0, 7) : null,
+                recurrenceTotalMonths: (r.recurrenceTotalMonths !== null && r.recurrenceTotalMonths !== undefined)
+                  ? Math.max(1, Math.min(240, parseInt(r.recurrenceTotalMonths) || 1)) : null,
+                note: typeof r.note === 'string' ? r.note.slice(0, 500) : '',
+                importedAt: new Date().toISOString()
+              };
+
               var ref = db.collection('payments').doc();
-              var obj = Object.assign({}, r, { userId: user.uid, importedAt: new Date().toISOString() });
-              delete obj.id;
               batch.set(ref, obj);
               count++;
             });
-            batch.commit().then(function () { toast(count + ' kayıt içe aktarıldı.'); })
+            batch.commit()
+              .then(function () {
+                var msg = count + ' kayıt içe aktarıldı.';
+                if (skipped > 0) msg += ' (' + skipped + ' geçersiz satır atlandı)';
+                toast(msg);
+              })
               .catch(function (err) { toast('Hata: ' + err.message); });
           } catch (ex) { toast('JSON okunamıyor: ' + ex.message); }
         };
@@ -2043,9 +2072,172 @@
 
 
       function $(id) { return document.getElementById(id); }
-      var fmt = new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" });
+
+      /* ── i18n ── */
+      var LANG = {
+        tr: {
+          dashboard: 'Dashboard', expense: 'Gider', income: 'Gelir', calendar: 'Takvim', settings: 'Ayarlar',
+          newEntry: 'Yeni Kayıt', editEntry: 'Kayıt Düzenle', save: 'Kaydet', cancel: 'Vazgeç',
+          login: 'Giriş Yap', register: 'Kayıt Ol', logout: 'Çıkış', loginBtn: 'Giriş',
+          paid: 'Alındı/Ödendi', unpaid: 'Alınmadı/Ödenmedi', paidShort: 'Ödendi', unpaidShort: 'Ödenmedi',
+          received: 'Alındı', notReceived: 'Alınmadı', waiting: 'Bekliyor',
+          income_tag: 'Gelir', expense_tag: 'Gider', monthly: 'Aylık',
+          thisMonth: 'Bu ay', netBalance: 'Net Bakiye',
+          noRecord: 'Kayıt yok.', noRecordMonth: 'Bu ay için kayıt yok.',
+          total: 'Toplam', entries: 'kayıt',
+          appearance: 'Görünüm', darkTheme: 'Koyu Tema', themeDesc: 'Ekrana uygun renk şemasını seç',
+          dataManagement: 'Veri Yönetimi',
+          exportJson: 'Verileri Dışa Aktar', exportJsonDesc: 'Tüm kayıtları JSON dosyası olarak indir',
+          importJson: 'Verileri İçe Aktar', importJsonDesc: 'JSON dosyasından kayıtları yükle (var olanların üstüne ekler)',
+          exportPdf: 'Aylık PDF Raporu', exportPdfDesc: 'Seçili ayın gelir/gider özetini PDF olarak indir',
+          language: 'Dil / Language', languageDesc: 'Arayüz dilini seç',
+          currency: 'Para Birimi', currencyDesc: 'Kullanılacak para birimini seç',
+          account: 'Hesap', email: 'E-posta',
+          privacy: 'Gizlilik ve KVKK', privacyLabel: 'Gizlilik Politikası', privacyDesc: 'KVKK aydınlatma metnini ve veri politikasını görüntüle',
+          readText: 'Metni Oku →',
+          about: 'Uygulama Hakkında', platform: 'Platform', update: 'Güncelleme',
+          recurring: 'Tekrarlayan ödeme/gelir', recurringHint: 'Ay bazında otomatik üretim',
+          monthsQ: 'Kaç ay sürecek? (örn: 4)', monthsHint: 'Girdiğin ay dahil sayılır',
+          seriesUpdate: 'Bu seri şablonunu da güncelle (gelecek aylar için)',
+          schemaHint: 'Şema uyumu:',
+          dayDetail: 'Gün Detayı', recordDetail: 'Kayıt Detayı', close: 'Kapat',
+          markPaid: 'Ödendi İşaretle', markReceived: 'Alındı İşaretle', undo: 'Geri Al', edit: 'Düzenle', del: 'Sil',
+          category: 'Kategori', date: 'Tarih', note: 'Not', duration: 'Süre', months: 'ay',
+          amountPlaceholder: 'Tutar', titlePlaceholder: 'Başlık (örn: Derya, Macbook)',
+          otherCatPlaceholder: 'Diğer kategori yaz',
+          filterAll: 'Durum: Hepsi', filterUnpaid: 'Durum: Alınmadı/Ödenmedi', filterPaid: 'Durum: Alındı/Ödendi',
+          searchPlaceholder: 'Ara (başlık / kategori)',
+          quickTips: '💡 Hızlı İpuçları',
+          quickTipsBody: '📆 Takvim: güne tıkla → detay<br>🔄 Tekrarlayanlar: ay değişince otomatik<br>🎨 Kategori renkleri grafikte aynı<br>✏️ Kayıt: listeden tıkla → düzenle',
+          spendingTitle: '💳 Nereye ne harcadım?', spendingEmpty: 'Bu ay gider kaydı yok.',
+          loginTitle: 'Giriş / Kayıt', loginHint: 'Dosyada <b>firebaseConfig</b> alanını kendi projenle doldur.',
+          loginErr: 'E-posta/şifre gir.', notLoggedIn: 'Önce giriş yap.', startHint: 'Sağ üstten <b>Giriş</b> butonuna bas.',
+          startTitle: 'Başlamak için giriş yap',
+          jsonDownloaded: 'JSON indirildi:', pdfDownloaded: 'PDF indirildi:', imported: 'kayıt içe aktarıldı.',
+          skipped: 'geçersiz satır atlandı', noData: 'Dışa aktaracak veri yok.', noMonthData: 'Bu ay için dışa aktaracak kayıt yok.',
+          updated: 'Güncellendi.', deleted: 'Silindi.', confirmDelete: 'Silinsin mi?',
+          pdfTitle: 'Odeme Takip - Aylik Rapor', pdfPeriod: 'Donem:', pdfCreated: 'Olusturma:',
+          pdfExpenses: 'Giderler', pdfIncomes: 'Gelirler', pdfTotal: 'Toplam',
+          pdfDate: 'Tarih', pdfTitle2: 'Baslik', pdfCategory: 'Kategori', pdfStatus: 'Durum', pdfAmount: 'Tutar',
+          pdfFooter: 'Odeme Takip - otomatik olusturuldu',
+          pdfPaid: 'Odendi', pdfUnpaid: 'Odenmedi', pdfReceived: 'Alindi', pdfWaiting: 'Bekliyor',
+        },
+        en: {
+          dashboard: 'Dashboard', expense: 'Expenses', income: 'Income', calendar: 'Calendar', settings: 'Settings',
+          newEntry: 'New Entry', editEntry: 'Edit Entry', save: 'Save', cancel: 'Cancel',
+          login: 'Sign In', register: 'Sign Up', logout: 'Logout', loginBtn: 'Login',
+          paid: 'Received/Paid', unpaid: 'Not Received/Unpaid', paidShort: 'Paid', unpaidShort: 'Unpaid',
+          received: 'Received', notReceived: 'Not Received', waiting: 'Pending',
+          income_tag: 'Income', expense_tag: 'Expense', monthly: 'Monthly',
+          thisMonth: 'This month', netBalance: 'Net Balance',
+          noRecord: 'No records.', noRecordMonth: 'No records for this month.',
+          total: 'Total', entries: 'entries',
+          appearance: 'Appearance', darkTheme: 'Dark Theme', themeDesc: 'Choose the color scheme that suits your display',
+          dataManagement: 'Data Management',
+          exportJson: 'Export Data', exportJsonDesc: 'Download all records as a JSON file',
+          importJson: 'Import Data', importJsonDesc: 'Load records from a JSON file (adds on top of existing)',
+          exportPdf: 'Monthly PDF Report', exportPdfDesc: 'Download a PDF summary of the selected month',
+          language: 'Language', languageDesc: 'Select the interface language',
+          currency: 'Currency', currencyDesc: 'Select the currency to use',
+          account: 'Account', email: 'Email',
+          privacy: 'Privacy & GDPR', privacyLabel: 'Privacy Policy', privacyDesc: 'View the data policy and disclosure text',
+          readText: 'Read →',
+          about: 'About', platform: 'Platform', update: 'Update',
+          recurring: 'Recurring payment/income', recurringHint: 'Auto-generated monthly',
+          monthsQ: 'How many months? (e.g. 4)', monthsHint: 'Including the starting month',
+          seriesUpdate: 'Also update series template (for future months)',
+          schemaHint: 'Schema:',
+          dayDetail: 'Day Detail', recordDetail: 'Record Detail', close: 'Close',
+          markPaid: 'Mark as Paid', markReceived: 'Mark as Received', undo: 'Undo', edit: 'Edit', del: 'Delete',
+          category: 'Category', date: 'Date', note: 'Note', duration: 'Duration', months: 'months',
+          amountPlaceholder: 'Amount', titlePlaceholder: 'Title (e.g. Netflix, Rent)',
+          otherCatPlaceholder: 'Type custom category',
+          filterAll: 'Status: All', filterUnpaid: 'Status: Unpaid', filterPaid: 'Status: Paid',
+          searchPlaceholder: 'Search (title / category)',
+          quickTips: '💡 Quick Tips',
+          quickTipsBody: '📆 Calendar: click a day → details<br>🔄 Recurring: auto-generated on month change<br>🎨 Category colors match the chart<br>✏️ Record: click in list → edit',
+          spendingTitle: '💳 Where did I spend?', spendingEmpty: 'No expense records this month.',
+          loginTitle: 'Sign In / Sign Up', loginHint: 'Fill in the <b>firebaseConfig</b> field in the file with your project.',
+          loginErr: 'Enter email/password.', notLoggedIn: 'Please log in first.', startHint: 'Tap the <b>Login</b> button on the top right.',
+          startTitle: 'Log in to get started',
+          jsonDownloaded: 'JSON downloaded:', pdfDownloaded: 'PDF downloaded:', imported: 'records imported.',
+          skipped: 'invalid rows skipped', noData: 'No data to export.', noMonthData: 'No records for this month to export.',
+          updated: 'Updated.', deleted: 'Deleted.', confirmDelete: 'Delete this entry?',
+          pdfTitle: 'Payment Tracker - Monthly Report', pdfPeriod: 'Period:', pdfCreated: 'Created:',
+          pdfExpenses: 'Expenses', pdfIncomes: 'Income', pdfTotal: 'Total',
+          pdfDate: 'Date', pdfTitle2: 'Title', pdfCategory: 'Category', pdfStatus: 'Status', pdfAmount: 'Amount',
+          pdfFooter: 'Payment Tracker - auto generated',
+          pdfPaid: 'Paid', pdfUnpaid: 'Unpaid', pdfReceived: 'Received', pdfWaiting: 'Pending',
+        }
+      };
+      var currentLang = localStorage.getItem('lang') || 'tr';
+      function t(key) { return (LANG[currentLang] && LANG[currentLang][key]) ? LANG[currentLang][key] : (LANG['tr'][key] || key); }
+      function setLang(lang) { currentLang = lang; localStorage.setItem('lang', lang); applyLang(); renderPage(); }
+
+      /* ── Currency ── */
+      var CURRENCIES = {
+        TRY: { code: 'TRY', locale: 'tr-TR', symbol: '₺' },
+        EUR: { code: 'EUR', locale: 'de-DE', symbol: '€' },
+        USD: { code: 'USD', locale: 'en-US', symbol: '$' }
+      };
+      var currentCurrency = localStorage.getItem('currency') || 'TRY';
+      function getCurrencyFmt() {
+        var c = CURRENCIES[currentCurrency] || CURRENCIES.TRY;
+        return new Intl.NumberFormat(c.locale, { style: 'currency', currency: c.code });
+      }
+      function setCurrency(code) { currentCurrency = code; localStorage.setItem('currency', code); renderPage(); }
+
       var privacyMode = false;
-      function fmtAmt(n) { return privacyMode ? '●●●' : fmt.format(n); }
+      function fmtAmt(n) { return privacyMode ? '●●●' : getCurrencyFmt().format(n); }
+
+      /* ── Apply language to static HTML elements ── */
+      function applyLang() {
+        // Tab bar
+        var tabs = document.querySelectorAll('.tab[data-page]');
+        tabs.forEach(function (tab) {
+          var page = tab.getAttribute('data-page');
+          var ico = tab.querySelector('.ico');
+          var icoHtml = ico ? ico.outerHTML : '';
+          tab.innerHTML = icoHtml + t(page);
+        });
+        // Status filter
+        var sf = document.getElementById('statusFilter');
+        if (sf) {
+          sf.options[0].text = t('filterAll');
+          sf.options[1].text = t('filterUnpaid');
+          sf.options[2].text = t('filterPaid');
+        }
+        // Search
+        var srch = document.getElementById('search');
+        if (srch) srch.placeholder = t('searchPlaceholder');
+        // Modal: Add/Edit
+        var mDir = document.getElementById('mDir');
+        if (mDir) { mDir.options[0].text = t('expense'); mDir.options[1].text = t('income'); }
+        var mPaid = document.getElementById('mPaid');
+        if (mPaid) { mPaid.options[0].text = t('unpaid'); mPaid.options[1].text = t('paid'); }
+        var mAmount = document.getElementById('mAmount');
+        if (mAmount) mAmount.placeholder = t('amountPlaceholder') + ' (' + (CURRENCIES[currentCurrency] || CURRENCIES.TRY).symbol + ')';
+        var mTitle = document.getElementById('mTitle');
+        if (mTitle) mTitle.placeholder = t('titlePlaceholder');
+        var mCategoryOther = document.getElementById('mCategoryOther');
+        if (mCategoryOther) mCategoryOther.placeholder = t('otherCatPlaceholder');
+        var mRecSpan = document.querySelector('#mRecurring + span, label span');
+        var recLabelSpan = document.querySelector('label span[style*="font-weight:650"]');
+        if (recLabelSpan && recLabelSpan.textContent.includes('Tekrar')) recLabelSpan.textContent = t('recurring');
+        var mRecHint = document.getElementById('mRecMonths');
+        if (mRecHint) mRecHint.placeholder = t('monthsQ');
+        // Buttons
+        var addSave = document.getElementById('addSave'); if (addSave) addSave.textContent = t('save');
+        var addCancel = document.getElementById('addCancel'); if (addCancel) addCancel.textContent = t('cancel');
+        var dayOk = document.getElementById('dayOk'); if (dayOk) dayOk.textContent = t('close');
+        var kvkkOk = document.getElementById('kvkkOk'); if (kvkkOk) kvkkOk.textContent = t('close');
+        var btnLoginOpen = document.getElementById('btnLoginOpen'); if (btnLoginOpen) btnLoginOpen.textContent = t('loginBtn');
+        var btnLogout = document.getElementById('btnLogout'); if (btnLogout) btnLogout.textContent = t('logout');
+        var btnAdd = document.getElementById('btnAdd'); if (btnAdd) btnAdd.textContent = '＋ ' + t('newEntry').split(' ')[0];
+        // Auth modal
+        var btnLogin = document.getElementById('btnLogin'); if (btnLogin) btnLogin.textContent = t('login');
+        var btnRegister = document.getElementById('btnRegister'); if (btnRegister) btnRegister.textContent = t('register');
+      }
 
       var CATEGORY_COLORS = {
         "Kira": "#7c9cff", "Market": "#2dd4bf", "Fatura": "#fbbf24", "Ulaşım": "#fb7185", "Eğlence": "#a78bfa",
@@ -2946,8 +3138,8 @@
           if (!user) {
             content.innerHTML =
               '<div class="card">' +
-              '<h2>Başlamak için giriş yap</h2>' +
-              '<div class="hint">Sağ üstten <b>Giriş</b> butonuna bas. firebaseConfig’i doldurduğundan emin ol.</div>' +
+              '<h2>' + t('startTitle') + '</h2>' +
+              '<div class="hint">' + t('startHint') + '</div>' +
               '</div>';
             return;
           }
@@ -2959,21 +3151,21 @@
             content.innerHTML =
               '<div class="grid dashGrid">' +
               '<div class="card kpiCard kpi-exp" style="grid-column:span 4; border-color:rgba(245,104,128,.25); background:rgba(245,104,128,.04);">' +
-              '<h2><span class="ttl"><span class="kico">💸</span><span>Gider</span></span><span class="tag bad">Bu ay</span></h2>' +
-              '<div class="kpi"><div class="value bad">' + fmtAmt(k.exp) + '</div><div class="sub"><span class="chip">✅ ' + k.expPaid + ' ödendi</span><span class="chip bad">⏳ ' + k.expUn + ' bekliyor</span></div></div>' +
+              '<h2><span class="ttl"><span class="kico">💸</span><span>' + t('expense') + '</span></span><span class="tag bad">' + t('thisMonth') + '</span></h2>' +
+              '<div class="kpi"><div class="value bad">' + fmtAmt(k.exp) + '</div><div class="sub"><span class="chip">✅ ' + k.expPaid + ' ' + t('paidShort') + '</span><span class="chip bad">⏳ ' + k.expUn + ' ' + t('waiting') + '</span></div></div>' +
               '</div>' +
               '<div class="card kpiCard kpi-inc" style="grid-column:span 4; border-color:rgba(34,211,170,.22); background:rgba(34,211,170,.04);">' +
-              '<h2><span class="ttl"><span class="kico">💰</span><span>Gelir</span></span><span class="tag good">Bu ay</span></h2>' +
-              '<div class="kpi"><div class="value good">' + fmtAmt(k.inc) + '</div><div class="sub"><span class="chip good">✅ ' + k.incPaid + ' alındı</span><span class="chip">⏳ ' + k.incUn + ' bekliyor</span></div></div>' +
+              '<h2><span class="ttl"><span class="kico">💰</span><span>' + t('income') + '</span></span><span class="tag good">' + t('thisMonth') + '</span></h2>' +
+              '<div class="kpi"><div class="value good">' + fmtAmt(k.inc) + '</div><div class="sub"><span class="chip good">✅ ' + k.incPaid + ' ' + t('received') + '</span><span class="chip">⏳ ' + k.incUn + ' ' + t('waiting') + '</span></div></div>' +
               '</div>' +
               '<div class="card kpiCard kpi-net" style="grid-column:span 4; border-color:rgba(91,142,255,.25); background:rgba(91,142,255,.04);">' +
-              '<h2><span class="ttl"><span class="kico">🧾</span><span>Net Bakiye</span></span><span class="tag">Bu ay</span></h2>' +
-              '<div class="kpi" style="align-items:center;text-align:center;"><div class="value ' + (k.net >= 0 ? 'good' : 'bad') + '">' + fmtAmt(k.net) + '</div><div class="sub" style="justify-content:center;"><span class="hint">Gelir − Gider</span></div></div>' +
+              '<h2><span class="ttl"><span class="kico">🧾</span><span>' + t('netBalance') + '</span></span><span class="tag">' + t('thisMonth') + '</span></h2>' +
+              '<div class="kpi" style="align-items:center;text-align:center;"><div class="value ' + (k.net >= 0 ? 'good' : 'bad') + '">' + fmtAmt(k.net) + '</div><div class="sub" style="justify-content:center;"><span class="hint">' + t('income') + ' − ' + t('expense') + '</span></div></div>' +
               '</div>' +
               renderSpendingChart(rowsMonth) +
               '<div class="card" style="grid-column:span 4; background:linear-gradient(135deg,rgba(91,142,255,.08),rgba(124,92,255,.05)); border-color:rgba(91,142,255,.18);">' +
-              '<h2>💡 Hızlı İpuçları</h2>' +
-              '<div class="hint" style="line-height:1.8;">📆 Takvim: güne tıkla → detay<br>🔄 Tekrarlayanlar: ay değişince otomatik<br>🎨 Kategori renkleri grafikte aynı<br>✏️ Kayıt: listeden tıkla → düzenle</div>' +
+              '<h2>' + t('quickTips') + '</h2>' +
+              '<div class="hint" style="line-height:1.8;">' + t('quickTipsBody') + '</div>' +
               '</div>' +
               '</div>';
 
@@ -2988,8 +3180,8 @@
             content.innerHTML =
               '<div class="card">' +
               '<div class="listPageHeader">' +
-              '<h2>💸 Gider</h2>' +
-              '<div class="sub">' + selectedMonth + ' • ' + rowsE.length + ' kayıt • Toplam: <span style="color:var(--bad)">' + fmtAmt(expTotal) + '</span></div>' +
+              '<h2>💸 ' + t('expense') + '</h2>' +
+              '<div class="sub">' + selectedMonth + ' • ' + rowsE.length + ' ' + t('entries') + ' • ' + t('total') + ': <span style="color:var(--bad)">' + fmtAmt(expTotal) + '</span></div>' +
               '</div>' +
               renderCompactList(rowsE, "expense") +
               '</div>';
@@ -3003,8 +3195,8 @@
             content.innerHTML =
               '<div class="card">' +
               '<div class="listPageHeader">' +
-              '<h2>💰 Gelir</h2>' +
-              '<div class="sub">' + selectedMonth + ' • ' + rowsI.length + ' kayıt • Toplam: <span style="color:var(--good)">' + fmtAmt(incTotal) + '</span></div>' +
+              '<h2>💰 ' + t('income') + '</h2>' +
+              '<div class="sub">' + selectedMonth + ' • ' + rowsI.length + ' ' + t('entries') + ' • ' + t('total') + ': <span style="color:var(--good)">' + fmtAmt(incTotal) + '</span></div>' +
               '</div>' +
               renderCompactList(rowsI, "income") +
               '</div>';
@@ -3015,8 +3207,8 @@
           if (currentPage === "calendar") {
             content.innerHTML =
               '<div class="card">' +
-              '<h2>Takvim • ' + selectedMonth + '</h2>' +
-              '<div class="hint">Güne tıkla → o günün detayları</div>' +
+              '<h2>' + t('calendar') + ' • ' + selectedMonth + '</h2>' +
+              '<div class="hint">' + (currentLang === 'en' ? 'Click a day → details' : 'Güne tıkla → o günün detayları') + '</div>' +
               renderCalendar(rowsMonth) +
               '</div>';
             bindCalendarClicks();
@@ -3030,51 +3222,71 @@
 
               /* Appearance */
               '<div class="settingsSection">' +
-              '<h3>🎨 Görünüm</h3>' +
+              '<h3>🎨 ' + t('appearance') + '</h3>' +
               '<div class="settingsRow">' +
-              '<div class="sLabelWrap"><div class="sLabel">Koyu Tema</div><div class="sDesc">Ekrana uygun renk şemasnı seç</div></div>' +
+              '<div class="sLabelWrap"><div class="sLabel">' + t('darkTheme') + '</div><div class="sDesc">' + t('themeDesc') + '</div></div>' +
               '<label class="toggle"><input type="checkbox" id="themeToggle"' + (isDark ? ' checked' : '') + '><span class="toggleTrack"></span></label>' +
+              '</div>' +
+              '</div>' +
+
+              /* Language & Currency */
+              '<div class="settingsSection">' +
+              '<h3>🌍 ' + t('language') + ' & ' + t('currency') + '</h3>' +
+              '<div class="settingsRow">' +
+              '<div class="sLabelWrap"><div class="sLabel">' + t('language') + '</div><div class="sDesc">' + t('languageDesc') + '</div></div>' +
+              '<select id="langSel" style="width:110px;font-size:13px;padding:6px 10px;">' +
+              '<option value="tr"' + (currentLang === 'tr' ? ' selected' : '') + '>🇹🇷 Türkçe</option>' +
+              '<option value="en"' + (currentLang === 'en' ? ' selected' : '') + '>🇬🇧 English</option>' +
+              '</select>' +
+              '</div>' +
+              '<div class="settingsRow">' +
+              '<div class="sLabelWrap"><div class="sLabel">' + t('currency') + '</div><div class="sDesc">' + t('currencyDesc') + '</div></div>' +
+              '<select id="currSel" style="width:110px;font-size:13px;padding:6px 10px;">' +
+              '<option value="TRY"' + (currentCurrency === 'TRY' ? ' selected' : '') + '>₺ TRY</option>' +
+              '<option value="EUR"' + (currentCurrency === 'EUR' ? ' selected' : '') + '>€ EUR</option>' +
+              '<option value="USD"' + (currentCurrency === 'USD' ? ' selected' : '') + '>$ USD</option>' +
+              '</select>' +
               '</div>' +
               '</div>' +
 
               /* Data */
               '<div class="settingsSection">' +
-              '<h3>💾 Veri Yönetimi</h3>' +
+              '<h3>💾 ' + t('dataManagement') + '</h3>' +
               '<div class="settingsRow">' +
-              '<div class="sLabelWrap"><div class="sLabel">Verileri Dışa Aktar</div><div class="sDesc">Tüm kayıtları JSON dosyası olarak indir</div></div>' +
+              '<div class="sLabelWrap"><div class="sLabel">' + t('exportJson') + '</div><div class="sDesc">' + t('exportJsonDesc') + '</div></div>' +
               '<button class="btn small" id="btnExport">↓ JSON</button>' +
               '</div>' +
               '<div class="settingsRow">' +
-              '<div class="sLabelWrap"><div class="sLabel">Verileri İçe Aktar</div><div class="sDesc">JSON dosyasından kayıtları yükle (var olanların üstüne ekler)</div></div>' +
+              '<div class="sLabelWrap"><div class="sLabel">' + t('importJson') + '</div><div class="sDesc">' + t('importJsonDesc') + '</div></div>' +
               '<button class="btn small" id="btnImport">↑ JSON</button>' +
               '<input type="file" id="importFile" accept=".json" style="display:none;">' +
               '</div>' +
               '<div class="settingsRow">' +
-              '<div class="sLabelWrap"><div class="sLabel">Aylık PDF Raporu</div><div class="sDesc">Seçili ayın gelir/gider özetini PDF olarak indir</div></div>' +
+              '<div class="sLabelWrap"><div class="sLabel">' + t('exportPdf') + '</div><div class="sDesc">' + t('exportPdfDesc') + '</div></div>' +
               '<button class="btn small primary" id="btnPdfExport">↓ PDF</button>' +
               '</div>' +
               '</div>' +
 
               /* Account */
-              (user ? '<div class="settingsSection"><h3>👤 Hesap</h3>' +
-                '<div class="settingsRow"><span class="dLabel">E-posta</span><span class="dVal" style="font-size:13px;font-weight:700;color:var(--text);">' + escapeHtml(user.email || '—') + '</span></div>' +
+              (user ? '<div class="settingsSection"><h3>👤 ' + t('account') + '</h3>' +
+                '<div class="settingsRow"><span class="dLabel">' + t('email') + '</span><span class="dVal" style="font-size:13px;font-weight:700;color:var(--text);">' + escapeHtml(user.email || '—') + '</span></div>' +
                 '</div>' : '') +
 
               /* Privacy */
               '<div class="settingsSection">' +
-              '<h3>🔒 Gizlilik ve KVKK</h3>' +
+              '<h3>🔒 ' + t('privacy') + '</h3>' +
               '<div class="settingsRow">' +
-              '<div class="sLabelWrap"><div class="sLabel">Gizlilik Politikası</div><div class="sDesc">KVKK aydınlatma metnini ve veri politikasını görüntüle</div></div>' +
-              '<button class="btn small" id="btnKvkk">Metni Oku →</button>' +
+              '<div class="sLabelWrap"><div class="sLabel">' + t('privacyLabel') + '</div><div class="sDesc">' + t('privacyDesc') + '</div></div>' +
+              '<button class="btn small" id="btnKvkk">' + t('readText') + '</button>' +
               '</div>' +
               '</div>' +
 
               /* Version */
               '<div class="settingsSection">' +
-              '<h3>ℹ️ Uygulama Hakkında</h3>' +
-              '<div class="settingsRow"><span class="sLabel">Ödeme Takip</span><span class="dVal" style="font-size:12px;color:var(--muted);">v1.0.0</span></div>' +
-              '<div class="settingsRow"><span class="sLabel">Platform</span><span class="dVal" style="font-size:12px;color:var(--muted);">Web (Firebase)</span></div>' +
-              '<div class="settingsRow" style="border:none;"><span class="sLabel">Güncelleme</span><span class="dVal" style="font-size:12px;color:var(--muted);">Mart 2026</span></div>' +
+              '<h3>ℹ️ ' + t('about') + '</h3>' +
+              '<div class="settingsRow"><span class="sLabel">Payment Tracker</span><span class="dVal" style="font-size:12px;color:var(--muted);">v1.0.0</span></div>' +
+              '<div class="settingsRow"><span class="sLabel">' + t('platform') + '</span><span class="dVal" style="font-size:12px;color:var(--muted);">Web (Firebase)</span></div>' +
+              '<div class="settingsRow" style="border:none;"><span class="sLabel">' + t('update') + '</span><span class="dVal" style="font-size:12px;color:var(--muted);">March 2026</span></div>' +
               '</div>' +
 
               '</div>';
@@ -3082,6 +3294,14 @@
             /* Bind theme toggle */
             var thTog = document.getElementById('themeToggle');
             if (thTog) thTog.addEventListener('change', function () { applyTheme(!this.checked); });
+
+            /* Bind language selector */
+            var langSel = document.getElementById('langSel');
+            if (langSel) langSel.addEventListener('change', function () { setLang(this.value); });
+
+            /* Bind currency selector */
+            var currSel = document.getElementById('currSel');
+            if (currSel) currSel.addEventListener('change', function () { setCurrency(this.value); });
 
             /* Bind export */
             var bExp = document.getElementById('btnExport');
@@ -3143,6 +3363,7 @@
         return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
       })();
       fillCategorySelect();
+      applyLang();
 
       /* KVKK popup */
       var kvkkBg = $("kvkkBg");
