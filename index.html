@@ -2889,12 +2889,13 @@
           '</tr></thead><tbody>';
 
         var body = rows.map(function (r) {
-          var t_gelir = t('income_tag');
-          var t_gider = t('expense_tag');
-          var t = dir === "income" ? '<span class="tag good">' + t_gelir + '</span>' : '<span class="tag bad">' + t_gider + '</span>';
+          var rowDir = normalizeDir(r);
+          var dirLabel = rowDir === "income"
+            ? '<span class="tag good">' + t('income_tag') + '</span>'
+            : '<span class="tag bad">' + t('expense_tag') + '</span>';
           var s = isPaid(r) ? '<span class="tag good">' + t('paid') + '</span>' : '<span class="tag">' + t('unpaid') + '</span>';
           var rec = isRecurring(r) ? '<span class="tag rec">' + t('monthly') + '</span>' : '<span class="tag">—</span>';
-          var amtColor = dir === "income" ? "var(--good)" : "var(--bad)";
+          var amtColor = rowDir === "income" ? "var(--good)" : "var(--bad)";
           var title = escapeHtml(r.title || "—");
           var cat = escapeHtml(getCatName(r.category || "Diğer"));
           var dot = '<span class="dot" style="background:' + colorForCategory(r.category) + '"></span>';
@@ -2902,7 +2903,7 @@
           return '' +
             '<tr>' +
             '<td class="nowrap">' + escapeHtml(String(r.date || "").slice(0, 10) || "-") + '</td>' +
-            '<td>' + t + '</td>' +
+            '<td>' + dirLabel + '</td>' +
             '<td><div style="font-weight:650">' + title + '</div></td>' +
             '<td>' + dot + '<span>' + cat + '</span></td>' +
             '<td class="right nowrap" style="font-weight:750;color:' + amtColor + '">' + fmtAmt(Number(r.amount || 0)) + '</td>' +
@@ -2910,7 +2911,7 @@
             '<td>' + rec + '</td>' +
             '<td class="right nowrap">' +
             '<button class="btn small" data-act="edit" data-id="' + escapeHtml(r.id) + '">' + t('edit') + '</button> ' +
-            '<button class="btn small" data-act="toggle" data-id="' + escapeHtml(r.id) + '">' + (isPaid(r) ? t('undo') : (dir === "income" ? t('markReceived') : t('markPaid'))) + '</button> ' +
+            '<button class="btn small" data-act="toggle" data-id="' + escapeHtml(r.id) + '">' + (isPaid(r) ? t('undo') : (rowDir === "income" ? t('markReceived') : t('markPaid'))) + '</button> ' +
             '<button class="btn small danger" data-act="del" data-id="' + escapeHtml(r.id) + '">' + t('del') + '</button>' +
             '</td>' +
             '</tr>';
