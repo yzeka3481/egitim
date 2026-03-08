@@ -3385,24 +3385,50 @@
         var btn = document.getElementById('btnAssetRefresh');
         if (btn) { btn.disabled = true; btn.textContent = t('assetRefreshing'); }
 
-        // Döviz + Altın + Gümüş: hepsi tek API'den, CORS yok, key yok
-        // XAU = altın (troy ounce), XAG = gümüş (troy ounce)
-        var pairs = 'USDTRY,EURTRY,GBPTRY,XAUTRY,XAGTRY';
-        var p = fetch('https://freeforexapi.com/api/live?pairs=' + pairs)
+        // Döviz: open.er-api — CORS yok, key yok
+        var p_fx = fetch('https://open.er-api.com/v6/latest/TRY')
           .then(function(r) { return r.json(); })
           .catch(function() { return null; });
 
-        return p
-          .then(function(data) {
-            if (data && data.rates) {
-              var r = data.rates;
-              if (r.USDTRY) assetRates.USD_TRY = r.USDTRY.rate;
-              if (r.EURTRY) assetRates.EUR_TRY = r.EURTRY.rate;
-              if (r.GBPTRY) assetRates.GBP_TRY = r.GBPTRY.rate;
-              // XAU/TRY = 1 troy ounce altın TL fiyatı → gram için 31.1035'e böl
-              if (r.XAUTRY) assetRates.GOLD_GRAM_TRY = r.XAUTRY.rate / 31.1035;
-              if (r.XAGTRY) assetRates.SILVER_GRAM_TRY = r.XAGTRY.rate / 31.1035;
+        // Altın + Gümüş: collectapi.com — CORS yok, Türk API'si, direkt TL
+        var p_gold = fetch('https://api.collectapi.com/economy/goldPrice', {
+          headers: {
+            'content-type': 'application/json',
+            'authorization': 'apikey 2286he5csqW6VrycftIbXi:7hJCFFjQh8WgQJh7B90XUG'
+          }
+        })
+          .then(function(r) { return r.json(); })
+          .catch(function() { return null; });
+
+        return Promise.all([p_fx, p_gold])
+          .then(function(res) {
+            var fx = res[0];
+            var gold = res[1];
+
+            // Döviz kurları
+            if (fx && fx.rates) {
+              assetRates.USD_TRY = fx.rates.USD ? 1 / fx.rates.USD : null;
+              assetRates.EUR_TRY = fx.rates.EUR ? 1 / fx.rates.EUR : null;
+              assetRates.GBP_TRY = fx.rates.GBP ? 1 / fx.rates.GBP : null;
             }
+
+            // collectapi goldPrice formatı:
+            // { success: true, result: [ {name:"Gram Altın", buying:"...", selling:"..."}, ... ] }
+            if (gold && gold.success && gold.result) {
+              gold.result.forEach(function(item) {
+                var name = (item.name || '').toLowerCase();
+                // Alış fiyatını kullan, nokta/virgül normalize et
+                var price = parseFloat((item.buying || item.selling || '0').replace(',', '.'));
+                if (!price) return;
+                if (name.indexOf('gram') > -1 && name.indexOf('altin') > -1) {
+                  assetRates.GOLD_GRAM_TRY = price;
+                }
+                if (name.indexOf('gümüş') > -1 || name.indexOf('gumus') > -1 || name.indexOf('silver') > -1) {
+                  assetRates.SILVER_GRAM_TRY = price;
+                }
+              });
+            }
+
             assetRates.lastFetch = new Date();
             localStorage.setItem('assetRates', JSON.stringify(assetRates));
             toast(t('assetRefreshOk'));
