@@ -192,40 +192,22 @@
       background: #0d1829;
     }
 
-    .monthNav { 
-      display: flex; 
-      gap: 4px; 
-      align-items: center; 
-      flex-shrink: 0;
-    }
-
-    .header .left {
+    .header {
+      padding: 12px 16px;
+      background: rgba(7, 16, 31, .88);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border-bottom: 1px solid var(--line);
       display: flex;
       gap: 12px;
       align-items: center;
       justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 200;
     }
-
-    .header .right {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    @media (min-width: 800px) {
-      .header .left, .header .right {
-        justify-content: flex-start;
-        width: auto;
-      }
-    }
-    
-    @media (max-width: 799px) {
-      .header .left, .header .right {
-        width: 100%;
-      }
-      .brand { display: flex; } /* Logoyu geri getirelim ama yanına profil gelsin */
-    }
+    .header .left, .header .right { display: flex; gap: 12px; align-items: center; }
+    .monthNav { display: flex; gap: 6px; align-items: center; }
 
     .hint {
       color: var(--muted);
@@ -1728,7 +1710,6 @@
       </div>
       <div class="right">
         <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
-        <button id="btnPrivacy" class="btn small" title="Para miktarlarını gizle/göster" style="font-size:16px;padding:7px 10px;">👁</button>
         <button id="btnAdd" class="btn primary" style="display:none;">＋ Yeni</button>
         <button id="btnLogout" class="btn" style="display:none;">Çıkış</button>
         <button id="btnLoginOpen" class="btn primary">Giriş</button>
@@ -4009,12 +3990,10 @@
       window.openKvkk = openKvkk;
 
       /* Privacy eye toggle */
-      $("btnPrivacy").addEventListener("click", function () {
+      window.togglePrivacy = function () {
         privacyMode = !privacyMode;
-        $("btnPrivacy").style.opacity = privacyMode ? '0.4' : '1';
-        $("btnPrivacy").title = privacyMode ? t('showAmounts') : t('hideAmounts');
         renderPage();
-      });
+      };
 
       renderPage();
       
