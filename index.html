@@ -1691,7 +1691,7 @@
         </div>
         <div class="monthNav" id="monthNav">
           <button id="btnPrev" class="btn small">◀</button>
-          <span class="pill"><span>📅</span><span id="monthLabel">—</span></span>
+          <span class="pill"><span id="monthLabel">—</span></span>
           <button id="btnNext" class="btn small">▶</button>
         </div>
         <select id="statusFilter">
@@ -1704,7 +1704,6 @@
       <div class="right">
         <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
         <button id="btnAdd" class="btn primary" style="display:none;">＋ Yeni</button>
-        <button id="btnLogout" class="btn" style="display:none;">Çıkış</button>
         <button id="btnLoginOpen" class="btn primary">Giriş</button>
         <span class="hint" id="topHint"></span>
       </div>
@@ -2632,8 +2631,8 @@
         tab.addEventListener("click", function () { setActiveTab(tab.getAttribute("data-page")); });
       });
 
-      $("btnPrev").addEventListener("click", function () { selectedMonth = prevMonth(selectedMonth); onMonthChanged(); });
-      $("btnNext").addEventListener("click", function () { selectedMonth = nextMonth(selectedMonth); onMonthChanged(); });
+      $("btnPrev").addEventListener("click", function () { selectedMonth = prevMonth(selectedMonth); $("monthLabel").textContent = formatMonthLabel(selectedMonth); onMonthChanged(); });
+      $("btnNext").addEventListener("click", function () { selectedMonth = nextMonth(selectedMonth); $("monthLabel").textContent = formatMonthLabel(selectedMonth); onMonthChanged(); });
       $("statusFilter").addEventListener("change", renderPage);
       $("search").addEventListener("input", renderPage);
 
@@ -2662,7 +2661,9 @@
           .catch(function (e) { console.error(e); showAuthErr(e.code || e.message); });
       });
 
-      $("btnLogout").addEventListener("click", function () { auth.signOut().catch(function (e) { console.error(e); }); });
+      if ($("btnLogout")) {
+        $("btnLogout").addEventListener("click", function () { auth.signOut().catch(function (e) { console.error(e); }); });
+      }
 
       var addBg = $("addBg");
       function fillCategorySelect() {
@@ -3725,7 +3726,7 @@
 
       function renderPage() {
         try {
-          $("monthLabel").textContent = selectedMonth;
+          $("monthLabel").textContent = formatMonthLabel(selectedMonth);
           var content = $("content");
 
           // Ay navigasyonu ve mobil bar görünürlüğü — her render'da senkronize et
@@ -3759,7 +3760,11 @@
               '<div class="kpi"><div class="value good">' + fmtAmt(k.inc) + '</div><div class="sub"><span class="chip good">✅ ' + k.incPaid + ' ' + t('received') + '</span><span class="chip">⏳ ' + k.incUn + ' ' + t('waiting') + '</span></div></div>' +
               '</div>' +
               '<div class="card kpiCard kpi-net" style="grid-column:span 4; border-color:rgba(91,142,255,.25); background:rgba(91,142,255,.04);">' +
-              '<h2><span class="ttl"><span class="kico">🧾</span><span>' + t('netBalance') + '</span></span><span class="tag">' + t('thisMonth') + '</span></h2>' +
+              '<h2><span class="ttl"><span class="kico">⚖️</span><span>' + t('netBalance') + '</span></span>' +
+              '<div style="display:flex; gap:8px; align-items:center;">' +
+              '<button onclick="window.togglePrivacy()" class="btn small" style="padding:4px 8px; font-size:14px; background:rgba(255,255,255,0.05); border:1px solid var(--line);">' + (privacyMode ? '🙈' : '👁️') + '</button>' +
+              '<span class="tag">' + t('thisMonth') + '</span>' +
+              '</div></h2>' +
               '<div class="kpi" style="align-items:center;text-align:center;"><div class="value ' + (k.net >= 0 ? 'good' : 'bad') + '">' + fmtAmt(k.net) + '</div><div class="sub" style="justify-content:center;"><span class="hint">' + t('income') + ' − ' + t('expense') + '</span></div></div>' +
               '</div>' +
               renderSpendingChart(rowsMonth) +
@@ -3889,10 +3894,14 @@
               /* Version */
               '<div class="settingsSection">' +
               '<h3>ℹ️ ' + t('about') + '</h3>' +
-              '<div class="settingsRow"><span class="sLabel">Payment Tracker</span><span class="dVal" style="font-size:12px;color:var(--muted);">v1.0.0</span></div>' +
-              '<div class="settingsRow"><span class="sLabel">' + t('platform') + '</span><span class="dVal" style="font-size:12px;color:var(--muted);">Web (Firebase)</span></div>' +
-              '<div class="settingsRow" style="border:none;"><span class="sLabel">' + t('update') + '</span><span class="dVal" style="font-size:12px;color:var(--muted);">March 2026</span></div>' +
+              '<div class="settingsRow"><span class="sLabel">CashNode</span><span class="dVal" style="font-size:12px;color:var(--muted);">v1.0.0</span></div>' +
+              '<div class="settingsRow" style="border:none;"><span class="sLabel">' + t('update') + '</span><span class="dVal" style="font-size:12px;color:var(--muted);">Nisan 2026</span></div>' +
               '</div>' +
+
+              /* Logout Section */
+              (user ? '<div style="margin-top:20px; padding:0 10px;">' +
+                '<button class="btn danger" id="btnLogoutSettings" style="width:100%; justify-content:center; gap:10px; font-size:14px; padding:12px;">🚪 ' + t('logout') + '</button>' +
+                '</div>' : '') +
 
               '</div>';
 
@@ -3928,18 +3937,34 @@
             var bKvkk = document.getElementById('btnKvkk');
             if (bKvkk) bKvkk.addEventListener('click', openKvkk);
 
+            /* Bind Logout button in settings */
+            var bLogoutSettings = document.getElementById('btnLogoutSettings');
+            if (bLogoutSettings) {
+              bLogoutSettings.addEventListener('click', function() {
+                auth.signOut().then(() => { location.reload(); }).catch(e => console.error(e));
+              });
+            }
+
             return;
           }
         } catch (e) { console.error(e); toast(t('saveErr') + ' ' + (e.message || e)); }
       }
 
+      const formatMonthLabel = (m) => {
+        const monthsTr = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+        const monthsEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const mList = (typeof currentLang !== 'undefined' && currentLang === 'en') ? monthsEn : monthsTr;
+        const [y, mm] = m.split('-');
+        return `${y} ${mList[parseInt(mm) - 1]}`;
+      };
+
       auth.onAuthStateChanged(function (u) {
         user = u || null;
-        $("monthLabel").textContent = selectedMonth;
+        $("monthLabel").textContent = formatMonthLabel(selectedMonth);
 
         if (!user) {
           $("userPill").style.display = "none";
-          $("btnLogout").style.display = "none";
+          if ($("btnLogout")) $("btnLogout").style.display = "none";
           $("btnAdd").style.display = "none";
           $("btnLoginOpen").style.display = "inline-flex";
           $("userEmail").textContent = "";
@@ -3953,13 +3978,13 @@
         }
 
         $("userPill").style.display = "inline-flex";
-        $("btnLogout").style.display = "inline-flex";
+        if ($("btnLogout")) $("btnLogout").style.display = "inline-flex";
         $("btnAdd").style.display = "inline-flex";
         $("btnLoginOpen").style.display = "none";
         $("userEmail").textContent = user.email || "—";
         $("topHint").textContent = "";
 
-        $("btnPrivacy").title = t('hideAmounts');
+        if ($("btnPrivacy")) $("btnPrivacy").title = t('hideAmounts');
         startListener();
         startAssetListener();
         renderPage();
@@ -3987,6 +4012,10 @@
         privacyMode = !privacyMode;
         renderPage();
       };
+
+      if ($("btnPrivacy")) {
+        $("btnPrivacy").addEventListener("click", window.togglePrivacy);
+      }
 
       renderPage();
       
