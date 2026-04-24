@@ -1691,7 +1691,7 @@
         </div>
         <div class="monthNav" id="monthNav">
           <button id="btnPrev" class="btn small">◀</button>
-          <span class="pill"><span id="monthLabel">—</span></span>
+          <span class="pill"><span>📅</span><span id="monthLabel">—</span></span>
           <button id="btnNext" class="btn small">▶</button>
         </div>
         <select id="statusFilter">
@@ -1703,8 +1703,8 @@
       </div>
       <div class="right">
         <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
-        <button id="btnPrivacy" class="btn small" title="Para miktarlarını gizle/göster" style="font-size:16px;padding:7px 10px;">👁</button>
         <button id="btnAdd" class="btn primary" style="display:none;">＋ Yeni</button>
+        <button id="btnLogout" class="btn" style="display:none;">Çıkış</button>
         <button id="btnLoginOpen" class="btn primary">Giriş</button>
         <span class="hint" id="topHint"></span>
       </div>
@@ -2911,7 +2911,7 @@
       }
 
       function onMonthChanged() {
-        $("monthLabel").textContent = formatMonthLabel(selectedMonth);
+        $("monthLabel").textContent = selectedMonth;
         if (user) generateRecurringForMonth(selectedMonth).then(renderPage).catch(function () { renderPage(); });
         else renderPage();
       }
@@ -3725,7 +3725,7 @@
 
       function renderPage() {
         try {
-          $("monthLabel").textContent = formatMonthLabel(selectedMonth);
+          $("monthLabel").textContent = selectedMonth;
           var content = $("content");
 
           // Ay navigasyonu ve mobil bar görünürlüğü — her render'da senkronize et
@@ -3889,14 +3889,10 @@
               /* Version */
               '<div class="settingsSection">' +
               '<h3>ℹ️ ' + t('about') + '</h3>' +
-              '<div class="settingsRow"><span class="sLabel">CashNode</span><span class="dVal" style="font-size:12px;color:var(--muted);">v1.0.0</span></div>' +
-              '<div class="settingsRow" style="border:none;"><span class="sLabel">' + t('update') + '</span><span class="dVal" style="font-size:12px;color:var(--muted);">Nisan 2026</span></div>' +
+              '<div class="settingsRow"><span class="sLabel">Payment Tracker</span><span class="dVal" style="font-size:12px;color:var(--muted);">v1.0.0</span></div>' +
+              '<div class="settingsRow"><span class="sLabel">' + t('platform') + '</span><span class="dVal" style="font-size:12px;color:var(--muted);">Web (Firebase)</span></div>' +
+              '<div class="settingsRow" style="border:none;"><span class="sLabel">' + t('update') + '</span><span class="dVal" style="font-size:12px;color:var(--muted);">March 2026</span></div>' +
               '</div>' +
-
-              /* Logout Section */
-              (user ? '<div style="margin-top:20px; padding:0 10px;">' +
-                '<button class="btn danger" id="btnLogoutSettings" style="width:100%; justify-content:center; gap:10px;">🚪 ' + t('logout') + '</button>' +
-                '</div>' : '') +
 
               '</div>';
 
@@ -3932,30 +3928,14 @@
             var bKvkk = document.getElementById('btnKvkk');
             if (bKvkk) bKvkk.addEventListener('click', openKvkk);
 
-            /* Bind Logout button in settings */
-            var bLogoutSettings = document.getElementById('btnLogoutSettings');
-            if (bLogoutSettings) bLogoutSettings.addEventListener('click', function() {
-              auth.signOut().then(() => {
-                location.reload();
-              });
-            });
-
             return;
           }
         } catch (e) { console.error(e); toast(t('saveErr') + ' ' + (e.message || e)); }
       }
 
-      const formatMonthLabel = (m) => {
-        const monthsTr = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-        const monthsEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        const mList = (typeof currentLang !== 'undefined' && currentLang === 'en') ? monthsEn : monthsTr;
-        const [y, mm] = m.split('-');
-        return `${y} ${mList[parseInt(mm) - 1]}`;
-      };
-
       auth.onAuthStateChanged(function (u) {
         user = u || null;
-        updateMonthLabel();
+        $("monthLabel").textContent = selectedMonth;
 
         if (!user) {
           $("userPill").style.display = "none";
@@ -3985,7 +3965,7 @@
         renderPage();
       });
 
-      $("monthLabel").textContent = formatMonthLabel(selectedMonth);
+      $("monthLabel").textContent = selectedMonth;
       $("mDate").value = (function () {
         var d = new Date();
         return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
@@ -4003,12 +3983,10 @@
       window.openKvkk = openKvkk;
 
       /* Privacy eye toggle */
-      $("btnPrivacy").addEventListener("click", function () {
+      window.togglePrivacy = function () {
         privacyMode = !privacyMode;
-        $("btnPrivacy").style.opacity = privacyMode ? '0.4' : '1';
-        $("btnPrivacy").title = privacyMode ? t('showAmounts') : t('hideAmounts');
         renderPage();
-      });
+      };
 
       renderPage();
       
