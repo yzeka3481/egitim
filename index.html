@@ -1704,6 +1704,47 @@
       .assetCard { grid-column: span 6 !important; }
       .assetSummaryCard { grid-column: span 6 !important; }
     }
+    /* Segmented Control */
+    .segmented {
+      display: flex;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 14px;
+      padding: 4px;
+      position: relative;
+      border: 1px solid var(--line);
+    }
+    .segmented input { display: none; }
+    .segmented label {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 10px;
+      transition: all 0.2s;
+      z-index: 1;
+    }
+    .segmented input:checked + label {
+      background: var(--card);
+      color: var(--text);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    #mDirExp:checked + label { color: var(--bad); }
+    #mDirInc:checked + label { color: var(--good); }
+    #mStatusPaid:checked + label { color: var(--good); }
+
+    .formGroup label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+    }
   </style>
 </head>
 
@@ -1820,59 +1861,75 @@
 
   <div id="addBg" class="modalBg">
     <div class="modal">
-      <div class="modalTop">
-        <strong id="addTitle">Yeni Kayıt</strong>
-        <button id="addClose" class="btn small">✕</button>
+      <div id="addHeader" class="modalTop" style="padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); transition: background 0.3s ease;">
+        <div id="addHeroIcon" style="width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">💸</div>
+        <strong id="addTitle" style="font-size: 18px; letter-spacing: -0.5px;">Yeni Kayıt</strong>
+        <button id="addClose" class="btn small" style="position: absolute; right: 15px; top: 15px;">✕</button>
       </div>
       <div class="modalBody">
-        <div class="grid2">
-          <select id="mDir">
-            <option value="expense">Gider</option>
-            <option value="income">Gelir</option>
-          </select>
-          <select id="mPaid">
-            <option value="false">Alınmadı/Ödenmedi</option>
-            <option value="true">Alındı/Ödendi</option>
-          </select>
+        <div class="segmented">
+          <input type="radio" name="mDir" id="mDirExp" value="expense" checked>
+          <label for="mDirExp">Gider</label>
+          <input type="radio" name="mDir" id="mDirInc" value="income">
+          <label for="mDirInc">Gelir</label>
         </div>
 
-        <div class="grid2">
-          <input id="mAmount" type="number" step="0.01" placeholder="Amount" />
-          <input id="mDate" type="date" />
-        </div>
-
-        <div class="grid2">
-          <select id="mCategorySel"></select>
-          <input id="mCategoryOther" placeholder="Diğer kategori yaz" style="display:none;" />
-        </div>
-
-        <input id="mTitle" placeholder="Başlık (örn: Derya, Macbook)" />
-
-        <div class="card" style="padding:10px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-              <input id="mRecurring" type="checkbox" />
-              <span style="font-weight:650;">Tekrarlayan ödeme/gelir</span>
-            </label>
-            <span class="hint">Ay bazında otomatik üretim</span>
+        <div class="formGroup">
+          <label>Tutar</label>
+          <div style="position: relative;">
+            <input type="number" id="mAmount" step="any" placeholder="0.00" style="font-size: 28px; font-weight: 800; text-align: center; padding: 15px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 2px solid var(--line);">
+            <span id="mCurrSymbol" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 18px; font-weight: 700; color: var(--muted);">₺</span>
           </div>
-          <div id="recBox" class="grid2" style="margin-top:10px; display:none;">
-            <input id="mRecMonths" type="number" min="1" step="1" placeholder="Kaç ay sürecek? (örn: 4)" />
-            <div class="hint" style="display:flex; align-items:center;">Girdiğin ay dahil sayılır</div>
+        </div>
+
+        <div class="grid2" style="gap: 15px;">
+          <div class="formGroup">
+            <label>Kategori</label>
+            <select id="mCategorySel" style="padding: 12px; border-radius: 12px;"></select>
+            <input type="text" id="mCategoryOther" placeholder="Kategori adı..." style="display:none; margin-top:8px; padding: 12px; border-radius: 12px;">
           </div>
-          <div class="hr" style="margin:10px 0;"></div>
-          <label id="seriesRow" style="display:none;align-items:center;gap:10px;cursor:pointer;">
-            <input id="mSeriesUpdate" type="checkbox" />
-            <span style="font-weight:650;">Bu seri şablonunu da güncelle (gelecek aylar için)</span>
+          <div class="formGroup">
+            <label>Tarih</label>
+            <input type="date" id="mDate" style="padding: 12px; border-radius: 12px;">
+          </div>
+        </div>
+        <div class="formGroup">
+          <label>Başlık / Açıklama</label>
+          <input type="text" id="mTitle" placeholder="Kira, Market, Maaş..." style="padding: 12px; border-radius: 12px;">
+        </div>
+        <div class="segmented" style="height: 40px;">
+          <input type="radio" name="mPaid" id="mStatusUnpaid" value="false" checked>
+          <label for="mStatusUnpaid" id="labelUnpaid">Bekliyor</label>
+          <input type="radio" name="mPaid" id="mStatusPaid" value="true">
+          <label for="mStatusPaid" id="labelPaid">Ödendi</label>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding: 10px; background:rgba(255,255,255,0.02); border-radius:12px; border:1px solid var(--line);">
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            <span style="font-size:14px; font-weight:600;">Tekrarlayan Kayıt</span>
+            <span class="hint" style="font-size:11px;">Her ay otomatik oluşturulsun</span>
+          </div>
+          <label class="toggle"><input type="checkbox" id="mRecurring"><span class="toggleTrack"></span></label>
+        </div>
+        <div id="recBox" style="display:none; padding: 15px; background:rgba(91,142,255,0.05); border-radius:12px; border:1px dashed var(--brand);">
+          <div class="formGroup">
+            <label>Kaç Ay Sürecek?</label>
+            <input type="number" id="mRecMonths" placeholder="Örn: 12">
+          </div>
+        </div>
+        <div id="seriesRow" style="display:none; padding: 10px; background:rgba(251,191,36,0.05); border-radius:10px; border:1px solid rgba(251,191,36,0.2);">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="mUpdateSeries" style="width:18px; height:18px;">
+            <span style="font-size:13px; font-weight:650;">Tüm seriyi güncelle</span>
           </label>
-
         </div>
-
-        <div class="hint">Şema uyumu: <b>userId, type(incoming/payment), isPaid, isRecurring, recurrenceId</b></div>
+        <div class="formGroup">
+          <label>Not (Opsiyonel)</label>
+          <textarea id="mNote" rows="2" style="padding: 12px; border-radius: 12px; background:rgba(255,255,255,0.03); border: 1px solid var(--line); color:var(--text); font-family:inherit; resize:none;" placeholder="Ekstra bilgi..."></textarea>
+        </div>
       </div>
-      <div class="actions">
-        <button id="addSave" class="btn primary" style="flex:1;">Kaydet</button>
+      <div class="actions" style="padding: 20px; background: transparent; border-top: 1px solid var(--line);">
         <button id="addCancel" class="btn" style="flex:1;">Vazgeç</button>
+        <button id="addSave" class="btn primary" style="flex:2; font-weight:700;">Kaydet</button>
       </div>
     </div>
   </div>
@@ -2397,12 +2454,10 @@
         var srch = document.getElementById('search');
         if (srch) srch.placeholder = t('searchPlaceholder');
         // Modal: Add/Edit
-        var mDir = document.getElementById('mDir');
-        if (mDir) { mDir.options[0].text = t('expense'); mDir.options[1].text = t('income'); }
-        var mPaid = document.getElementById('mPaid');
-        if (mPaid) { mPaid.options[0].text = t('unpaid'); mPaid.options[1].text = t('paid'); }
         var mAmount = document.getElementById('mAmount');
-        if (mAmount) mAmount.placeholder = t('amountPlaceholder') + ' (' + (CURRENCIES[currentCurrency] || CURRENCIES.TRY).symbol + ')';
+        if (mAmount) mAmount.placeholder = '0.00';
+        document.getElementById('mCurrSymbol').textContent = (CURRENCIES[currentCurrency] || CURRENCIES.TRY).symbol;
+        
         var mTitle = document.getElementById('mTitle');
         if (mTitle) mTitle.placeholder = t('titlePlaceholder');
         var mCategoryOther = document.getElementById('mCategoryOther');
@@ -2546,45 +2601,78 @@
         $("seriesRow").style.display = "none";
       }
 
+      function updateAddHeaderStyle() {
+        var dirExp = document.getElementById('mDirExp');
+        var isInc = document.getElementById('mDirInc').checked;
+        var header = document.getElementById('addHeader');
+        var icon = document.getElementById('addHeroIcon');
+        var labPaid = document.getElementById('labelPaid');
+        var labUnpaid = document.getElementById('labelUnpaid');
+        
+        if (isInc) {
+          header.style.background = 'rgba(34,211,170,0.1)';
+          icon.textContent = '💰';
+          icon.style.background = 'rgba(34,211,170,0.2)';
+          icon.style.color = 'var(--good)';
+          if (labPaid) labPaid.textContent = t('received');
+          if (labUnpaid) labUnpaid.textContent = t('notReceived');
+        } else {
+          header.style.background = 'rgba(245,104,128,0.1)';
+          icon.textContent = '💸';
+          icon.style.background = 'rgba(245,104,128,0.2)';
+          icon.style.color = 'var(--bad)';
+          if (labPaid) labPaid.textContent = t('paid');
+          if (labUnpaid) labUnpaid.textContent = t('unpaid');
+        }
+      }
+
       function openAddModalForEdit(row) {
+        if (!row) return;
         editingId = row.id;
         editingRow = row;
-        $("addTitle").textContent = t('editEntry');
-        $("mDir").value = (normalizeDir(row) === "income") ? "income" : "expense";
-        $("mPaid").value = String(!!row.isPaid);
-        $("mAmount").value = Number(row.amount || 0) || "";
-        $("mDate").value = String(row.date || selectedMonth + "-01").slice(0, 10);
-
-        // category
+        document.getElementById('addTitle').textContent = t('editEntry');
+        
+        var dir = normalizeDir(row);
+        if (dir === 'income') document.getElementById('mDirInc').checked = true;
+        else document.getElementById('mDirExp').checked = true;
+        
+        if (isPaid(row)) document.getElementById('mStatusPaid').checked = true;
+        else document.getElementById('mStatusUnpaid').checked = true;
+        
+        document.getElementById('mAmount').value = Number(row.amount || 0) || "";
+        document.getElementById('mDate').value = String(row.date || selectedMonth + "-01").slice(0, 10);
+        
         fillCategorySelect();
         var cat = (row.category || "Diğer").trim() || "Diğer";
         if (PRESET_CATS.includes(cat)) {
-          $("mCategorySel").value = cat;
-          $("mCategoryOther").style.display = (cat === "Diğer") ? "" : "none";
-          $("mCategoryOther").value = "";
+          document.getElementById("mCategorySel").value = cat;
+          document.getElementById("mCategoryOther").style.display = (cat === "Diğer") ? "" : "none";
+          document.getElementById("mCategoryOther").value = "";
         } else {
-          $("mCategorySel").value = "Diğer";
-          $("mCategoryOther").style.display = "";
-          $("mCategoryOther").value = cat;
+          document.getElementById("mCategorySel").value = "Diğer";
+          document.getElementById("mCategoryOther").style.display = "";
+          document.getElementById("mCategoryOther").value = cat;
         }
-
-        $("mTitle").value = row.title || "";
-
-        // recurring
+        
+        document.getElementById("mTitle").value = row.title || "";
+        document.getElementById("mNote").value = row.note || "";
+        
         var rec = !!row.isRecurring;
-        $("mRecurring").checked = rec;
+        document.getElementById("mRecurring").checked = rec;
         var rm = Number(row.recurrenceTotalMonths);
-        $("mRecMonths").value = (rm && rm > 0) ? rm : "";
-        $("recBox").style.display = rec ? "grid" : "none";
-
-        // allow updating template (future months) if recurring
+        document.getElementById("mRecMonths").value = (rm && rm > 0) ? rm : "";
+        document.getElementById("recBox").style.display = rec ? "block" : "none";
+        
         if (rec && row.recurrenceId) {
-          $("seriesRow").style.display = "flex";
-          $("mSeriesUpdate").checked = false;
+          document.getElementById("seriesRow").style.display = "block";
+          document.getElementById("mUpdateSeries").checked = false;
         } else {
-          $("seriesRow").style.display = "none";
-          $("mSeriesUpdate").checked = false;
+          document.getElementById("seriesRow").style.display = "none";
+          document.getElementById("mUpdateSeries").checked = false;
         }
+        
+        updateAddHeaderStyle();
+        addBg.classList.add("show");
       }
 
       // Delegated actions (works in overflow tables + mobile Safari)
@@ -2705,32 +2793,48 @@
 
       function openAddModalForCreate() {
         if (!user) return toast(t('notLoggedIn'));
-        $("mDir").value = "expense";
-        $("mPaid").value = "false";
-        $("mAmount").value = "";
-        $("mDate").value = selectedMonth + "-01";
+        document.getElementById('addTitle').textContent = t('newEntry');
+        document.getElementById('mDirExp').checked = true;
+        document.getElementById('mStatusUnpaid').checked = true;
+        document.getElementById('mAmount').value = "";
+        document.getElementById('mDate').value = selectedMonth + "-01";
+        
         fillCategorySelect();
-        $("mCategoryOther").value = "";
-        $("mTitle").value = "";
-        $("mRecurring").checked = false;
-        $("recBox").style.display = "none";
-        $("mRecMonths").value = "";
+        document.getElementById('mCategoryOther').value = "";
+        document.getElementById('mCategoryOther').style.display = "none";
+        document.getElementById('mTitle').value = "";
+        document.getElementById('mNote').value = "";
+        
+        document.getElementById('mRecurring').checked = false;
+        document.getElementById('recBox').style.display = "none";
+        document.getElementById('mRecMonths').value = "";
         window.__editingId = null;
         document.getElementById("mRecurring").disabled = false;
         document.getElementById("mRecMonths").disabled = false;
+        document.getElementById("seriesRow").style.display = "none";
+        
+        updateAddHeaderStyle();
         addBg.classList.add("show");
       }
+      
+      // Bind segmented listeners
+      setTimeout(() => {
+        if (document.getElementById('mDirExp')) {
+          document.getElementById('mDirExp').addEventListener('change', updateAddHeaderStyle);
+          document.getElementById('mDirInc').addEventListener('change', updateAddHeaderStyle);
+        }
+      }, 500);
 
       if ($("btnAdd")) {
         $("btnAdd").addEventListener("click", openAddModalForCreate);
       }
       $("addClose").addEventListener("click", function () {
         addBg.classList.remove("show");
-        editingId = null; editingRow = null;
+        editingId = null; editingRow = null; window.__editingId = null;
       });
       $("addCancel").addEventListener("click", function () {
         addBg.classList.remove("show");
-        editingId = null; editingRow = null;
+        editingId = null; editingRow = null; window.__editingId = null;
       });
       addBg.addEventListener("click", function (e) { if (e.target === addBg) addBg.classList.remove("show"); });
 
@@ -2747,31 +2851,38 @@
       $("addSave").addEventListener("click", function () {
         if (!user) return;
         var editingId = window.__editingId || null;
+        
+        var isInc = document.getElementById('mDirInc').checked;
+        var dirValue = isInc ? 'income' : 'expense';
+        var isStatusPaid = document.getElementById('mStatusPaid').checked;
+        
+        var amountValue = Number($("mAmount").value);
+        var dateValue = $("mDate").value;
+        var catValue = categoryValueFromForm();
+        var titleValue = $("mTitle").value.trim();
+        var noteValue = $("mNote").value.trim();
+        var recurringValue = $("mRecurring").checked;
+        var recMonthsValue = Number($("mRecMonths").value);
+        var updateSeriesValue = $("mSeriesUpdate").checked;
+
+        if (!amountValue || amountValue <= 0) return toast(t('enterAmount'));
+        if (!dateValue) return toast(t('enterDate'));
+        if (recurringValue && (!recMonthsValue || recMonthsValue < 1)) return toast(t('enterRecMonths'));
 
         // EDIT MODE: update existing doc
         if (editingId) {
-          var dirE = $("mDir").value;
-          var paidE = $("mPaid").value === "true";
-          var amountE = Number($("mAmount").value);
-          var dateE = $("mDate").value;
-          var categoryE = categoryValueFromForm();
-          var titleE = $("mTitle").value.trim();
-          var recurringE = $("mRecurring").checked;
-          var recMonthsE = Number($("mRecMonths").value);
-
-          if (!amountE || amountE <= 0) return toast(t('enterAmount'));
-          if (!dateE) return toast(t('enterDate'));
-          if (recurringE && (!recMonthsE || recMonthsE < 1)) return toast(t('enterRecMonths'));
-
           var payloadE = {
-            amount: amountE,
-            category: categoryE,
-            date: dateE,
-            isPaid: paidE,
-            title: titleE || "",
-            type: (dirE === "income") ? "incoming" : "payment",
-            isRecurring: recurringE,
-            recurrenceTotalMonths: recurringE ? recMonthsE : null,
+            amount: amountValue,
+            category: catValue,
+            date: dateValue,
+            isPaid: isStatusPaid,
+            title: titleValue || "",
+            note: noteValue || "",
+            type: (dirValue === "income") ? "incoming" : "payment",
+            isRecurring: recurringValue,
+            isTemplate: !!editingRow.isTemplate,
+            recurrenceId: editingRow.recurrenceId || null,
+            recurrenceTotalMonths: recurringValue ? recMonthsValue : null,
             updatedAt: serverTs()
           };
 
@@ -2783,11 +2894,12 @@
               if (($("mSeriesUpdate").checked) && editingRow && editingRow.recurrenceId) {
                 var tid = "T_" + String(editingRow.recurrenceId);
                 return db.collection("payments").doc(tid).set({
-                  amount: amountE,
-                  category: categoryE,
-                  title: titleE || "",
-                  type: (dirE === "income") ? "incoming" : "payment",
-                  recurrenceTotalMonths: recMonthsE,
+                  amount: amountValue,
+                  category: catValue,
+                  title: titleValue || "",
+                  note: noteValue || "",
+                  type: (dirValue === "income") ? "incoming" : "payment",
+                  recurrenceTotalMonths: recMonthsValue,
                   updatedAt: serverTs()
                 }, { merge: true }).catch(function (err) { console.error(err); });
               }
@@ -2805,118 +2917,52 @@
           return;
         }
 
-        var dir = $("mDir").value;
-        var paid = $("mPaid").value === "true";
-        var amount = Number($("mAmount").value);
-        var date = $("mDate").value;
-        var category = categoryValueFromForm();
-        var title = $("mTitle").value.trim();
-        var recurring = $("mRecurring").checked;
-        var recMonths = Number($("mRecMonths").value);
-
-        if (!amount || amount <= 0) return toast(t('enterAmount'));
-        if (!date) return toast(t('enterDate'));
-        if (recurring && (!recMonths || recMonths < 1)) return toast(t('enterRecMonths'));
-
-        var month = date.slice(0, 7);
-        // If editing, update existing document (do not re-generate recurring)
-        if (editingId) {
-          var ref = db.collection("payments").doc(editingId);
-          var row0 = allRows.find(function (r) { return r.id === editingId; }) || {};
-          var payload = {
-            amount: amount,
-            category: category,
-            date: date,
-            isPaid: paid,
-            title: title || "",
-            type: (dir === "income") ? "incoming" : "payment",
-            updatedAt: serverTs()
-          };
-          ref.update(payload).then(function () {
-            addBg.classList.remove("show");
-            toast(t('updatedOk'));
-            window.__editingId = null;
-            // unlock recurring fields back for new entries
-            document.getElementById("mRecurring").disabled = false;
-            document.getElementById("mRecMonths").disabled = false;
-          }).catch(function (e) {
-            console.error(e);
-            toast(t('updateErr') + " " + (e.code || e.message));
-          });
-          return;
-        }
-
-        if (recurring) {
-          var rid = uuid().slice(0, 8);
-          var templateId = "T_" + rid;
-          var common = {
-            userId: user.uid,
-            amount: amount,
-            category: category,
-            isRecurring: true,
-            mode: "payment",
-            recurrenceId: rid,
-            recurrenceStart: month,
-            recurrenceTotalMonths: recMonths,
-            title: title || "",
-            type: (dir === "income") ? "incoming" : "payment",
-            updatedAt: serverTs()
-          };
-
-          Promise.resolve()
-            .then(function () {
-              return db.collection("payments").doc(templateId).set(Object.assign({}, common, {
-                isTemplate: true,
-                date: month + "-01",
-                isPaid: false,
-                createdAt: serverTs()
-              }), { merge: true });
-            })
-            .then(function () {
-              return db.collection("payments").doc(rid + "_" + month).set(Object.assign({}, common, {
-                isTemplate: false,
-                date: date,
-                isPaid: paid,
-                createdAt: serverTs()
-              }), { merge: true });
-            })
-            .then(function () {
-              addBg.classList.remove("show");
-              toast(t('recurSaved')); renderPage();
-              return generateRecurringForMonth(month);
-            })
-            .catch(function (e) {
-              console.error(e);
-              toast(t('saveErr') + " " + (e.code || e.message));
-            });
-
-          return;
-        }
-
-        db.collection("payments").add({
+        var payload = {
           userId: user.uid,
-          amount: amount,
-          category: category,
-          date: date,
-          isPaid: paid,
-          isRecurring: false,
+          amount: amountValue,
+          category: catValue,
+          date: dateValue,
+          isPaid: isStatusPaid,
+          title: titleValue || "",
+          note: noteValue || "",
+          type: (dirValue === "income") ? "incoming" : "payment",
+          isRecurring: recurringValue,
           isTemplate: false,
-          mode: "payment",
-          title: title || "",
-          type: (dir === "income") ? "incoming" : "payment",
           recurrenceId: null,
-          recurrenceStart: null,
-          recurrenceTotalMonths: null,
+          recurrenceTotalMonths: recurringValue ? recMonthsValue : null,
           createdAt: serverTs(),
           updatedAt: serverTs()
-        }).then(function () {
-          addBg.classList.remove("show");
-          toast(t('savedOk')); renderPage();
-        }).catch(function (e) {
-          console.error(e);
-          toast(t('saveErr') + " " + (e.code || e.message));
-        });
+        };
+
+        if (recurringValue) {
+          var recId = Date.now();
+          payload.recurrenceId = recId;
+          var batch = db.batch();
+          for (var i = 0; i < recMonthsValue; i++) {
+            var d = new Date(dateValue);
+            d.setMonth(d.getMonth() + i);
+            var mStr = d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+            var p = Object.assign({}, payload);
+            p.date = mStr;
+            var newRef = db.collection("payments").doc();
+            batch.set(newRef, p);
+            if (i === 0) {
+              var templateRef = db.collection("payments").doc("T_" + recId);
+              batch.set(templateRef, p);
+            }
+          }
+          batch.commit().then(function () {
+            addBg.classList.remove("show");
+            toast(t('savedOk'));
+          }).catch(function (e) { console.error(e); toast(t('saveErr') + " " + e.message); });
+        } else {
+          db.collection("payments").add(payload).then(function () {
+            addBg.classList.remove("show");
+            toast(t('savedOk'));
+          }).catch(function (e) { console.error(e); toast(t('saveErr') + " " + e.message); });
+        }
       });
+
 
       var dayBg = $("dayBg");
       $("dayClose").addEventListener("click", function () { dayBg.classList.remove("show"); });
@@ -2948,18 +2994,11 @@
       }
 
       function filteredRowsForMonth(dirFilter) {
-        var st = $("statusFilter").value;
-        var q = ($("search").value || "").trim().toLowerCase();
-
         var rows = allRows
           .filter(function (r) { return !isTemplate(r); })
           .filter(function (r) { return monthOfDoc(r) === selectedMonth; });
 
         if (dirFilter) rows = rows.filter(function (r) { return normalizeDir(r) === dirFilter; });
-        if (st !== "all") rows = rows.filter(function (r) { return st === "paid" ? isPaid(r) : !isPaid(r); });
-        if (q) rows = rows.filter(function (r) {
-          return ((r.title || "") + " " + (r.category || "")).toLowerCase().includes(q);
-        });
 
         var seen = new Set();
         var out = [];
