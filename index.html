@@ -3773,6 +3773,20 @@
         });
       });
 
+      function filteredRowsForMonth(targetDir) {
+        var filter = $("statusFilter").value;
+        return allRows.filter(function (r) {
+          if (r.date.slice(0, 7) !== selectedMonth) return false;
+          if (targetDir && normalizeDir(r) !== targetDir) return false;
+
+          if (filter === "paid") return (normalizeDir(r) === "expense" && isPaid(r));
+          if (filter === "received") return (normalizeDir(r) === "income" && isPaid(r));
+          if (filter === "unpaid") return !isPaid(r);
+
+          return true;
+        });
+      }
+
       function renderPage() {
         try {
           $("monthLabel").textContent = formatMonthLabel(selectedMonth);
