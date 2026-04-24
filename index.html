@@ -59,20 +59,19 @@
     }
 
     .header {
-      padding: 12px 16px;
+      padding: 10px 16px;
       background: rgba(7, 16, 31, .88);
       backdrop-filter: blur(22px);
       -webkit-backdrop-filter: blur(22px);
       border-bottom: 1px solid var(--line);
       display: flex;
+      flex-wrap: wrap;
       gap: 12px;
       align-items: center;
       justify-content: space-between;
-      flex-wrap: wrap;
       position: sticky;
       top: 0;
       z-index: 200;
-      min-height: 64px;
     }
 
     .brand {
@@ -187,23 +186,36 @@
       background: #0d1829;
     }
 
-    .monthNav { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+    .monthNav { 
+      display: flex; 
+      gap: 5px; 
+      align-items: center; 
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.03);
+      padding: 4px;
+      border-radius: 14px;
+    }
 
     .header .left {
       display: flex;
-      gap: 14px;
+      gap: 12px;
       align-items: center;
       flex-wrap: wrap;
-      flex: 1;
-      min-width: 0;
     }
 
     .header .right {
       display: flex;
-      gap: 12px;
+      gap: 8px;
       align-items: center;
       justify-content: flex-end;
-      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    @media (max-width: 600px) {
+      .header { justify-content: center; gap: 15px; }
+      .header .left { justify-content: center; width: 100%; }
+      .header .right { justify-content: center; width: 100%; margin-left: 0; }
+      .brand { display: none; } /* Mobilde logoyu gizleyip yer kazanalım veya küçültelim */
     }
 
     .hint {
