@@ -1028,15 +1028,14 @@
       }
       /* Email pill gizle */
       #userPill { display: none !important; }
-      /* Filtre ve arama mobilde küçük boyutlarla görünür */
-      #statusFilter, #search { 
+      /* Filtre mobilde küçük boyutlarla görünür */
+      #statusFilter { 
         display: inline-flex; 
         height: 32px;
         font-size: 11px;
         padding: 4px 8px;
+        width: 100px;
       }
-      #statusFilter { width: 85px; }
-      #search { flex: 1; min-width: 80px; }
       
       .header {
         gap: 6px;
@@ -1730,11 +1729,11 @@
           <button id="btnNext" class="btn small">▶</button>
         </div>
         <select id="statusFilter">
-          <option value="all">Durum: Hepsi</option>
-          <option value="unpaid">Durum: Alınmadı/Ödenmedi</option>
-          <option value="paid">Durum: Alındı/Ödendi</option>
+          <option value="all">Hepsi</option>
+          <option value="paid">Ödendi</option>
+          <option value="received">Alındı</option>
+          <option value="unpaid">Bekliyor</option>
         </select>
-        <input id="search" placeholder="Ara (başlık / kategori)" />
       </div>
       <div class="right">
         <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
@@ -2677,7 +2676,6 @@
       $("btnPrev").addEventListener("click", function () { selectedMonth = prevMonth(selectedMonth); $("monthLabel").textContent = formatMonthLabel(selectedMonth); onMonthChanged(); });
       $("btnNext").addEventListener("click", function () { selectedMonth = nextMonth(selectedMonth); $("monthLabel").textContent = formatMonthLabel(selectedMonth); onMonthChanged(); });
       $("statusFilter").addEventListener("change", renderPage);
-      $("search").addEventListener("input", renderPage);
 
       var authBg = $("authBg");
       $("btnLoginOpen").addEventListener("click", function () { authBg.classList.add("show"); });
