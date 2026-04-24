@@ -1028,8 +1028,22 @@
       }
       /* Email pill gizle */
       #userPill { display: none !important; }
-      /* Filtre ve arama gizle — bunlar içerik alanında görünür */
-      #statusFilter, #search { display: none !important; }
+      /* Filtre ve arama mobilde küçük boyutlarla görünür */
+      #statusFilter, #search { 
+        display: inline-flex; 
+        height: 32px;
+        font-size: 11px;
+        padding: 4px 8px;
+      }
+      #statusFilter { width: 85px; }
+      #search { flex: 1; min-width: 80px; }
+      
+      .header {
+        gap: 6px;
+        padding: 8px 12px;
+      }
+      .monthNav { gap: 4px; }
+      .monthNav .btn.small { padding: 4px 6px; font-size: 10px; }
       /* Ay nav kompakt */
       #monthLabel { font-size: 12px; }
       /* Brand küçült */
