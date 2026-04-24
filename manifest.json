@@ -1,6 +1,6 @@
 {
-  "name": "Ödeme Takip",
-  "short_name": "Ödeme Takip",
+  "name": "CashNode",
+  "short_name": "CashNode",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",

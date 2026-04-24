@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ödeme Takip</title>
+  <title>CashNode</title>
   <meta name="theme-color" content="#07101f" />
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./app-icon.png">
@@ -1686,7 +1686,7 @@
     <header class="header">
       <div class="left">
         <div class="brand">
-          <h1>Ödeme Takip</h1>
+          <h1>CashNode</h1>
           <small id="subline">Dashboard</small>
         </div>
         <div class="monthNav" id="monthNav">
@@ -1972,7 +1972,7 @@
         var blob = new Blob([data], { type: 'application/json' });
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
-        a.href = url; a.download = 'odeme-takip-' + selectedMonth + '.json';
+        a.href = url; a.download = 'cashnode-' + selectedMonth + '.json';
         a.click(); URL.revokeObjectURL(url);
         toast(t('jsonDownloaded') + ' ' + allRows.length + ' ' + t('entries') + '.');
       }
@@ -2109,7 +2109,7 @@
         doc.text(t('pdfFooter'), ml, 290);
         doc.text(new Date().toLocaleString(currentLang === 'en' ? 'en-US' : 'tr-TR'), pw - mr, 290, { align: 'right' });
 
-        doc.save('odeme-takip-' + selectedMonth + '.pdf');
+        doc.save('cashnode-' + selectedMonth + '.pdf');
         toast(t('pdfDownloaded') + ' ' + rowsMonth.length + ' ' + t('entries') + '.');
       }
 
@@ -2183,7 +2183,7 @@
       /* ── i18n ── */
       var LANG = {
         tr: {
-          appTitle: 'Ödeme Takip',
+          appTitle: 'CashNode',
           dashboard: 'Dashboard', expense: 'Gider', income: 'Gelir', calendar: 'Takvim', assets: 'Varlıklar', settings: 'Ayarlar',
           newEntry: 'Yeni', editEntry: 'Kayıt Düzenle', save: 'Kaydet', cancel: 'Vazgeç',
           login: 'Giriş Yap', register: 'Kayıt Ol', logout: 'Çıkış', loginBtn: 'Giriş',
@@ -2234,10 +2234,10 @@
           jsonDownloaded: 'JSON indirildi:', pdfDownloaded: 'PDF indirildi:', imported: 'kayıt içe aktarıldı.',
           skipped: 'geçersiz satır atlandı', noData: 'Dışa aktaracak veri yok.', noMonthData: 'Bu ay için dışa aktaracak kayıt yok.',
           updated: 'Güncellendi.', deleted: 'Silindi.', confirmDelete: 'Silinsin mi?',
-          pdfTitle: 'Odeme Takip - Aylik Rapor', pdfPeriod: 'Donem:', pdfCreated: 'Olusturma:',
+          pdfTitle: 'CashNode - Aylik Rapor', pdfPeriod: 'Donem:', pdfCreated: 'Olusturma:',
           pdfExpenses: 'Giderler', pdfIncomes: 'Gelirler', pdfTotal: 'Toplam',
           pdfDate: 'Tarih', pdfTitle2: 'Baslik', pdfCategory: 'Kategori', pdfStatus: 'Durum', pdfAmount: 'Tutar',
-          pdfFooter: 'Odeme Takip - otomatik olusturuldu',
+          pdfFooter: 'CashNode - otomatik olusturuldu',
           pdfPaid: 'Odendi', pdfUnpaid: 'Odenmedi', pdfReceived: 'Alindi', pdfWaiting: 'Bekliyor',
           assetsTitle: 'Mal Varlıklarım', addAsset: '＋ Varlık Ekle', assetName: 'Varlık Adı',
           assetType: 'Tür', assetAmount: 'Miktar', assetValue: 'Birim Değer', assetNote: 'Not',
@@ -3997,8 +3997,8 @@
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('./service-worker.js')
-            .then(reg => console.log('Ödeme Takip: SW Kaydedildi'))
-            .catch(err => console.log('Ödeme Takip: SW Hatası', err));
+            .then(reg => console.log('CashNode: SW Kaydedildi'))
+            .catch(err => console.log('CashNode: SW Hatası', err));
         });
       }
     })();

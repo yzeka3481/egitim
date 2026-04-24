@@ -1,4 +1,4 @@
-const CACHE_NAME = 'odeme-takip-v1';
+const CACHE_NAME = 'cashnode-v1';
 const ASSETS = [
   './index.html',
   './app-icon.png'
