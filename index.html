@@ -1006,9 +1006,19 @@
       }
       /* Email pill gizle */
       #userPill { display: none !important; }
-      /* Filtre ve arama mobilde de görünür */
-      #statusFilter, #search { display: inline-flex; }
-      #search { flex: 1; min-width: 120px; }
+      /* Filtre ve arama mobilde ayrı bir satırda tam genişlik */
+      #statusFilter, #search { 
+        display: inline-flex; 
+        width: 100%;
+        margin-top: 8px;
+        order: 10; /* En sona at */
+      }
+      #search { flex: 1; }
+      
+      .header {
+        flex-wrap: wrap; /* Taşınca aşağı kaydır */
+        padding: 10px 16px;
+      }
       /* Ay nav kompakt */
       #monthLabel { font-size: 12px; }
       /* Brand küçült */
@@ -3167,7 +3177,11 @@
         var row = allRows.find(function (r) { return r.id === itemRowId; });
         if (!row) return;
         db.collection("payments").doc(itemRowId).update({ isPaid: !isPaid(row), updatedAt: serverTs() })
-          .then(function () { toast(t('statusUpdated')); })
+          .then(function () { 
+            toast(t('statusUpdated')); 
+            // Pencereyi kapatmadan içeriği anında yenile:
+            openItemModal(itemRowId);
+          })
           .catch(function (e) { console.error(e); toast(t('opErr') + " " + (e.code || e.message)); });
       });
 
