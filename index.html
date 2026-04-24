@@ -65,22 +65,50 @@
       -webkit-backdrop-filter: blur(22px);
       border-bottom: 1px solid var(--line);
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
       position: sticky;
       top: 0;
       z-index: 200;
     }
 
-    .brand { display: flex; flex-direction: column; gap: 4px; }
-    .brand h1 { margin: 0; font-size: 15px; letter-spacing: -.2px; font-weight: 800; background: linear-gradient(120deg, #e8f0ff 30%, #7baeff 80%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .brand small { color: var(--muted); font-size: 12px; }
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
 
-    .header .left, .header .right { display: flex; gap: 12px; align-items: center; }
-    .monthNav { display: flex; gap: 6px; align-items: center; }
+    .brand h1 {
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: -.2px;
+      font-weight: 800;
+      background: linear-gradient(120deg, #e8f0ff 30%, #7baeff 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-    .pill { border: 1px solid var(--line); background: rgba(14, 22, 42, .9); padding: 8px 10px; border-radius: 999px; display: flex; gap: 10px; align-items: center; color: #cfe0ff; font-weight: 650; font-size: 12px; white-space: nowrap; }
+    .brand small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      background: rgba(14, 22, 42, .9);
+      padding: 8px 10px;
+      border-radius: 999px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: #cfe0ff;
+      font-weight: 650;
+      font-size: 12px;
+      white-space: nowrap;
+    }
 
     .btn {
       border: 1px solid var(--line);
@@ -99,14 +127,39 @@
       font-family: inherit;
     }
 
-    .btn:hover { background: rgba(255, 255, 255, .12); transform: translateY(-1px); }
-    .btn:active { transform: translateY(0); }
-    .btn.primary { background: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%); border-color: rgba(91, 142, 255, .35); box-shadow: 0 4px 20px rgba(91, 142, 255, .28); }
-    .btn.primary:hover { filter: brightness(1.1); }
-    .btn.small { padding: 7px 10px; border-radius: 10px; font-size: 12px; }
-    .btn.danger { background: rgba(245, 104, 128, .12); border-color: rgba(245, 104, 128, .3); color: #ffa3b5; }
+    .btn:hover {
+      background: rgba(255, 255, 255, .12);
+      transform: translateY(-1px);
+    }
 
-    input, select {
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%);
+      border-color: rgba(91, 142, 255, .35);
+      box-shadow: 0 4px 20px rgba(91, 142, 255, .28);
+    }
+
+    .btn.primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn.small {
+      padding: 7px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    .btn.danger {
+      background: rgba(245, 104, 128, .12);
+      border-color: rgba(245, 104, 128, .3);
+      color: #ffa3b5;
+    }
+
+    input,
+    select {
       border: 1px solid var(--line);
       background: rgba(255, 255, 255, .06);
       color: var(--text);
@@ -118,9 +171,36 @@
       font-size: 14px;
       transition: border-color .15s, box-shadow .15s;
     }
-    input:focus, select:focus { border-color: rgba(91, 142, 255, .55); box-shadow: 0 0 0 3px rgba(91, 142, 255, .12); }
-    input::placeholder { color: var(--muted); }
-    select option { background: #0d1829; }
+
+    input:focus,
+    select:focus {
+      border-color: rgba(91, 142, 255, .55);
+      box-shadow: 0 0 0 3px rgba(91, 142, 255, .12);
+    }
+
+    input::placeholder {
+      color: var(--muted);
+    }
+
+    select option {
+      background: #0d1829;
+    }
+
+    .monthNav { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+    .header .left {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .header .right {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
     .hint {
       color: var(--muted);
@@ -1623,6 +1703,7 @@
       </div>
       <div class="right">
         <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
+        <button id="btnPrivacy" class="btn small" title="Para miktarlarını gizle/göster" style="font-size:16px;padding:7px 10px;">👁</button>
         <button id="btnAdd" class="btn primary" style="display:none;">＋ Yeni</button>
         <button id="btnLogout" class="btn" style="display:none;">Çıkış</button>
         <button id="btnLoginOpen" class="btn primary">Giriş</button>
@@ -3903,10 +3984,12 @@
       window.openKvkk = openKvkk;
 
       /* Privacy eye toggle */
-      window.togglePrivacy = function () {
+      $("btnPrivacy").addEventListener("click", function () {
         privacyMode = !privacyMode;
+        $("btnPrivacy").style.opacity = privacyMode ? '0.4' : '1';
+        $("btnPrivacy").title = privacyMode ? t('showAmounts') : t('hideAmounts');
         renderPage();
-      };
+      });
 
       renderPage();
       
