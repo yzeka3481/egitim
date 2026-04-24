@@ -1042,7 +1042,9 @@
       .brand small { font-size: 10px; }
       /* Butonları küçült */
       #btnLogout { font-size: 12px; padding: 7px 10px; }
-      .grid2 { grid-template-columns: 1fr; }
+      .grid2 { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+      .formGroup label { font-size: 9px !important; margin-bottom: 2px; }
+      .segmented label { font-size: 12px !important; padding: 8px !important; }
     }
 
     @media (max-width: 420px) {
@@ -1861,10 +1863,10 @@
 
   <div id="addBg" class="modalBg">
     <div class="modal">
-      <div id="addHeader" class="modalTop" style="padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); transition: background 0.3s ease;">
-        <div id="addHeroIcon" style="width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">💸</div>
-        <strong id="addTitle" style="font-size: 18px; letter-spacing: -0.5px;">Yeni Kayıt</strong>
-        <button id="addClose" class="btn small" style="position: absolute; right: 15px; top: 15px;">✕</button>
+      <div id="addHeader" class="modalTop" style="padding: 15px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 12px; border-bottom: 1px solid var(--line); transition: background 0.3s ease; position: relative;">
+        <div id="addHeroIcon" style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">💸</div>
+        <strong id="addTitle" style="font-size: 16px; letter-spacing: -0.5px;">Yeni Kayıt</strong>
+        <button id="addClose" class="btn small" style="position: absolute; right: 12px; top: 12px; width: 30px; height: 30px; border-radius: 50%; padding: 0;">✕</button>
       </div>
       <div class="modalBody" style="padding: 20px; gap: 15px;">
         <!-- Segmented Control for Direction -->
@@ -2276,7 +2278,7 @@
           dashboard: 'Dashboard', expense: 'Gider', income: 'Gelir', calendar: 'Takvim', assets: 'Varlıklar', settings: 'Ayarlar',
           newEntry: 'Yeni', editEntry: 'Kayıt Düzenle', save: 'Kaydet', cancel: 'Vazgeç',
           login: 'Giriş Yap', register: 'Kayıt Ol', logout: 'Çıkış', loginBtn: 'Giriş',
-          paid: 'Alındı/Ödendi', unpaid: 'Alınmadı/Ödenmedi', paidShort: 'Ödendi', unpaidShort: 'Ödenmedi',
+          paid: 'Ödendi', unpaid: 'Ödenmedi', paidShort: 'Ödendi', unpaidShort: 'Ödenmedi',
           received: 'Alındı', notReceived: 'Alınmadı', waiting: 'Bekliyor',
           income_tag: 'Gelir', expense_tag: 'Gider', monthly: 'Aylık',
           thisMonth: 'Bu ay', netBalance: 'Net Bakiye',
@@ -2350,8 +2352,8 @@
           dashboard: 'Dashboard', expense: 'Expenses', income: 'Income', calendar: 'Calendar', assets: 'Assets', settings: 'Settings',
           newEntry: 'New Entry', editEntry: 'Edit Entry', save: 'Save', cancel: 'Cancel',
           login: 'Sign In', register: 'Sign Up', logout: 'Logout', loginBtn: 'Login',
-          paid: 'Received/Paid', unpaid: 'Not Received/Unpaid', paidShort: 'Paid', unpaidShort: 'Unpaid',
-          received: 'Received', notReceived: 'Not Received', waiting: 'Pending',
+          paid: 'Paid', unpaid: 'Unpaid', paidShort: 'Paid', unpaidShort: 'Unpaid',
+          received: 'Received', notReceived: 'Pending', waiting: 'Pending',
           income_tag: 'Income', expense_tag: 'Expense', monthly: 'Monthly',
           thisMonth: 'This month', netBalance: 'Net Balance',
           noRecord: 'No records.', noRecordMonth: 'No records for this month.',
@@ -2622,14 +2624,14 @@
         var labUnpaid = document.getElementById('labelUnpaid');
         
         if (isInc) {
-          header.style.background = 'rgba(34,211,170,0.1)';
+          header.style.background = 'linear-gradient(135deg, rgba(34,211,170,0.2), rgba(34,211,170,0.05))';
           icon.textContent = '💰';
           icon.style.background = 'rgba(34,211,170,0.2)';
           icon.style.color = 'var(--good)';
           if (labPaid) labPaid.textContent = t('received');
           if (labUnpaid) labUnpaid.textContent = t('notReceived');
         } else {
-          header.style.background = 'rgba(245,104,128,0.1)';
+          header.style.background = 'linear-gradient(135deg, rgba(245,104,128,0.2), rgba(245,104,128,0.05))';
           icon.textContent = '💸';
           icon.style.background = 'rgba(245,104,128,0.2)';
           icon.style.color = 'var(--bad)';
