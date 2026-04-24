@@ -558,6 +558,28 @@
       background: linear-gradient(135deg, rgba(91, 142, 255, .14), rgba(124, 92, 255, .09));
     }
 
+    .primary-tab {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%) !important;
+      color: white !important;
+      border-radius: 50% !important;
+      width: 50px;
+      height: 50px;
+      flex: 0 0 50px !important;
+      margin-top: -20px;
+      box-shadow: 0 8px 25px rgba(91, 142, 255, .4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .primary-tab:hover {
+      transform: scale(1.1) translateY(-2px);
+      filter: brightness(1.1);
+    }
+
     .ico {
       font-size: 18px;
       line-height: 1;
@@ -1014,7 +1036,6 @@
       .brand h1 { font-size: 13px; }
       .brand small { font-size: 10px; }
       /* Butonları küçült */
-      #btnAdd { font-size: 12px; padding: 7px 10px; }
       #btnLogout { font-size: 12px; padding: 7px 10px; }
       .grid2 { grid-template-columns: 1fr; }
     }
@@ -1703,7 +1724,6 @@
       </div>
       <div class="right">
         <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
-        <button id="btnAdd" class="btn primary" style="display:none;">＋ Yeni</button>
         <button id="btnLoginOpen" class="btn primary">Giriş</button>
         <span class="hint" id="topHint"></span>
       </div>
@@ -1721,6 +1741,9 @@
       </div>
       <div class="tab" data-page="income">
         <div class="ico">💰</div>Gelir
+      </div>
+      <div class="tab primary-tab" id="tabAdd">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
       </div>
       <div class="tab" data-page="calendar">
         <div class="ico">📆</div>Takvim
@@ -2628,7 +2651,13 @@
         renderPage();
       }
       document.querySelectorAll(".tab").forEach(function (tab) {
-        tab.addEventListener("click", function () { setActiveTab(tab.getAttribute("data-page")); });
+        tab.addEventListener("click", function () { 
+          if (tab.id === "tabAdd") {
+            $("btnAdd").click(); // Mevcut Yeni butonu mantığını tetikle
+            return;
+          }
+          setActiveTab(tab.getAttribute("data-page")); 
+        });
       });
 
       $("btnPrev").addEventListener("click", function () { selectedMonth = prevMonth(selectedMonth); $("monthLabel").textContent = formatMonthLabel(selectedMonth); onMonthChanged(); });
@@ -3969,7 +3998,7 @@
         if (!user) {
           $("userPill").style.display = "none";
           if ($("btnLogout")) $("btnLogout").style.display = "none";
-          $("btnAdd").style.display = "none";
+          if ($("btnAdd")) $("btnAdd").style.display = "none";
           $("btnLoginOpen").style.display = "inline-flex";
           $("userEmail").textContent = "";
           $("topHint").textContent = "";
@@ -3983,7 +4012,7 @@
 
         $("userPill").style.display = "inline-flex";
         if ($("btnLogout")) $("btnLogout").style.display = "inline-flex";
-        $("btnAdd").style.display = "inline-flex";
+        if ($("btnAdd")) $("btnAdd").style.display = "inline-flex";
         $("btnLoginOpen").style.display = "none";
         $("userEmail").textContent = user.email || "—";
         $("topHint").textContent = "";
