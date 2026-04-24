@@ -1028,14 +1028,6 @@
       }
       /* Email pill gizle */
       #userPill { display: none !important; }
-      /* Filtre mobilde küçük boyutlarla görünür */
-      #statusFilter { 
-        display: inline-flex; 
-        height: 32px;
-        font-size: 11px;
-        padding: 4px 8px;
-        width: 125px;
-      }
       
       .header {
         gap: 6px;
@@ -1728,12 +1720,6 @@
           <span class="pill"><span id="monthLabel">—</span></span>
           <button id="btnNext" class="btn small">▶</button>
         </div>
-        <select id="statusFilter">
-          <option value="all">Hepsi</option>
-          <option value="paid">Ödendi</option>
-          <option value="received">Alındı</option>
-          <option value="unpaid">Bekliyor</option>
-        </select>
       </div>
       <div class="right">
         <span id="userPill" class="pill" style="display:none;"><span>👤</span><span id="userEmail"></span></span>
@@ -2675,7 +2661,6 @@
 
       $("btnPrev").addEventListener("click", function () { selectedMonth = prevMonth(selectedMonth); $("monthLabel").textContent = formatMonthLabel(selectedMonth); onMonthChanged(); });
       $("btnNext").addEventListener("click", function () { selectedMonth = nextMonth(selectedMonth); $("monthLabel").textContent = formatMonthLabel(selectedMonth); onMonthChanged(); });
-      $("statusFilter").addEventListener("change", renderPage);
 
       var authBg = $("authBg");
       $("btnLoginOpen").addEventListener("click", function () { authBg.classList.add("show"); });
@@ -3774,15 +3759,9 @@
       });
 
       function filteredRowsForMonth(targetDir) {
-        var filter = $("statusFilter").value;
         return allRows.filter(function (r) {
           if (r.date.slice(0, 7) !== selectedMonth) return false;
           if (targetDir && normalizeDir(r) !== targetDir) return false;
-
-          if (filter === "paid") return (normalizeDir(r) === "expense" && isPaid(r));
-          if (filter === "received") return (normalizeDir(r) === "income" && isPaid(r));
-          if (filter === "unpaid") return !isPaid(r);
-
           return true;
         });
       }
