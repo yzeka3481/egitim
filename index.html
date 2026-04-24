@@ -3052,14 +3052,25 @@
       }
 
       function kpisFor(rows) {
-        var exp = rows.filter(function (r) { return normalizeDir(r) === "expense"; }).reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
-        var inc = rows.filter(function (r) { return normalizeDir(r) === "income"; }).reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
-        var net = inc - exp;
-        var expPaid = rows.filter(function (r) { return normalizeDir(r) === "expense" && isPaid(r); }).length;
-        var expUn = rows.filter(function (r) { return normalizeDir(r) === "expense" && !isPaid(r); }).length;
-        var incPaid = rows.filter(function (r) { return normalizeDir(r) === "income" && isPaid(r); }).length;
-        var incUn = rows.filter(function (r) { return normalizeDir(r) === "income" && !isPaid(r); }).length;
-        return { exp: exp, inc: inc, net: net, expPaid: expPaid, expUn: expUn, incPaid: incPaid, incUn: incUn };
+        var exp = 0, inc = 0, expPaidAmt = 0, incPaidAmt = 0;
+        var expPaidCount = 0, expUnCount = 0, incPaidCount = 0, incUnCount = 0;
+        rows.forEach(function(r) {
+          var amt = Number(r.amount || 0);
+          var isInc = normalizeDir(r) === "income";
+          var paid = isPaid(r);
+          if (isInc) {
+            inc += amt;
+            if (paid) { incPaidAmt += amt; incPaidCount++; } else incUnCount++;
+          } else {
+            exp += amt;
+            if (paid) { expPaidAmt += amt; expPaidCount++; } else expUnCount++;
+          }
+        });
+        return { 
+          exp: exp, inc: inc, net: inc - exp, 
+          expPaid: expPaidCount, expUn: expUnCount, expPaidAmt: expPaidAmt,
+          incPaid: incPaidCount, incUn: incUnCount, incPaidAmt: incPaidAmt 
+        };
       }
 
       function groupExpensesByCategory(rows) {
@@ -3868,15 +3879,36 @@
           var k = kpisFor(rowsMonth);
 
           if (currentPage === "dashboard") {
+            var expPct = k.exp > 0 ? (k.expPaidAmt / k.exp) * 100 : 0;
+            var incPct = k.inc > 0 ? (k.incPaidAmt / k.inc) * 100 : 0;
+
             content.innerHTML =
               '<div class="grid dashGrid">' +
               '<div class="card kpiCard kpi-exp" style="grid-column:span 4; border-color:rgba(245,104,128,.25); background:rgba(245,104,128,.04);">' +
               '<h2><span class="ttl"><span class="kico">💸</span><span>' + t('expense') + '</span></span><span class="tag bad">' + t('thisMonth') + '</span></h2>' +
-              '<div class="kpi"><div class="value bad">' + fmtAmt(k.exp) + '</div><div class="sub"><span class="chip">✅ ' + k.expPaid + ' ' + t('paidShort') + '</span><span class="chip bad">⏳ ' + k.expUn + ' ' + t('waiting') + '</span></div></div>' +
+              '<div class="kpi">' +
+              '<div class="value bad">' + fmtAmt(k.exp) + '</div>' +
+              '<div style="height:4px; background:rgba(245,104,128,0.1); border-radius:2px; margin: 10px 0; overflow:hidden;">' +
+              '<div style="height:100%; background:var(--bad); width:' + expPct + '%; transition:width 0.4s ease;"></div>' +
+              '</div>' +
+              '<div class="sub" style="display:flex; justify-content:space-between; align-items:center;">' +
+              '<span style="font-size:11px; font-weight:650; color:var(--bad);">' + fmtAmt(k.expPaidAmt) + ' ' + t('paidShort').toLowerCase() + '</span>' +
+              '<span class="hint" style="font-size:10px;">' + k.expUn + ' ' + t('waiting').toLowerCase() + '</span>' +
+              '</div>' +
+              '</div>' +
               '</div>' +
               '<div class="card kpiCard kpi-inc" style="grid-column:span 4; border-color:rgba(34,211,170,.22); background:rgba(34,211,170,.04);">' +
               '<h2><span class="ttl"><span class="kico">💰</span><span>' + t('income') + '</span></span><span class="tag good">' + t('thisMonth') + '</span></h2>' +
-              '<div class="kpi"><div class="value good">' + fmtAmt(k.inc) + '</div><div class="sub"><span class="chip good">✅ ' + k.incPaid + ' ' + t('received') + '</span><span class="chip">⏳ ' + k.incUn + ' ' + t('waiting') + '</span></div></div>' +
+              '<div class="kpi">' +
+              '<div class="value good">' + fmtAmt(k.inc) + '</div>' +
+              '<div style="height:4px; background:rgba(34,211,170,0.1); border-radius:2px; margin: 10px 0; overflow:hidden;">' +
+              '<div style="height:100%; background:var(--good); width:' + incPct + '%; transition:width 0.4s ease;"></div>' +
+              '</div>' +
+              '<div class="sub" style="display:flex; justify-content:space-between; align-items:center;">' +
+              '<span style="font-size:11px; font-weight:650; color:var(--good);">' + fmtAmt(k.incPaidAmt) + ' ' + t('received').toLowerCase() + '</span>' +
+              '<span class="hint" style="font-size:10px;">' + k.incUn + ' ' + t('waiting').toLowerCase() + '</span>' +
+              '</div>' +
+              '</div>' +
               '</div>' +
               '<div class="card kpiCard kpi-net" style="grid-column:span 4; border-color:rgba(91,142,255,.25); background:rgba(91,142,255,.04);">' +
               '<h2><span class="ttl"><span class="kico">⚖️</span><span>' + t('netBalance') + '</span></span>' +
