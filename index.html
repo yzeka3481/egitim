@@ -1863,10 +1863,10 @@
 
   <div id="addBg" class="modalBg">
     <div class="modal">
-      <div id="addHeader" class="modalTop" style="padding: 15px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 12px; border-bottom: 1px solid var(--line); transition: background 0.3s ease; position: relative;">
-        <div id="addHeroIcon" style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">💸</div>
-        <strong id="addTitle" style="font-size: 16px; letter-spacing: -0.5px;">Yeni Kayıt</strong>
-        <button id="addClose" class="btn small" style="position: absolute; right: 12px; top: 12px; width: 30px; height: 30px; border-radius: 50%; padding: 0;">✕</button>
+      <div id="addHeader" class="modalTop" style="padding: 12px 15px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px; border-bottom: 1px solid var(--line); transition: background 0.3s ease; position: relative; min-height: 60px;">
+        <div id="addHeroIcon" style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">💸</div>
+        <strong id="addTitle" style="font-size: 15px; letter-spacing: -0.5px;">Yeni Kayıt</strong>
+        <button id="addClose" class="btn small" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; line-height: 1; background: rgba(255,255,255,0.1); border: 1px solid var(--line);">✕</button>
       </div>
       <div class="modalBody" style="padding: 20px; gap: 15px;">
         <!-- Segmented Control for Direction -->
@@ -1882,13 +1882,13 @@
           <div class="formGroup">
             <label>Tutar</label>
             <div style="position: relative;">
-              <input type="number" id="mAmount" step="any" placeholder="0.00" style="font-size: 14px; font-weight: 700; text-align: left; padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--line); width: 100%; height: 40px; box-sizing: border-box;">
+              <input type="number" id="mAmount" step="any" placeholder="0.00" style="font-size: 14px; font-weight: 700; text-align: left; padding: 0 12px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--line); width: 100%; height: 40px !important; box-sizing: border-box;">
               <span id="mCurrSymbol" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 700; color: var(--muted);">₺</span>
             </div>
           </div>
           <div class="formGroup">
             <label>Tarih</label>
-            <input type="date" id="mDate" style="padding: 8px 12px; border-radius: 12px; width: 100%; font-size: 13px; height: 40px; box-sizing: border-box;">
+            <input type="date" id="mDate" style="padding: 0 12px; border-radius: 12px; width: 100%; font-size: 13px; height: 40px !important; box-sizing: border-box; -webkit-appearance: none; display: flex; align-items: center;">
           </div>
         </div>
 
@@ -1896,12 +1896,12 @@
         <div class="grid2" style="gap: 15px;">
           <div class="formGroup">
             <label>Kategori</label>
-            <select id="mCategorySel" style="padding: 8px 12px; border-radius: 12px; width: 100%; height: 40px; box-sizing: border-box; font-size: 13px;"></select>
-            <input type="text" id="mCategoryOther" placeholder="Kategori adı..." style="display:none; margin-top:8px; padding: 8px 12px; border-radius: 12px; width: 100%; height: 40px; box-sizing: border-box; font-size: 13px;">
+            <select id="mCategorySel" style="padding: 0 12px; border-radius: 12px; width: 100%; height: 40px !important; box-sizing: border-box; font-size: 13px;"></select>
+            <input type="text" id="mCategoryOther" placeholder="Kategori adı..." style="display:none; margin-top:8px; padding: 0 12px; border-radius: 12px; width: 100%; height: 40px !important; box-sizing: border-box; font-size: 13px;">
           </div>
           <div class="formGroup">
             <label>Başlık</label>
-            <input type="text" id="mTitle" placeholder="Açıklama..." style="padding: 8px 12px; border-radius: 12px; width: 100%; height: 40px; box-sizing: border-box; font-size: 13px;">
+            <input type="text" id="mTitle" placeholder="Açıklama..." style="padding: 0 12px; border-radius: 12px; width: 100%; height: 40px !important; box-sizing: border-box; font-size: 13px;">
           </div>
         </div>
 
