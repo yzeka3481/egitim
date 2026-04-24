@@ -65,56 +65,22 @@
       -webkit-backdrop-filter: blur(22px);
       border-bottom: 1px solid var(--line);
       display: flex;
-      flex-direction: column;
       gap: 12px;
+      align-items: center;
+      justify-content: space-between;
       position: sticky;
       top: 0;
       z-index: 200;
     }
 
-    @media (min-width: 800px) {
-      .header {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-      }
-    }
+    .brand { display: flex; flex-direction: column; gap: 4px; }
+    .brand h1 { margin: 0; font-size: 15px; letter-spacing: -.2px; font-weight: 800; background: linear-gradient(120deg, #e8f0ff 30%, #7baeff 80%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .brand small { color: var(--muted); font-size: 12px; }
 
-    .brand {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+    .header .left, .header .right { display: flex; gap: 12px; align-items: center; }
+    .monthNav { display: flex; gap: 6px; align-items: center; }
 
-    .brand h1 {
-      margin: 0;
-      font-size: 15px;
-      letter-spacing: -.2px;
-      font-weight: 800;
-      background: linear-gradient(120deg, #e8f0ff 30%, #7baeff 80%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .brand small {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .pill {
-      border: 1px solid var(--line);
-      background: rgba(14, 22, 42, .9);
-      padding: 8px 10px;
-      border-radius: 999px;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      color: #cfe0ff;
-      font-weight: 650;
-      font-size: 12px;
-      white-space: nowrap;
-    }
+    .pill { border: 1px solid var(--line); background: rgba(14, 22, 42, .9); padding: 8px 10px; border-radius: 999px; display: flex; gap: 10px; align-items: center; color: #cfe0ff; font-weight: 650; font-size: 12px; white-space: nowrap; }
 
     .btn {
       border: 1px solid var(--line);
@@ -133,39 +99,14 @@
       font-family: inherit;
     }
 
-    .btn:hover {
-      background: rgba(255, 255, 255, .12);
-      transform: translateY(-1px);
-    }
+    .btn:hover { background: rgba(255, 255, 255, .12); transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn.primary { background: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%); border-color: rgba(91, 142, 255, .35); box-shadow: 0 4px 20px rgba(91, 142, 255, .28); }
+    .btn.primary:hover { filter: brightness(1.1); }
+    .btn.small { padding: 7px 10px; border-radius: 10px; font-size: 12px; }
+    .btn.danger { background: rgba(245, 104, 128, .12); border-color: rgba(245, 104, 128, .3); color: #ffa3b5; }
 
-    .btn:active {
-      transform: translateY(0);
-    }
-
-    .btn.primary {
-      background: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%);
-      border-color: rgba(91, 142, 255, .35);
-      box-shadow: 0 4px 20px rgba(91, 142, 255, .28);
-    }
-
-    .btn.primary:hover {
-      filter: brightness(1.1);
-    }
-
-    .btn.small {
-      padding: 7px 10px;
-      border-radius: 10px;
-      font-size: 12px;
-    }
-
-    .btn.danger {
-      background: rgba(245, 104, 128, .12);
-      border-color: rgba(245, 104, 128, .3);
-      color: #ffa3b5;
-    }
-
-    input,
-    select {
+    input, select {
       border: 1px solid var(--line);
       background: rgba(255, 255, 255, .06);
       color: var(--text);
@@ -177,37 +118,9 @@
       font-size: 14px;
       transition: border-color .15s, box-shadow .15s;
     }
-
-    input:focus,
-    select:focus {
-      border-color: rgba(91, 142, 255, .55);
-      box-shadow: 0 0 0 3px rgba(91, 142, 255, .12);
-    }
-
-    input::placeholder {
-      color: var(--muted);
-    }
-
-    select option {
-      background: #0d1829;
-    }
-
-    .header {
-      padding: 12px 16px;
-      background: rgba(7, 16, 31, .88);
-      backdrop-filter: blur(22px);
-      -webkit-backdrop-filter: blur(22px);
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 200;
-    }
-    .header .left, .header .right { display: flex; gap: 12px; align-items: center; }
-    .monthNav { display: flex; gap: 6px; align-items: center; }
+    input:focus, select:focus { border-color: rgba(91, 142, 255, .55); box-shadow: 0 0 0 3px rgba(91, 142, 255, .12); }
+    input::placeholder { color: var(--muted); }
+    select option { background: #0d1829; }
 
     .hint {
       color: var(--muted);
