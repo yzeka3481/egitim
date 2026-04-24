@@ -1006,8 +1006,9 @@
       }
       /* Email pill gizle */
       #userPill { display: none !important; }
-      /* Filtre ve arama gizle — bunlar içerik alanında görünür */
-      #statusFilter, #search { display: none !important; }
+      /* Filtre ve arama mobilde de görünür */
+      #statusFilter, #search { display: inline-flex; }
+      #search { flex: 1; min-width: 120px; }
       /* Ay nav kompakt */
       #monthLabel { font-size: 12px; }
       /* Brand küçült */
