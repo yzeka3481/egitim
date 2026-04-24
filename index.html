@@ -65,13 +65,14 @@
       -webkit-backdrop-filter: blur(22px);
       border-bottom: 1px solid var(--line);
       display: flex;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
       position: sticky;
       top: 0;
       z-index: 200;
+      min-height: 64px;
     }
 
     .brand {
@@ -186,20 +187,23 @@
       background: #0d1829;
     }
 
-    .monthNav { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+    .monthNav { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
     .header .left {
       display: flex;
-      gap: 10px;
+      gap: 14px;
       align-items: center;
       flex-wrap: wrap;
+      flex: 1;
+      min-width: 0;
     }
 
     .header .right {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
-      flex-wrap: wrap;
+      justify-content: flex-end;
+      flex-shrink: 0;
     }
 
     .hint {
