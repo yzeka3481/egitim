@@ -2653,7 +2653,7 @@
       document.querySelectorAll(".tab").forEach(function (tab) {
         tab.addEventListener("click", function () { 
           if (tab.id === "tabAdd") {
-            $("btnAdd").click(); // Mevcut Yeni butonu mantığını tetikle
+            openAddModalForCreate(); // Fonksiyonu doğrudan çağır
             return;
           }
           setActiveTab(tab.getAttribute("data-page")); 
@@ -2706,7 +2706,7 @@
       });
       $("mRecurring").addEventListener("change", function () { $("recBox").style.display = $("mRecurring").checked ? "grid" : "none"; });
 
-      $("btnAdd").addEventListener("click", function () {
+      function openAddModalForCreate() {
         if (!user) return toast(t('notLoggedIn'));
         $("mDir").value = "expense";
         $("mPaid").value = "false";
@@ -2722,7 +2722,11 @@
         document.getElementById("mRecurring").disabled = false;
         document.getElementById("mRecMonths").disabled = false;
         addBg.classList.add("show");
-      });
+      }
+
+      if ($("btnAdd")) {
+        $("btnAdd").addEventListener("click", openAddModalForCreate);
+      }
       $("addClose").addEventListener("click", function () {
         addBg.classList.remove("show");
         editingId = null; editingRow = null;
