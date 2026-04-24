@@ -1,0 +1,22 @@
+{
+  "name": "Ödeme Takip",
+  "short_name": "Ödeme Takip",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07101f",
+  "theme_color": "#0b1220",
+  "description": "Ödemelerinizi ve bütçenizi takip edin.",
+  "icons": [
+    {
+      "src": "app-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

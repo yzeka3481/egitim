@@ -5,7 +5,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Ödeme Takip</title>
-  <meta name="theme-color" content="#0b1220" />
+  <meta name="theme-color" content="#07101f" />
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./app-icon.png">
   <style>
     :root {
       --bg: #07101f;
@@ -41,9 +43,14 @@
       min-height: 100vh;
       display: flex;
       justify-content: center;
-      padding: 16px 16px 100px;
+      padding: env(safe-area-inset-top) 16px calc(100px + env(safe-area-inset-bottom));
       -webkit-font-smoothing: antialiased;
+      overscroll-behavior: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
+    input, textarea, select { user-select: text; -webkit-user-select: text; }
 
     .app {
       width: min(1100px, 100%);
@@ -3985,6 +3992,15 @@
       });
 
       renderPage();
+      
+      // Service Worker Registration
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./service-worker.js')
+            .then(reg => console.log('Ödeme Takip: SW Kaydedildi'))
+            .catch(err => console.log('Ödeme Takip: SW Hatası', err));
+        });
+      }
     })();
   </script>
 </body>
