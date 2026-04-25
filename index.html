@@ -2266,38 +2266,53 @@
         if (!user || !db) return;
         if (!confirm(t('confirmDeleteAll'))) return;
 
+        var statusToast = (m) => toast(m);
+        
+        // Önce yetki ve veri kontrolü için paralel sorgu atalım
         var p1 = db.collection('payments').where('userId', '==', user.uid).get();
         var p2 = db.collection('assets').where('userId', '==', user.uid).get();
 
         Promise.all([p1, p2]).then(function(results) {
-          var batch = db.batch();
-          var count = 0;
-          var total = 0;
-          
-          results.forEach(function(snap) {
-            snap.forEach(function(doc) {
-              batch.delete(doc.ref);
-              count++;
-              total++;
-              if (count >= 450) { // Firestore batch limit safety
-                batch.commit();
-                batch = db.batch();
-                count = 0;
-              }
-            });
-          });
+          var paymentsSnap = results[0];
+          var assetsSnap = results[1];
+          var total = paymentsSnap.size + assetsSnap.size;
 
           if (total === 0) {
             toast(t('noRecord'));
             return;
           }
 
-          return batch.commit().then(function() {
+          var allDocs = [];
+          paymentsSnap.forEach(d => allDocs.push(d.ref));
+          assetsSnap.forEach(d => allDocs.push(d.ref));
+
+          // Parçalara bölerek (chunk) silme işlemi (Firestore 500 limit)
+          var chunks = [];
+          for (var i = 0; i < allDocs.length; i += 450) {
+            chunks.push(allDocs.slice(i, i + 450));
+          }
+
+          var chain = Promise.resolve();
+          chunks.forEach(function(chunk, idx) {
+            chain = chain.then(function() {
+              var batch = db.batch();
+              chunk.forEach(ref => batch.delete(ref));
+              return batch.commit();
+            });
+          });
+
+          return chain.then(function() {
             toast(t('allDeleted'));
             setActiveTab('dashboard');
           });
         }).catch(function(err) {
-          toast(t('opErr') + ' ' + err.message);
+          console.error("Delete All Error:", err);
+          // Hata mesajını daha anlaşılır kılalım
+          var msg = err.message;
+          if (msg.includes("permissions")) {
+            msg = "Firebase yetki hatası. Lütfen kuralları (Rules) kontrol edin.";
+          }
+          toast(t('opErr') + ' ' + msg);
         });
       }
 
@@ -2990,6 +3005,7 @@
           }
 
           var payloadE = {
+            userId: user.uid,
             amount: amountValue,
             category: catValue,
             date: dateValue,
@@ -3026,23 +3042,31 @@
 
             // If it's a new recurring or "Update Series" is checked
             if (!wasRecurring || updateSeriesValue) {
+              var futureCount = 0;
+              // We start from 1 because 0 is the current document being edited
               for (var i = 1; i < recMonthsValue; i++) {
-                var d = new Date(dateValue);
+                // Safe date calculation: YYYY-MM-DD
+                var parts = dateValue.split('-');
+                var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
                 d.setMonth(d.getMonth() + i);
+                
                 var mStr = d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
                 var targetMonth = mStr.slice(0, 7);
                 var docId = ridStr + "_" + targetMonth;
                 
                 var p = Object.assign({}, payloadE);
                 p.date = mStr;
-                p.isPaid = false; // Future months usually unpaid
+                p.isPaid = false; 
                 p.isTemplate = false;
                 p.recurrenceId = ridStr;
                 p.recurrenceStart = startVal;
                 p.userId = user.uid;
+                p.createdAt = serverTs();
                 
                 batchE.set(db.collection("payments").doc(docId), p, { merge: true });
+                futureCount++;
               }
+              window.__lastFutureCount = futureCount;
             }
           }
 
@@ -3050,7 +3074,12 @@
             .then(function () {
               addBg.classList.remove("show");
               editingId = null; editingRow = null;
-              toast(t('updatedOk'));
+              var msg = t('updatedOk');
+              if (window.__lastFutureCount > 0) {
+                msg += " (" + window.__lastFutureCount + " " + t('recurAdded').toLowerCase() + ")";
+              }
+              toast(msg);
+              window.__lastFutureCount = 0;
             })
             .catch(function (err) {
               console.error(err);
