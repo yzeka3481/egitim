@@ -2261,6 +2261,46 @@
         reader.readAsText(file);
       }
 
+      /* ── Delete All ── */
+      function deleteAllData() {
+        if (!user || !db) return;
+        if (!confirm(t('confirmDeleteAll'))) return;
+
+        var p1 = db.collection('payments').where('userId', '==', user.uid).get();
+        var p2 = db.collection('assets').where('userId', '==', user.uid).get();
+
+        Promise.all([p1, p2]).then(function(results) {
+          var batch = db.batch();
+          var count = 0;
+          var total = 0;
+          
+          results.forEach(function(snap) {
+            snap.forEach(function(doc) {
+              batch.delete(doc.ref);
+              count++;
+              total++;
+              if (count >= 450) { // Firestore batch limit safety
+                batch.commit();
+                batch = db.batch();
+                count = 0;
+              }
+            });
+          });
+
+          if (total === 0) {
+            toast(t('noRecord'));
+            return;
+          }
+
+          return batch.commit().then(function() {
+            toast(t('allDeleted'));
+            setActiveTab('dashboard');
+          });
+        }).catch(function(err) {
+          toast(t('opErr') + ' ' + err.message);
+        });
+      }
+
       var firebaseConfig = {
         apiKey: "AIzaSyCor3xd3b5oISqFTChJeO1KNR6FsCQiAKg",
         authDomain: "gezi-5b54b.firebaseapp.com",
@@ -2294,6 +2334,9 @@
           exportPdf: 'Aylık PDF Raporu', exportPdfDesc: 'Seçili ayın gelir/gider özetini PDF olarak indir',
           language: 'Dil / Language', languageDesc: 'Arayüz dilini seç',
           currency: 'Para Birimi', currencyDesc: 'Kullanılacak para birimini seç',
+          deleteAll: 'Tüm Verileri Sil', deleteAllDesc: 'Tüm kayıtları ve varlıkları kalıcı olarak siler. Bu işlem geri alınamaz!',
+          confirmDeleteAll: 'TÜM verileriniz silinecek. Emin misiniz?',
+          allDeleted: 'Tüm veriler başarıyla silindi.',
           account: 'Hesap', email: 'E-posta',
           privacy: 'Gizlilik ve KVKK', privacyLabel: 'Gizlilik Politikası', privacyDesc: 'KVKK aydınlatma metnini ve veri politikasını görüntüle',
           readText: 'Metni Oku →',
@@ -2370,6 +2413,9 @@
           exportPdf: 'Monthly PDF Report', exportPdfDesc: 'Download a PDF summary of the selected month',
           language: 'Language', languageDesc: 'Select the interface language',
           currency: 'Currency', currencyDesc: 'Select the currency to use',
+          deleteAll: 'Delete All Data', deleteAllDesc: 'Permanently deletes all records and assets. This action cannot be undone!',
+          confirmDeleteAll: 'ALL your data will be deleted. Are you sure?',
+          allDeleted: 'All data has been successfully deleted.',
           account: 'Account', email: 'Email',
           privacy: 'Privacy & GDPR', privacyLabel: 'Privacy Policy', privacyDesc: 'View the data policy and disclosure text',
           readText: 'Read →',
@@ -2935,6 +2981,14 @@
 
         // EDIT MODE: update existing doc
         if (editingId) {
+          var rid = editingRow.recurrenceId || null;
+          var wasRecurring = !!editingRow.isRecurring;
+          
+          // If turning on recurring for the first time on an existing item
+          if (recurringValue && !wasRecurring) {
+            rid = Date.now().toString();
+          }
+
           var payloadE = {
             amount: amountValue,
             category: catValue,
@@ -2945,29 +2999,54 @@
             type: (dirValue === "income") ? "incoming" : "payment",
             isRecurring: recurringValue,
             isTemplate: !!editingRow.isTemplate,
-            recurrenceId: editingRow.recurrenceId || null,
+            recurrenceId: rid,
             recurrenceTotalMonths: recurringValue ? recMonthsValue : null,
             updatedAt: serverTs()
           };
+          
+          if (recurringValue && !wasRecurring) {
+            payloadE.recurrenceStart = dateValue.slice(0, 7);
+          }
 
           var refE = db.collection("payments").doc(editingId);
+          var batchE = db.batch();
+          batchE.set(refE, payloadE, { merge: true });
 
-          refE.set(payloadE, { merge: true })
-            .then(function () {
-              // Optionally update template (future months) if recurring
-              if (($("mUpdateSeries").checked) && editingRow && editingRow.recurrenceId) {
-                var tid = "T_" + String(editingRow.recurrenceId);
-                return db.collection("payments").doc(tid).set({
-                  amount: amountValue,
-                  category: catValue,
-                  title: titleValue || "",
-                  note: noteValue || "",
-                  type: (dirValue === "income") ? "incoming" : "payment",
-                  recurrenceTotalMonths: recMonthsValue,
-                  updatedAt: serverTs()
-                }, { merge: true }).catch(function (err) { console.error(err); });
+          // Handle series update or initial generation
+          if (recurringValue) {
+            var ridStr = String(rid);
+            var startVal = payloadE.recurrenceStart || (editingRow.recurrenceStart || dateValue.slice(0, 7));
+            
+            // Update Template
+            var templateRef = db.collection("payments").doc("T_" + ridStr);
+            var tPayload = Object.assign({}, payloadE);
+            tPayload.isTemplate = true;
+            delete tPayload.date;
+            batchE.set(templateRef, tPayload, { merge: true });
+
+            // If it's a new recurring or "Update Series" is checked
+            if (!wasRecurring || updateSeriesValue) {
+              for (var i = 1; i < recMonthsValue; i++) {
+                var d = new Date(dateValue);
+                d.setMonth(d.getMonth() + i);
+                var mStr = d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+                var targetMonth = mStr.slice(0, 7);
+                var docId = ridStr + "_" + targetMonth;
+                
+                var p = Object.assign({}, payloadE);
+                p.date = mStr;
+                p.isPaid = false; // Future months usually unpaid
+                p.isTemplate = false;
+                p.recurrenceId = ridStr;
+                p.recurrenceStart = startVal;
+                p.userId = user.uid;
+                
+                batchE.set(db.collection("payments").doc(docId), p, { merge: true });
               }
-            })
+            }
+          }
+
+          batchE.commit()
             .then(function () {
               addBg.classList.remove("show");
               editingId = null; editingRow = null;
@@ -4082,6 +4161,10 @@
               '<div class="sLabelWrap"><div class="sLabel">' + t('exportPdf') + '</div><div class="sDesc">' + t('exportPdfDesc') + '</div></div>' +
               '<button class="btn small primary" id="btnPdfExport">↓ PDF</button>' +
               '</div>' +
+              '<div class="settingsRow">' +
+              '<div class="sLabelWrap"><div class="sLabel" style="color:var(--bad)">' + t('deleteAll') + '</div><div class="sDesc">' + t('deleteAllDesc') + '</div></div>' +
+              '<button class="btn small danger" id="btnDeleteAll">⚠️ ' + t('deleteAll') + '</button>' +
+              '</div>' +
               '</div>' +
 
               /* Account */
@@ -4139,6 +4222,10 @@
             /* Bind PDF export */
             var bPdf = document.getElementById('btnPdfExport');
             if (bPdf) bPdf.addEventListener('click', exportPDF);
+
+            /* Bind Delete All */
+            var bDelAll = document.getElementById('btnDeleteAll');
+            if (bDelAll) bDelAll.addEventListener('click', deleteAllData);
 
             /* Bind KVKK button */
             var bKvkk = document.getElementById('btnKvkk');
