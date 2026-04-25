@@ -1,12 +1,12 @@
 {
-  "name": "TripLedger",
-  "short_name": "TripLedger",
+  "name": "CashNode",
+  "short_name": "CashNode",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#1e293b",
-  "theme_color": "#4f46e5",
-  "description": "Seyahat harcamalarınızı ve rotanızı takip edin.",
+  "background_color": "#07101f",
+  "theme_color": "#0b1220",
+  "description": "Ödemelerinizi ve bütçenizi takip edin.",
   "icons": [
     {
       "src": "app-icon.png",
