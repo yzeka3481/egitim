@@ -2578,14 +2578,37 @@
         USD: { code: 'USD', locale: 'en-US', symbol: '$' }
       };
       var currentCurrency = localStorage.getItem('currency') || 'TRY';
-      function getCurrencyFmt() {
-        var c = CURRENCIES[currentCurrency] || CURRENCIES.TRY;
-        return new Intl.NumberFormat(c.locale, { style: 'currency', currency: c.code });
+      function getActiveCurrency() {
+        var cc = currentCurrency;
+        if (typeof assetRates !== 'undefined' && cc !== 'TRY') {
+          if (cc === 'USD' && !assetRates.USD_TRY) cc = 'TRY';
+          if (cc === 'EUR' && !assetRates.EUR_TRY) cc = 'TRY';
+        }
+        return cc;
+      }
+      function getCurrencyFmt(noDec) {
+        var c = CURRENCIES[getActiveCurrency()] || CURRENCIES.TRY;
+        var opts = { style: 'currency', currency: c.code };
+        if (noDec) opts.maximumFractionDigits = 0;
+        return new Intl.NumberFormat(c.locale, opts);
       }
       function setCurrency(code) { currentCurrency = code; localStorage.setItem('currency', code); renderPage(); }
 
       var privacyMode = false;
-      function fmtAmt(n) { return privacyMode ? '●●●' : getCurrencyFmt().format(n); }
+      function convertTRY(n) {
+        if (!n) return 0;
+        var cc = getActiveCurrency();
+        if (cc === 'TRY') return n;
+        if (typeof assetRates !== 'undefined') {
+          if (cc === 'USD' && assetRates.USD_TRY) return n / assetRates.USD_TRY;
+          if (cc === 'EUR' && assetRates.EUR_TRY) return n / assetRates.EUR_TRY;
+        }
+        return n;
+      }
+      function fmtAmt(n, noDec) {
+        if (privacyMode) return '●●●';
+        return getCurrencyFmt(noDec).format(convertTRY(n));
+      }
 
       /* ── Apply language to static HTML elements ── */
       function applyLang() {
@@ -3969,7 +3992,7 @@
           '<button id="btnAssetRefresh" class="btn small refreshBtn">' + t('assetRefresh') + '</button>' +
           '</div>' +
           '<div class="assetSummaryRow">' +
-          '<div class="assetSummaryKpi"><div class="kLabel">' + t('assetNetWorth') + '</div><div class="kVal" style="color:var(--brand)">' + (netWorth ? fmt.format(netWorth) : '—') + '</div></div>' +
+          '<div class="assetSummaryKpi"><div class="kLabel">' + t('assetNetWorth') + '</div><div class="kVal" style="color:var(--brand)">' + (netWorth ? fmtAmt(netWorth, true) : '—') + '</div></div>' +
           '<div class="assetSummaryKpi"><div class="kLabel">' + t('total') + ' Varlık</div><div class="kVal">' + allAssets.length + '</div></div>' +
           '</div>' +
           '<div class="rateRow" style="margin-top:12px;">' + rateChips + '</div>' +
@@ -4001,14 +4024,15 @@
               var fDate = dArr.length === 3 ? (dArr[2] + '.' + dArr[1] + '.' + dArr[0]) : asset.buyDate;
               subText += ' · Alış: ' + fDate;
             }
-            var totalStr = result.total ? fmt.format(result.total) : '—';
+            var totalStr = result.total ? fmtAmt(result.total, true) : '—';
             var rawStr = qty + (asset.type === 'cash' ? ' ' + (asset.currency || 'TRY') : ' ' + typeLabel.split(' ')[0]);
             var profitHtml = '';
             if (asset.buyPrice && result.total > 0) {
                var p = result.total - (qty * asset.buyPrice);
                var pColor = p > 0 ? 'var(--good)' : (p < 0 ? 'var(--bad)' : 'var(--muted)');
                var pSign = p > 0 ? '+' : '';
-               profitHtml = '<div style="font-size:12px; font-weight:800; color:' + pColor + '; margin-top:2px;">' + pSign + fmt.format(p) + '</div>';
+               var formattedP = fmtAmt(Math.abs(p), true);
+               profitHtml = '<div style="font-size:12px; font-weight:800; color:' + pColor + '; margin-top:2px;">' + (p < 0 ? '-' : pSign) + formattedP + '</div>';
             }
             return '' +
               '<div class="assetCard" style="grid-column:span 6;" data-asset-id="' + escapeHtml(asset.id) + '">' +
