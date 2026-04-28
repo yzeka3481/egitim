@@ -501,6 +501,37 @@
       flex-wrap: wrap;
     }
 
+    .fab-button {
+      position: fixed;
+      bottom: calc(90px + env(safe-area-inset-bottom));
+      right: 20px;
+      width: 58px;
+      height: 58px;
+      border-radius: 29px;
+      background: linear-gradient(135deg, #4F46E5, #D946EF);
+      box-shadow: 
+        inset 2px 2px 4px rgba(255, 255, 255, 0.3), 
+        0 10px 24px rgba(217, 70, 239, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      cursor: pointer;
+      z-index: 1000;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+    }
+    .fab-button:active {
+      transform: scale(0.9);
+      box-shadow: 
+        inset 2px 2px 4px rgba(255, 255, 255, 0.3), 
+        0 4px 12px rgba(217, 70, 239, 0.3);
+    }
+    .fab-button svg {
+      width: 24px;
+      height: 24px;
+      stroke-width: 2.5;
+    }
+
     .calDot {
       width: 6px;
       height: 6px;
@@ -1776,6 +1807,10 @@
     <div id="content" class="content"></div>
   </div>
 
+  <div id="fabAdd" class="fab-button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+  </div>
+
   <div class="tabbarWrap">
     <div class="tabbar">
       <div class="tab active" data-page="dashboard">
@@ -1787,14 +1822,14 @@
       <div class="tab" data-page="income">
         <div class="ico">💰</div>Gelir
       </div>
-      <div class="tab primary-tab" id="tabAdd">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-      </div>
       <div class="tab" data-page="calendar">
         <div class="ico">📆</div>Takvim
       </div>
       <div class="tab" data-page="assets">
         <div class="ico">🏦</div>Varlıklar
+      </div>
+      <div class="tab" data-page="subscriptions">
+        <div class="ico">🔁</div>Abonelik
       </div>
       <div class="tab" data-page="settings">
         <div class="ico">⚙️</div>Ayarlar
@@ -1841,6 +1876,39 @@
         <button id="assetSave" class="btn primary" style="flex:1;">Kaydet</button>
         <button id="assetDelete" class="btn danger" style="display:none;">🗑 Sil</button>
         <button id="assetCancel" class="btn" style="flex:1;">Vazgeç</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="subBg" class="modalBg">
+    <div class="modal">
+      <div class="modalTop">
+        <strong id="subModalTitle">Abonelik Ekle</strong>
+        <button id="subClose" class="btn small">✕</button>
+      </div>
+      <div class="modalBody">
+        <input id="sTitle" placeholder="Abonelik (Örn: Netflix)" />
+        <div class="grid2">
+          <input id="sAmount" type="number" step="any" min="0" placeholder="Aylık Tutar" />
+          <input id="sRenewDay" type="number" min="1" max="31" placeholder="Yenilenme Günü (Örn: 15)" />
+        </div>
+        <label style="display:block;margin-top:10px;margin-bottom:4px;font-size:12px;color:var(--muted);">Ödeme Yöntemi</label>
+        <select id="sPaymentMethod">
+          <option value="cc">Kredi Kartı (Gidere Ekleme)</option>
+          <option value="cash">Nakit/Hesap</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:14px;margin-bottom:10px;">
+          <input type="checkbox" id="sIsTrial"> <span style="font-size:14px;font-weight:650;color:#e8f0ff;">Bu bir Ücretsiz Deneme (Free Trial)</span>
+        </label>
+        <div id="sTrialWrap" style="display:none; margin-bottom:10px;">
+          <span style="font-size:12px;color:var(--warn);display:block;margin-bottom:4px;">Deneme Bitiş Tarihi</span>
+          <input type="date" id="sTrialEnd">
+        </div>
+      </div>
+      <div class="actions">
+        <button id="subSave" class="btn primary" style="flex:1;">Kaydet</button>
+        <button id="subDelete" class="btn danger" style="display:none;">🗑 Sil</button>
+        <button id="subCancel" class="btn" style="flex:1;">Vazgeç</button>
       </div>
     </div>
   </div>
@@ -2333,7 +2401,7 @@
       var LANG = {
         tr: {
           appTitle: 'CashNode',
-          dashboard: 'Dashboard', expense: 'Gider', income: 'Gelir', calendar: 'Takvim', assets: 'Varlıklar', settings: 'Ayarlar',
+          dashboard: 'Dashboard', expense: 'Gider', income: 'Gelir', calendar: 'Takvim', assets: 'Varlıklar', subscriptions: 'Abonelik', settings: 'Ayarlar',
           newEntry: 'Yeni', editEntry: 'Kayıt Düzenle', save: 'Kaydet', cancel: 'Vazgeç',
           login: 'Giriş Yap', register: 'Kayıt Ol', logout: 'Çıkış', loginBtn: 'Giriş',
           paid: 'Ödendi', unpaid: 'Ödenmedi', paidShort: 'Ödendi', unpaidShort: 'Ödenmedi',
@@ -2412,7 +2480,7 @@
         },
         en: {
           appTitle: 'Payment Tracker',
-          dashboard: 'Dashboard', expense: 'Expenses', income: 'Income', calendar: 'Calendar', assets: 'Assets', settings: 'Settings',
+          dashboard: 'Dashboard', expense: 'Expenses', income: 'Income', calendar: 'Calendar', assets: 'Assets', subscriptions: 'Subscriptions', settings: 'Settings',
           newEntry: 'New Entry', editEntry: 'Edit Entry', save: 'Save', cancel: 'Cancel',
           login: 'Sign In', register: 'Sign Up', logout: 'Logout', loginBtn: 'Login',
           paid: 'Paid', unpaid: 'Unpaid', paidShort: 'Paid', unpaidShort: 'Unpaid',
@@ -2856,13 +2924,22 @@
       window.setActiveTab = setActiveTab;
       document.querySelectorAll(".tab").forEach(function (tab) {
         tab.addEventListener("click", function () { 
-          if (tab.id === "tabAdd") {
-            openAddModalForCreate(); // Fonksiyonu doğrudan çağır
-            return;
-          }
           setActiveTab(tab.getAttribute("data-page")); 
         });
       });
+
+      var fab = document.getElementById("fabAdd");
+      if (fab) {
+        fab.addEventListener("click", function() {
+          if (currentPage === "assets") {
+            openAssetModal(null);
+          } else if (currentPage === "subscriptions") {
+            openSubModal(null);
+          } else {
+            openAddModalForCreate();
+          }
+        });
+      }
 
       $("btnPrev").addEventListener("click", function () { selectedMonth = prevMonth(selectedMonth); $("monthLabel").textContent = formatMonthLabel(selectedMonth); onMonthChanged(); });
       $("btnNext").addEventListener("click", function () { selectedMonth = nextMonth(selectedMonth); $("monthLabel").textContent = formatMonthLabel(selectedMonth); onMonthChanged(); });
@@ -2919,12 +2996,20 @@
       function openAddModalForCreate() {
         if (!user) return toast(t('notLoggedIn'));
         document.getElementById('addTitle').textContent = t('newEntry');
-        document.getElementById('mDirExp').checked = true;
+        
+        var isIncome = (currentPage === "income");
+        document.getElementById(isIncome ? 'mDirInc' : 'mDirExp').checked = true;
+        
         document.getElementById('mStatusUnpaid').checked = true;
         document.getElementById('mAmount').value = "";
-        document.getElementById('mDate').value = selectedMonth + "-01";
         
-        fillCategorySelect("expense");
+        var today = new Date();
+        var todayYm = today.getFullYear() + "-" + pad2(today.getMonth() + 1);
+        document.getElementById('mDate').value = (todayYm === selectedMonth) 
+            ? (todayYm + "-" + pad2(today.getDate())) 
+            : (selectedMonth + "-01");
+        
+        fillCategorySelect(isIncome ? "income" : "expense");
         document.getElementById('mCategoryOther').value = "";
         document.getElementById('mCategoryOther').style.display = "none";
         document.getElementById('mTitle').value = "";
@@ -3662,6 +3747,9 @@
       var allAssets = [];
       var assetUnsub = null;
       var assetEditId = null;
+      var allSubscriptions = [];
+      var subUnsub = null;
+      var subEditId = null;
 
       /* Asset type metadata */
       var ASSET_META = {
@@ -3867,7 +3955,6 @@
           '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">' +
           '<h2 style="margin:0;font-size:15px;font-weight:800;">' + t('assetsTitle') + '</h2>' +
           '<button id="btnAssetRefresh" class="btn small refreshBtn">' + t('assetRefresh') + '</button>' +
-          '<button id="btnAssetAdd" class="btn small primary">＋ ' + t('addAsset').replace('＋ ','') + '</button>' +
           '</div>' +
           '<div class="assetSummaryRow">' +
           '<div class="assetSummaryKpi"><div class="kLabel">' + t('assetNetWorth') + '</div><div class="kVal" style="color:var(--brand)">' + (netWorth ? fmt.format(netWorth) : '—') + '</div></div>' +
@@ -4018,6 +4105,183 @@
 
 
 
+      function startSubListener() {
+        if (!user || !db) return;
+        if (subUnsub) { subUnsub(); subUnsub = null; }
+        subUnsub = db.collection("subscriptions").where("userId", "==", user.uid).onSnapshot(function (snap) {
+          allSubscriptions = snap.docs.map(function (d) {
+            var data = d.data() || {};
+            data.id = d.id;
+            return data;
+          });
+          if (currentPage === 'dashboard' || currentPage === 'subscriptions') renderPage();
+        }, function (err) {
+          console.error(err);
+        });
+      }
+
+      function renderTrialAlerts() {
+        if (!allSubscriptions || allSubscriptions.length === 0) return '';
+        var today = new Date();
+        today.setHours(0,0,0,0);
+        var alertsHtml = '';
+        allSubscriptions.forEach(function(s) {
+          if (s.isTrial && s.trialEnd) {
+            var tEnd = new Date(s.trialEnd);
+            tEnd.setHours(0,0,0,0);
+            var diffDays = Math.ceil((tEnd - today) / (1000 * 60 * 60 * 24));
+            if (diffDays >= 0 && diffDays <= 3) {
+              var dayText = diffDays === 0 ? 'Bugün' : diffDays + ' gün sonra';
+              alertsHtml += '<div style="background:rgba(251,191,36,.12); border:1px solid rgba(251,191,36,.3); border-radius:12px; padding:12px; margin-bottom:12px; display:flex; align-items:center; gap:10px;">' +
+                '<div style="font-size:24px;">⏳</div>' +
+                '<div>' +
+                  '<div style="font-weight:650; color:var(--warn); font-size:14px;">Deneme Süresi Bitiyor!</div>' +
+                  '<div style="font-size:12px; color:var(--text); margin-top:4px;"><b>' + escapeHtml(s.title) + '</b> aboneliğinin ücretsiz denemesi <b>' + dayText + '</b> bitiyor. İptal etmeyi unutmayın!</div>' +
+                '</div>' +
+              '</div>';
+            }
+          }
+        });
+        if (!alertsHtml) return '';
+        return '<div style="grid-column:span 4; margin-top:4px;">' + alertsHtml + '</div>';
+      }
+
+      function renderSubscriptionsPage() {
+        var content = $("content");
+        var totalMonthly = 0;
+        var totalCC = 0;
+        var listHtml = '';
+
+        if (!allSubscriptions || allSubscriptions.length === 0) {
+          listHtml = '<div class="hint" style="text-align:center; padding:40px 20px;">' +
+            '<div style="font-size:40px; margin-bottom:10px;">🔁</div>' +
+            'Henüz abonelik eklenmemiş. Kredi kartı ekstrene yansıyan veya ayrıca ödediğin abonelikleri buradan takip edebilirsin.' +
+            '</div>';
+        } else {
+          allSubscriptions.forEach(function(s) {
+            if (!s.isTrial) {
+              totalMonthly += Number(s.amount || 0);
+              if (s.paymentMethod === 'cc') totalCC += Number(s.amount || 0);
+            }
+            var subBadge = s.isTrial ? '<span class="tag warn" style="font-size:10px; padding:2px 6px;">Deneme (Bitiş: ' + escapeHtml(s.trialEnd || '-') + ')</span>' : '';
+            var ccBadge = s.paymentMethod === 'cc' ? '<span class="tag" style="font-size:10px; background:rgba(91,142,255,.15); color:var(--brand); border:none; padding:2px 6px;">Kredi Kartı</span>' : '';
+            var renewText = s.renewDay ? '<div class="hint" style="font-size:11px;">Her ayın ' + s.renewDay + '. günü</div>' : '';
+            
+            listHtml += '<div class="rowItem" data-sub-id="' + escapeHtml(s.id) + '" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:12px; border-bottom:1px solid var(--line);">' +
+              '<div style="display:flex; align-items:center; gap:12px;">' +
+                '<div style="width:40px; height:40px; border-radius:12px; background:rgba(255,255,255,.05); display:flex; align-items:center; justify-content:center; font-size:20px;">' + (s.title ? s.title.charAt(0).toUpperCase() : '🔁') + '</div>' +
+                '<div style="display:flex; flex-direction:column; gap:4px;">' +
+                  '<div style="font-weight:650; font-size:14px; color:var(--text);">' + escapeHtml(s.title || 'Abonelik') + '</div>' +
+                  renewText +
+                  '<div style="display:flex; gap:6px;">' + subBadge + ccBadge + '</div>' +
+                '</div>' +
+              '</div>' +
+              '<div style="font-weight:700; font-size:15px; color:' + (s.isTrial ? 'var(--warn)' : 'var(--text)') + ';">' + (s.isTrial ? 'Ücretsiz' : fmtAmt(s.amount)) + '</div>' +
+            '</div>';
+          });
+        }
+
+        content.innerHTML = 
+          '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">' +
+            '<div>' +
+              '<h2 style="margin:0; font-size:20px;">🔁 Abonelikler</h2>' +
+              '<div class="hint" style="font-size:12px; margin-top:4px;">Aboneliklerinizi takip edin (Giderlere yansımaz)</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="grid2" style="margin-bottom:16px;">' +
+            '<div class="card" style="padding:16px; background:rgba(91,142,255,.05); border-color:rgba(91,142,255,.15);">' +
+              '<div class="hint" style="font-size:11px; margin-bottom:4px;">Aylık Toplam Yük</div>' +
+              '<div style="font-size:18px; font-weight:700; color:var(--text);">' + fmtAmt(totalMonthly) + '</div>' +
+            '</div>' +
+            '<div class="card" style="padding:16px; background:rgba(255,255,255,.02); border-color:rgba(255,255,255,.05);">' +
+              '<div class="hint" style="font-size:11px; margin-bottom:4px;">Kredi Kartından Kesilen</div>' +
+              '<div style="font-size:18px; font-weight:700; color:var(--muted);">' + fmtAmt(totalCC) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="card" style="padding:0;">' + listHtml + '</div>';
+
+        var btnAdd = document.getElementById('btnSubAdd');
+        if (btnAdd) btnAdd.addEventListener('click', function() { openSubModal(null); });
+
+        document.querySelectorAll('.rowItem[data-sub-id]').forEach(function(el) {
+          el.addEventListener('click', function(e) {
+            var id = el.getAttribute('data-sub-id');
+            var sub = allSubscriptions.find(function(s) { return s.id === id; });
+            if (sub) openSubModal(sub);
+          });
+        });
+      }
+
+      var subBg = document.getElementById('subBg');
+      function openSubModal(sub) {
+        subEditId = sub ? sub.id : null;
+        document.getElementById('subModalTitle').textContent = sub ? 'Abonelik Düzenle' : 'Abonelik Ekle';
+        document.getElementById('sTitle').value = sub ? (sub.title || '') : '';
+        document.getElementById('sAmount').value = sub ? (sub.amount || '') : '';
+        document.getElementById('sRenewDay').value = sub ? (sub.renewDay || '') : '';
+        document.getElementById('sPaymentMethod').value = sub ? (sub.paymentMethod || 'cc') : 'cc';
+        document.getElementById('sIsTrial').checked = sub ? !!sub.isTrial : false;
+        document.getElementById('sTrialEnd').value = sub ? (sub.trialEnd || '') : '';
+        
+        document.getElementById('sTrialWrap').style.display = document.getElementById('sIsTrial').checked ? 'block' : 'none';
+        document.getElementById('subDelete').style.display = sub ? 'inline-flex' : 'none';
+        
+        subBg.classList.add('show');
+      }
+
+      document.getElementById('sIsTrial').addEventListener('change', function() {
+        document.getElementById('sTrialWrap').style.display = this.checked ? 'block' : 'none';
+      });
+      document.getElementById('subClose').addEventListener('click', function() { subBg.classList.remove('show'); });
+      document.getElementById('subCancel').addEventListener('click', function() { subBg.classList.remove('show'); });
+      subBg.addEventListener('click', function(e) { if(e.target === subBg) subBg.classList.remove('show'); });
+
+      document.getElementById('subDelete').addEventListener('click', function() {
+        if(!subEditId) return;
+        if(confirm(t('confirmDelete'))) {
+          db.collection('subscriptions').doc(subEditId).delete().then(function() {
+            subBg.classList.remove('show');
+            toast(t('deletedOk'));
+            subEditId = null;
+          }).catch(function(err){ toast(t('opErr') + ' ' + err); });
+        }
+      });
+
+      document.getElementById('subSave').addEventListener('click', function() {
+        var title = document.getElementById('sTitle').value.trim();
+        var amount = Number(document.getElementById('sAmount').value);
+        var renewDay = parseInt(document.getElementById('sRenewDay').value);
+        var isTrial = document.getElementById('sIsTrial').checked;
+        var trialEnd = document.getElementById('sTrialEnd').value;
+        var payMethod = document.getElementById('sPaymentMethod').value;
+
+        if (!title) return toast('Abonelik adı girin.');
+        if (!isTrial && (!amount || amount <= 0)) return toast('Tutar girin.');
+
+        var payload = {
+          userId: user.uid,
+          title: title,
+          amount: amount || 0,
+          renewDay: isNaN(renewDay) ? null : renewDay,
+          isTrial: isTrial,
+          trialEnd: isTrial ? trialEnd : null,
+          paymentMethod: payMethod,
+          updatedAt: serverTs()
+        };
+
+        var p = subEditId
+          ? db.collection('subscriptions').doc(subEditId).set(payload, { merge: true })
+          : (function() { payload.createdAt = serverTs(); return db.collection('subscriptions').add(payload); })();
+
+        p.then(function() {
+          subBg.classList.remove('show');
+          toast(subEditId ? t('updatedOk') : t('savedOk'));
+          subEditId = null;
+        }).catch(function(err) {
+          toast(t('saveErr') + ' ' + (err.message || err));
+        });
+      });
+
       function renderPage() {
         try {
           $("monthLabel").textContent = formatMonthLabel(selectedMonth);
@@ -4028,7 +4292,7 @@
           var _monthNav = document.getElementById("monthNav");
           if (_monthNav) _monthNav.style.display = showNav ? "" : "none";
           var _mobileBar = document.getElementById("headerMobileBar");
-          if (_mobileBar) _mobileBar.style.display = (currentPage === "assets" || currentPage === "settings") ? "none" : "";
+          if (_mobileBar) _mobileBar.style.display = (currentPage === "assets" || currentPage === "settings" || currentPage === "subscriptions") ? "none" : "";
 
           if (!user) {
             content.innerHTML =
@@ -4083,6 +4347,7 @@
               '<div class="kpi" style="align-items:center;text-align:center;"><div class="value ' + (k.net >= 0 ? 'good' : 'bad') + '">' + fmtAmt(k.net) + '</div><div class="sub" style="justify-content:center;"><span class="hint">' + t('income') + ' − ' + t('expense') + '</span></div></div>' +
               '</div>' +
               renderSpendingChart(rowsMonth) +
+              renderTrialAlerts() +
               '<div class="card" style="grid-column:span 4; background:linear-gradient(135deg,rgba(91,142,255,.08),rgba(124,92,255,.05)); border-color:rgba(91,142,255,.18);">' +
               '<h2>' + t('quickTips') + '</h2>' +
               '<div class="hint" style="line-height:1.8;">' + t('quickTipsBody') + '</div>' +
@@ -4137,6 +4402,11 @@
 
           if (currentPage === "assets") {
             renderAssetsPage();
+            return;
+          }
+
+          if (currentPage === "subscriptions") {
+            renderSubscriptionsPage();
             return;
           }
 
@@ -4294,8 +4564,10 @@
           $("topHint").textContent = "";
           allRows = [];
           allAssets = [];
+          allSubscriptions = [];
           if (unsub) { unsub(); unsub = null; }
           if (assetUnsub) { assetUnsub(); assetUnsub = null; }
+          if (subUnsub) { subUnsub(); subUnsub = null; }
           renderPage();
           return;
         }
@@ -4310,6 +4582,7 @@
         if ($("btnPrivacy")) $("btnPrivacy").title = t('hideAmounts');
         startListener();
         startAssetListener();
+        startSubListener();
         renderPage();
       });
 
