@@ -1870,7 +1870,12 @@
           <input id="assetValue" type="number" step="any" min="0" placeholder="Birim değer (opsiyonel)" />
         </div>
         <div class="hint" id="assetValueHint">Birim değer boş bırakılırsa canlı fiyat kullanılır.</div>
-        <input id="assetNote" placeholder="Not (opsiyonel)" />
+        <label class="hint" style="display:block;margin-top:10px;margin-bottom:4px;">Alış Bilgileri (Kâr Hesabı İçin)</label>
+        <div class="grid2">
+          <input id="assetBuyPrice" type="number" step="any" min="0" placeholder="Birim Alış Fiyatı (TRY)" />
+          <input id="assetBuyDate" type="date" title="Alış Tarihi" />
+        </div>
+        <input id="assetNote" placeholder="Not (opsiyonel)" style="margin-top:10px;" />
       </div>
       <div class="actions">
         <button id="assetSave" class="btn primary" style="flex:1;">Kaydet</button>
@@ -2431,7 +2436,7 @@
           dayDetail: 'Gün Detayı', recordDetail: 'Kayıt Detayı', close: 'Kapat',
           markPaid: 'Ödendi İşaretle', markReceived: 'Alındı İşaretle', undo: 'Geri Al', edit: 'Düzenle', del: 'Sil',
           category: 'Kategori', date: 'Tarih', note: 'Not', duration: 'Süre', months: 'ay',
-          amountPlaceholder: 'Tutar', titlePlaceholder: 'Başlık (örn: Derya, Macbook)',
+          amountPlaceholder: 'Tutar', titlePlaceholder: 'Başlık (örn: Tuna, Macbook)',
           otherCatPlaceholder: 'Diğer kategori yaz',
           filterAll: 'Durum: Hepsi', filterUnpaid: 'Durum: Alınmadı/Ödenmedi', filterPaid: 'Durum: Alındı/Ödendi',
           searchPlaceholder: 'Ara (başlık / kategori)',
@@ -3927,11 +3932,15 @@
 
         // Net servet hesapla
         var netWorth = 0;
+        var totalProfit = 0;
         var hasUnknown = false;
         allAssets.forEach(function(a) {
           var r = calcAssetTRY(a);
           netWorth += r.total;
           if (!r.total && Number(a.amount) > 0) hasUnknown = true;
+          if (a.buyPrice && r.total > 0) {
+            totalProfit += (r.total - (Number(a.amount) * a.buyPrice));
+          }
         });
 
         // Güncelleme zamanı
@@ -3984,8 +3993,20 @@
               : '<span class="assetManualBadge">✎ Manuel</span>';
             var unitStr = result.unitTRY ? ' · ' + fmtTRY(result.unitTRY) + '/birim' : '';
             var subText = typeLabel + (asset.currency && asset.currency !== 'TRY' ? ' · ' + asset.currency : '') + unitStr;
+            if (asset.buyDate) {
+              var dArr = asset.buyDate.split('-');
+              var fDate = dArr.length === 3 ? (dArr[2] + '.' + dArr[1] + '.' + dArr[0]) : asset.buyDate;
+              subText += ' · Alış: ' + fDate;
+            }
             var totalStr = result.total ? fmt.format(result.total) : '—';
             var rawStr = qty + (asset.type === 'cash' ? ' ' + (asset.currency || 'TRY') : ' ' + typeLabel.split(' ')[0]);
+            var profitHtml = '';
+            if (asset.buyPrice && result.total > 0) {
+               var p = result.total - (qty * asset.buyPrice);
+               var pColor = p > 0 ? 'var(--good)' : (p < 0 ? 'var(--bad)' : 'var(--muted)');
+               var pSign = p > 0 ? '+' : '';
+               profitHtml = '<div style="font-size:12px; font-weight:800; color:' + pColor + '; margin-top:2px;">' + pSign + fmt.format(p) + '</div>';
+            }
             return '' +
               '<div class="assetCard" style="grid-column:span 6;" data-asset-id="' + escapeHtml(asset.id) + '">' +
               '<div class="assetIcon" style="background:' + meta.bg + ';">' + meta.icon + '</div>' +
@@ -3993,9 +4014,10 @@
               '<div class="assetLabel">' + escapeHtml(asset.name || typeLabel) + '</div>' +
               '<div class="assetSub">' + escapeHtml(subText) + (asset.note ? ' · ' + escapeHtml(asset.note) : '') + '</div>' +
               '</div>' +
-              '<div class="assetRight">' +
+              '<div class="assetRight" style="text-align:right;">' +
               '<div class="assetVal" style="color:' + meta.color + '">' + (privacyMode ? '●●●' : totalStr) + '</div>' +
               '<div class="assetRaw">' + (privacyMode ? '●●' : rawStr) + '</div>' +
+              profitHtml +
               '<div style="margin-top:4px;">' + badge + '</div>' +
               '</div>' +
               '</div>';
@@ -4033,6 +4055,8 @@
         document.getElementById('assetName').value = asset ? (asset.name || '') : '';
         document.getElementById('assetAmount').value = asset ? (asset.amount || '') : '';
         document.getElementById('assetValue').value = asset ? (asset.manualValue || '') : '';
+        document.getElementById('assetBuyPrice').value = asset ? (asset.buyPrice || '') : '';
+        document.getElementById('assetBuyDate').value = asset ? (asset.buyDate || '') : '';
         document.getElementById('assetNote').value = asset ? (asset.note || '') : '';
         updateAssetValueHint();
         var assetDelBtn = document.getElementById('assetDelete');
@@ -4075,6 +4099,8 @@
         var name = document.getElementById('assetName').value.trim();
         var amount = Number(document.getElementById('assetAmount').value);
         var manualValue = Number(document.getElementById('assetValue').value) || 0;
+        var buyPrice = Number(document.getElementById('assetBuyPrice').value) || null;
+        var buyDate = document.getElementById('assetBuyDate').value || null;
         var note = document.getElementById('assetNote').value.trim();
 
         if (!amount || amount <= 0) return toast(t('enterAmount'));
@@ -4086,6 +4112,8 @@
           name: name || t('assetType_' + type),
           amount: amount,
           manualValue: manualValue || null,
+          buyPrice: buyPrice,
+          buyDate: buyDate,
           note: note || '',
           updatedAt: serverTs()
         };
