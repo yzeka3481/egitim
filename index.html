@@ -171,6 +171,10 @@
       font-size: 14px;
       transition: border-color .15s, box-shadow .15s;
     }
+    input:not([type="checkbox"]):not([type="radio"]),
+    select {
+      width: 100%;
+    }
 
     input:focus,
     select:focus {
@@ -4216,11 +4220,11 @@
             '</div>' +
           '</div>' +
           '<div class="grid2" style="margin-bottom:16px;">' +
-            '<div class="card" style="padding:16px; background:rgba(91,142,255,.05); border-color:rgba(91,142,255,.15);">' +
+            '<div class="card" style="padding:16px;">' +
               '<div class="hint" style="font-size:11px; margin-bottom:4px;">Aylık Toplam Yük</div>' +
               '<div style="font-size:18px; font-weight:700; color:var(--text);">' + fmtAmt(totalMonthly) + '</div>' +
             '</div>' +
-            '<div class="card" style="padding:16px; background:rgba(255,255,255,.02); border-color:rgba(255,255,255,.05);">' +
+            '<div class="card" style="padding:16px;">' +
               '<div class="hint" style="font-size:11px; margin-bottom:4px;">Kredi Kartından Kesilen</div>' +
               '<div style="font-size:18px; font-weight:700; color:var(--muted);">' + fmtAmt(totalCC) + '</div>' +
             '</div>' +
