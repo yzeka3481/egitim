@@ -186,6 +186,17 @@
       color: var(--muted);
     }
 
+    input[type="date"] {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--text);
+    }
+
+    input[type="date"]:not([value]),
+    input[type="date"][value=""] {
+      color: var(--muted);
+    }
+
     select option {
       background: #0d1829;
     }
@@ -4083,7 +4094,8 @@
         document.getElementById('assetAmount').value = asset ? (asset.amount || '') : '';
         document.getElementById('assetValue').value = asset ? (asset.manualValue || '') : '';
         document.getElementById('assetBuyPrice').value = asset ? (asset.buyPrice || '') : '';
-        document.getElementById('assetBuyDate').value = asset ? (asset.buyDate || '') : '';
+        var todayStr = (function() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); })();
+        document.getElementById('assetBuyDate').value = asset ? (asset.buyDate || '') : todayStr;
         document.getElementById('assetNote').value = asset ? (asset.note || '') : '';
         updateAssetValueHint();
         var assetDelBtn = document.getElementById('assetDelete');
