@@ -186,17 +186,6 @@
       color: var(--muted);
     }
 
-    input[type="date"] {
-      min-width: 0;
-      overflow: hidden;
-      color: var(--text);
-    }
-
-    input[type="date"]:not([value]),
-    input[type="date"][value=""] {
-      color: var(--muted);
-    }
-
     select option {
       background: #0d1829;
     }
@@ -2460,7 +2449,7 @@
           cat_Kira: 'Kira', cat_Market: 'Market', cat_Fatura: 'Fatura', cat_Ulasim: 'Ulaşım', cat_Eglence: 'Eğlence',
           cat_Saglik: 'Sağlık', cat_Egitim: 'Eğitim', cat_Yemek: 'Yemek', cat_Giyim: 'Giyim', cat_Kredi: 'Kredi/Kart',
           cat_Nakit: 'Nakit', cat_Diger: 'Diğer',
-          cat_Maas: 'Maaş', cat_Prim: 'Prim/Bonus', cat_Satis: 'Satış', cat_Hediye: 'Hediye', cat_Faiz: 'Faiz/Yatırım',
+          cat_Maas: 'Maaş', cat_Prim: 'Prim/Bonus', cat_Satis: 'Satış', cat_Hediye: 'Hediye', cat_Faiz: 'Faiz/Yatırım', cat_DevredenBakiye: 'Devreden Bakiye',
           calDays: ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'],
           emailPlaceholder: 'E-posta', passwordPlaceholder: 'Şifre',
           loginErr: 'E-posta/şifre gir.', notLoggedIn: 'Önce giriş yap.', startHint: 'Sağ üstten <b>Giriş</b> butonuna bas.',
@@ -2539,7 +2528,7 @@
           cat_Kira: 'Rent', cat_Market: 'Groceries', cat_Fatura: 'Bills', cat_Ulasim: 'Transport', cat_Eglence: 'Entertainment',
           cat_Saglik: 'Health', cat_Egitim: 'Education', cat_Yemek: 'Dining', cat_Giyim: 'Clothing', cat_Kredi: 'Credit/Card',
           cat_Nakit: 'Cash', cat_Diger: 'Other',
-          cat_Maas: 'Salary', cat_Prim: 'Bonus', cat_Satis: 'Sale', cat_Hediye: 'Gift', cat_Faiz: 'Interest/Investment',
+          cat_Maas: 'Salary', cat_Prim: 'Bonus', cat_Satis: 'Sale', cat_Hediye: 'Gift', cat_Faiz: 'Interest/Investment', cat_DevredenBakiye: 'Carried Over Balance',
           calDays: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
           loginTitle: 'Sign In / Sign Up', loginHint: 'Fill in the <b>firebaseConfig</b> field in the file with your project.',
           emailPlaceholder: 'Email', passwordPlaceholder: 'Password',
@@ -2721,17 +2710,17 @@
         "Kira": "#7c9cff", "Market": "#2dd4bf", "Fatura": "#fbbf24", "Ulaşım": "#fb7185", "Eğlence": "#a78bfa",
         "Sağlık": "#34d399", "Eğitim": "#60a5fa", "Yemek": "#f472b6", "Giyim": "#f59e0b", "Kredi/Kart": "#f97316",
         "Nakit": "#93c5fd", "Diğer": "#9ca3af",
-        "Maaş": "#10b981", "Prim": "#34d399", "Satış": "#059669", "Hediye": "#6ee7b7", "Faiz": "#047857"
+        "Maaş": "#10b981", "Prim": "#34d399", "Satış": "#059669", "Hediye": "#6ee7b7", "Faiz": "#047857", "Devreden Bakiye": "#3b82f6"
       };
       var EXPENSE_CATS = ["Kira", "Market", "Fatura", "Ulaşım", "Yemek", "Eğlence", "Sağlık", "Eğitim", "Giyim", "Kredi/Kart", "Nakit", "Diğer"];
-      var INCOME_CATS = ["Maaş", "Prim", "Satış", "Hediye", "Faiz", "Diğer"];
+      var INCOME_CATS = ["Devreden Bakiye", "Maaş", "Prim", "Satış", "Hediye", "Faiz", "Diğer"];
 
       function getCatKey(trName) {
         var map = { 
           "Kira": "cat_Kira", "Market": "cat_Market", "Fatura": "cat_Fatura", "Ulaşım": "cat_Ulasim", 
           "Eğlence": "cat_Eglence", "Sağlık": "cat_Saglik", "Eğitim": "cat_Egitim", "Yemek": "cat_Yemek", 
           "Giyim": "cat_Giyim", "Kredi/Kart": "cat_Kredi", "Nakit": "cat_Nakit", "Diğer": "cat_Diger",
-          "Maaş": "cat_Maas", "Prim": "cat_Prim", "Satış": "cat_Satis", "Hediye": "cat_Hediye", "Faiz": "cat_Faiz"
+          "Maaş": "cat_Maas", "Prim": "cat_Prim", "Satış": "cat_Satis", "Hediye": "cat_Hediye", "Faiz": "cat_Faiz", "Devreden Bakiye": "cat_DevredenBakiye"
         };
         return map[trName];
       }
@@ -2801,6 +2790,17 @@
         $("seriesRow").style.display = "none";
       }
 
+      function updateAddStatusVisibility() {
+        var cat = $("mCategorySel").value;
+        var statusRow = document.querySelector('input[name="mPaid"]').closest('.segmented');
+        if (cat === "Devreden Bakiye") {
+          if (statusRow) statusRow.style.display = "none";
+          document.getElementById('mStatusPaid').checked = true;
+        } else {
+          if (statusRow) statusRow.style.display = "flex";
+        }
+      }
+
       function updateAddHeaderStyle() {
         var dirExp = document.getElementById('mDirExp');
         var isInc = document.getElementById('mDirInc').checked;
@@ -2826,6 +2826,7 @@
           if (labUnpaid) labUnpaid.textContent = t('unpaid');
           if (!window.__fillingEdit) fillCategorySelect("expense");
         }
+        updateAddStatusVisibility();
       }
 
       function openAddModalForEdit(row) {
@@ -3029,9 +3030,11 @@
           sel.value = (type === "income") ? "Maaş" : "Market";
         }
         $("mCategoryOther").style.display = (sel.value === "Diğer") ? "" : "none";
+        updateAddStatusVisibility();
       }
       $("mCategorySel").addEventListener("change", function () {
         $("mCategoryOther").style.display = ($("mCategorySel").value === "Diğer") ? "" : "none";
+        updateAddStatusVisibility();
       });
       $("mRecurring").addEventListener("change", function () { $("recBox").style.display = $("mRecurring").checked ? "block" : "none"; });
  
@@ -4094,8 +4097,7 @@
         document.getElementById('assetAmount').value = asset ? (asset.amount || '') : '';
         document.getElementById('assetValue').value = asset ? (asset.manualValue || '') : '';
         document.getElementById('assetBuyPrice').value = asset ? (asset.buyPrice || '') : '';
-        var todayStr = (function() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); })();
-        document.getElementById('assetBuyDate').value = asset ? (asset.buyDate || '') : todayStr;
+        document.getElementById('assetBuyDate').value = asset ? (asset.buyDate || '') : '';
         document.getElementById('assetNote').value = asset ? (asset.note || '') : '';
         updateAssetValueHint();
         var assetDelBtn = document.getElementById('assetDelete');
