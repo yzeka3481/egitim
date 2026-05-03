@@ -1847,6 +1847,100 @@
     }
     .chartCol:hover .barVal { opacity: 1; }
 
+    /* Premium Menu Grid */
+    .menuGrid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .menuCard {
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 24px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+    .menuCard:hover {
+      background: rgba(255,255,255,0.05);
+      transform: translateY(-6px);
+      border-color: rgba(255,255,255,0.15);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    .menuCard::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.05), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .menuCard:hover::after { opacity: 1; }
+    
+    .menuIcon {
+      font-size: 32px;
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 20px;
+      margin-bottom: 4px;
+      transition: transform 0.3s ease;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    .menuCard:hover .menuIcon { transform: scale(1.1) rotate(5deg); }
+    
+    .menuCard.c-cal .menuIcon { background: linear-gradient(135deg, rgba(245,104,128,0.2), rgba(245,104,128,0.05)); color: #f56880; border: 1px solid rgba(245,104,128,0.2); }
+    .menuCard.c-rep .menuIcon { background: linear-gradient(135deg, rgba(34,211,170,0.2), rgba(34,211,170,0.05)); color: #22d3aa; border: 1px solid rgba(34,211,170,0.2); }
+    .menuCard.c-sub .menuIcon { background: linear-gradient(135deg, rgba(124,92,255,0.2), rgba(124,92,255,0.05)); color: #7c5cff; border: 1px solid rgba(124,92,255,0.2); }
+    .menuCard.c-set .menuIcon { background: linear-gradient(135deg, rgba(91,142,255,0.2), rgba(91,142,255,0.05)); color: #5b8eff; border: 1px solid rgba(91,142,255,0.2); }
+    
+    .menuLabel { font-weight: 800; font-size: 15px; color: var(--text); letter-spacing: -0.3px; }
+    .menuSub { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+    /* New Premium Layout based on Screenshot */
+    .premiumGrid { display: flex; flex-direction: column; gap: 24px; margin-top: 10px; }
+    .premiumSection { display: flex; flex-direction: column; gap: 14px; }
+    .premiumSection h3 { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-left: 4px; }
+    
+    .pCard {
+      border-radius: 24px;
+      padding: 24px;
+      min-height: 110px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.25s ease;
+      border: none;
+      color: #fff;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    .pCard:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.25); filter: brightness(1.1); }
+    .pCard:active { transform: scale(0.97); }
+    
+    .pCard .pTitle { font-size: 16px; font-weight: 850; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .pCard .pIcon { position: absolute; bottom: 12px; right: 12px; font-size: 40px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)); transition: transform 0.3s ease; }
+    .pCard:hover .pIcon { transform: scale(1.2) rotate(-5deg); }
+    
+    .pCard.pink { background: linear-gradient(135deg, #ff2d55, #d00036); }
+    .pCard.orange { background: linear-gradient(135deg, #ff9500, #ff5e00); }
+    .pCard.cyan { background: linear-gradient(135deg, #00bcd4, #008ba3); }
+    .pCard.purple { background: linear-gradient(135deg, #6236ff, #441dfc); }
+    .pCard.indigo { background: linear-gradient(135deg, #5856d6, #3b3a98); }
+
     /* Search Bar */
     .searchContainer {
       display: flex;
@@ -1928,28 +2022,19 @@
   <div class="tabbarWrap">
     <div class="tabbar">
       <div class="tab active" data-page="dashboard">
-        <div class="ico">📊</div>Dashboard
+        <div class="ico">📊</div><span data-t="dashboard">Dashboard</span>
       </div>
       <div class="tab" data-page="expense">
-        <div class="ico">💸</div>Gider
+        <div class="ico">💸</div><span data-t="expense">Gider</span>
       </div>
       <div class="tab" data-page="income">
-        <div class="ico">💰</div>Gelir
-      </div>
-      <div class="tab" data-page="calendar">
-        <div class="ico">📆</div>Takvim
-      </div>
-      <div class="tab" data-page="reports">
-        <div class="ico">📈</div>Raporlar
+        <div class="ico">💰</div><span data-t="income">Gelir</span>
       </div>
       <div class="tab" data-page="assets">
-        <div class="ico">🏦</div>Varlıklar
+        <div class="ico">🏦</div><span data-t="assets">Varlıklar</span>
       </div>
-      <div class="tab" data-page="subscriptions">
-        <div class="ico">🔁</div>Abonelik
-      </div>
-      <div class="tab" data-page="settings">
-        <div class="ico">⚙️</div>Ayarlar
+      <div class="tab" data-page="more">
+        <div class="ico">🛠️</div><span data-t="more">Asistan</span>
       </div>
     </div>
   </div>
@@ -2605,6 +2690,10 @@
           assetValueHintLive: 'Birim değer boş bırakılırsa canlı fiyat kullanılır.',
           assetValueHintManual: 'Girdiğin değer kullanılacak (canlı fiyat yok).',
           assetCurrency: 'Para Birimi', optional: 'opsiyonel',
+          more: 'Asistan',
+          menuDesc: 'Diğer araçlar ve ayarlar',
+          tools: 'Araçlar',
+          other: 'Diğer'
         },
         en: {
           appTitle: 'Payment Tracker',
@@ -2688,6 +2777,10 @@
           assetValueHintLive: 'Leave unit value empty to use live price.',
           assetValueHintManual: 'Your entered value will be used (no live price).',
           assetCurrency: 'Currency', optional: 'optional',
+          more: 'Assistant',
+          menuDesc: 'Other tools and settings',
+          tools: 'Tools',
+          other: 'Other'
         }
       };
       var currentLang = localStorage.getItem('lang') || 'tr';
@@ -3081,10 +3174,32 @@
 
       function setActiveTab(page) {
         currentPage = page;
+        var parentTabs = {
+           'calendar': 'more',
+           'reports': 'more',
+           'subscriptions': 'more',
+           'settings': 'more'
+        };
+        var highlightTab = parentTabs[page] || page;
+
         document.querySelectorAll(".tab").forEach(function (t) {
-          t.classList.toggle("active", t.getAttribute("data-page") === page);
+          t.classList.toggle("active", t.getAttribute("data-page") === highlightTab);
         });
-        $("subline").textContent = t(page === "dashboard" ? "dashboard" : page === "expense" ? "expense" : page === "income" ? "income" : page === "calendar" ? "calendar" : page === "assets" ? "assets" : "settings");
+
+        // Update header subline
+        var titleMap = {
+          'dashboard': t('dashboard'),
+          'expense': t('expense'),
+          'income': t('income'),
+          'assets': t('assets'),
+          'calendar': t('calendar'),
+          'reports': t('reports'),
+          'subscriptions': t('subscriptions'),
+          'settings': t('settings'),
+          'more': t('more')
+        };
+        $("subline").textContent = titleMap[page] || t('appTitle');
+
         // Ay navigasyonu sadece ilgili sayfalarda görünsün
         var showNav = (page === "dashboard" || page === "expense" || page === "income" || page === "calendar");
         var monthNav = document.getElementById("monthNav");
@@ -4519,7 +4634,7 @@
           if (_searchBar) _searchBar.style.display = showSearch ? "flex" : "none";
 
           var _mobileBar = document.getElementById("headerMobileBar");
-          if (_mobileBar) _mobileBar.style.display = (currentPage === "assets" || currentPage === "settings" || currentPage === "subscriptions" || currentPage === "reports") ? "none" : "";
+          if (_mobileBar) _mobileBar.style.display = (currentPage === "assets" || currentPage === "settings" || currentPage === "subscriptions" || currentPage === "reports" || currentPage === "more") ? "none" : "";
 
           if (!user) {
             content.innerHTML =
@@ -4639,6 +4754,42 @@
 
           if (currentPage === "subscriptions") {
             renderSubscriptionsPage();
+            return;
+          }
+
+          if (currentPage === "more") {
+            content.innerHTML = 
+              '<div class="premiumGrid" style="animation: fadeIn 0.4s ease;">' +
+                
+                /* Category 1 */
+                '<div class="premiumSection">' +
+                  '<h3>' + (currentLang === 'tr' ? 'Planlama ve Takip' : 'Planning & Tracking') + '</h3>' +
+                  '<div class="pCard pink" onclick="window.setActiveTab(\'calendar\')" style="width:100%;">' +
+                    '<div class="pTitle">' + t('calendar') + '</div>' +
+                    '<div class="pIcon">📅</div>' +
+                  '</div>' +
+                  '<div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">' +
+                    '<div class="pCard orange" onclick="window.setActiveTab(\'subscriptions\')">' +
+                      '<div class="pTitle">' + t('subscriptions') + '</div>' +
+                      '<div class="pIcon">🔁</div>' +
+                    '</div>' +
+                    '<div class="pCard cyan" onclick="window.setActiveTab(\'reports\')">' +
+                      '<div class="pTitle">' + t('reports') + '</div>' +
+                      '<div class="pIcon">📈</div>' +
+                    '</div>' +
+                  '</div>' +
+                '</div>' +
+
+                /* Category 2 */
+                '<div class="premiumSection">' +
+                  '<h3>' + (currentLang === 'tr' ? 'Ayarlar ve Sistem' : 'Settings & System') + '</h3>' +
+                  '<div class="pCard purple" onclick="window.setActiveTab(\'settings\')" style="width:100%;">' +
+                    '<div class="pTitle">' + t('settings') + '</div>' +
+                    '<div class="pIcon">⚙️</div>' +
+                  '</div>' +
+                '</div>' +
+
+              '</div>';
             return;
           }
 
