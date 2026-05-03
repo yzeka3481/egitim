@@ -1784,6 +1784,109 @@
       letter-spacing: 0.5px;
       display: block;
     }
+
+    /* Tags Chips */
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      background: rgba(91, 142, 255, 0.1);
+      color: #9bb4e8;
+      border: 1px solid rgba(91, 142, 255, 0.2);
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-right: 4px;
+      margin-top: 4px;
+      cursor: pointer;
+    }
+    .tag-chip:hover {
+      background: rgba(91, 142, 255, 0.2);
+    }
+
+    /* Yearly Report Styles */
+    .reportGrid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; }
+    .reportKpiRow { grid-column: span 12; display: flex; gap: 14px; flex-wrap: wrap; }
+    .reportKpi { flex: 1; min-width: 180px; padding: 20px; }
+    .reportChartCard { grid-column: span 12; padding: 24px; min-height: 320px; }
+    .yearlyChart { 
+      display: flex; 
+      align-items: flex-end; 
+      justify-content: space-between; 
+      height: 200px; 
+      margin-top: 30px; 
+      gap: 10px; 
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+      position: relative;
+    }
+    .chartCol { 
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 5px; 
+      height: 100%; 
+      justify-content: flex-end; 
+      position: relative;
+    }
+    .barGroup { width: 100%; height: 100%; display: flex; gap: 2px; align-items: flex-end; justify-content: center; }
+    .bar { width: 40%; border-radius: 4px 4px 0 0; min-height: 2px; transition: height 0.4s ease; }
+    .bar.inc { background: var(--good); opacity: 0.8; }
+    .bar.exp { background: var(--bad); opacity: 0.8; }
+    .colLabel { font-size: 10px; font-weight: 700; color: var(--muted); margin-top: 8px; }
+    .barVal { 
+      position: absolute; 
+      top: -20px; 
+      font-size: 9px; 
+      font-weight: 700; 
+      opacity: 0; 
+      transition: opacity 0.2s; 
+      white-space: nowrap; 
+      pointer-events: none;
+    }
+    .chartCol:hover .barVal { opacity: 1; }
+
+    /* Search Bar */
+    .searchContainer {
+      display: flex;
+      gap: 10px;
+      margin: 0 16px 12px 16px;
+      padding: 4px 0;
+      animation: slideDown 0.3s ease;
+    }
+    .searchContainer input {
+      flex: 1;
+      height: 42px;
+      border-radius: 12px;
+      padding: 0 16px;
+      font-size: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line);
+      color: var(--text);
+      transition: all 0.2s;
+    }
+    .searchContainer input:focus {
+      background: rgba(255,255,255,0.07);
+      border-color: var(--brand);
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(91, 142, 255, 0.1);
+    }
+    .searchContainer select {
+      width: 120px;
+      height: 42px;
+      border-radius: 12px;
+      padding: 0 12px;
+      font-size: 13px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line);
+      color: var(--text);
+      cursor: pointer;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 
@@ -1807,6 +1910,14 @@
         <span class="hint" id="topHint"></span>
       </div>
     </header>
+    <div id="searchBar" class="searchContainer" style="display:none;">
+      <input type="text" id="search" placeholder="Ara (başlık, kategori, #etiket)...">
+      <select id="statusFilter">
+        <option value="all">Hepsi</option>
+        <option value="unpaid">Bekleyen</option>
+        <option value="paid">Tamamlanan</option>
+      </select>
+    </div>
     <div id="content" class="content"></div>
   </div>
 
@@ -1827,6 +1938,9 @@
       </div>
       <div class="tab" data-page="calendar">
         <div class="ico">📆</div>Takvim
+      </div>
+      <div class="tab" data-page="reports">
+        <div class="ico">📈</div>Raporlar
       </div>
       <div class="tab" data-page="assets">
         <div class="ico">🏦</div>Varlıklar
@@ -2016,8 +2130,11 @@
         </div>
 
         <div class="formGroup">
-          <label>Not (Opsiyonel)</label>
           <textarea id="mNote" rows="2" style="padding: 12px; border-radius: 12px; background:rgba(255,255,255,0.03); border: 1px solid var(--line); color:var(--text); font-family:inherit; resize:none; width: 100%;" placeholder="Ekstra bilgi..."></textarea>
+        </div>
+        <div class="formGroup">
+          <label id="labelTags">Etiketler</label>
+          <input type="text" id="mTags" placeholder="#tatil #iş" style="padding: 0 12px; border-radius: 12px; width: 100%; height: 40px !important; box-sizing: border-box; font-size: 13px;">
         </div>
       </div>
       <div class="actions" style="padding: 20px; background: transparent; border-top: 1px solid var(--line);">
@@ -2409,7 +2526,7 @@
       var LANG = {
         tr: {
           appTitle: 'CashNode',
-          dashboard: 'Dashboard', expense: 'Gider', income: 'Gelir', calendar: 'Takvim', assets: 'Varlıklar', subscriptions: 'Abonelik', settings: 'Ayarlar',
+          dashboard: 'Dashboard', expense: 'Gider', income: 'Gelir', calendar: 'Takvim', reports: 'Raporlar', assets: 'Varlıklar', subscriptions: 'Abonelik', settings: 'Ayarlar',
           newEntry: 'Yeni', editEntry: 'Kayıt Düzenle', save: 'Kaydet', cancel: 'Vazgeç',
           login: 'Giriş Yap', register: 'Kayıt Ol', logout: 'Çıkış', loginBtn: 'Giriş',
           paid: 'Ödendi', unpaid: 'Ödenmedi', paidShort: 'Ödendi', unpaidShort: 'Ödenmedi',
@@ -2441,6 +2558,9 @@
           category: 'Kategori', date: 'Tarih', note: 'Not', duration: 'Süre', months: 'ay',
           amountPlaceholder: 'Tutar', titlePlaceholder: 'Başlık (örn: Tuna, Macbook)',
           otherCatPlaceholder: 'Diğer kategori yaz',
+          tags: 'Etiketler', tagsPlaceholder: '#tatil #iş #hediye',
+          reportsTitle: 'Yıllık Analiz', yearlyOverview: 'Yıllık Genel Bakış', monthlyTrend: 'Aylık Değişim',
+          yearlyIncome: 'Yıllık Gelir', yearlyExpense: 'Yıllık Gider', yearlyNet: 'Yıllık Net',
           filterAll: 'Durum: Hepsi', filterUnpaid: 'Durum: Alınmadı/Ödenmedi', filterPaid: 'Durum: Alındı/Ödendi',
           searchPlaceholder: 'Ara (başlık / kategori)',
           quickTips: '💡 Hızlı İpuçları',
@@ -2488,7 +2608,7 @@
         },
         en: {
           appTitle: 'Payment Tracker',
-          dashboard: 'Dashboard', expense: 'Expenses', income: 'Income', calendar: 'Calendar', assets: 'Assets', subscriptions: 'Subscriptions', settings: 'Settings',
+          dashboard: 'Dashboard', expense: 'Expenses', income: 'Income', calendar: 'Calendar', reports: 'Reports', assets: 'Assets', subscriptions: 'Subscriptions', settings: 'Settings',
           newEntry: 'New Entry', editEntry: 'Edit Entry', save: 'Save', cancel: 'Cancel',
           login: 'Sign In', register: 'Sign Up', logout: 'Logout', loginBtn: 'Login',
           paid: 'Paid', unpaid: 'Unpaid', paidShort: 'Paid', unpaidShort: 'Unpaid',
@@ -2520,6 +2640,9 @@
           category: 'Category', date: 'Date', note: 'Note', duration: 'Duration', months: 'months',
           amountPlaceholder: 'Amount', titlePlaceholder: 'Title (e.g. Netflix, Rent)',
           otherCatPlaceholder: 'Type custom category',
+          tags: 'Tags', tagsPlaceholder: '#vacation #work #gift',
+          reportsTitle: 'Yearly Analysis', yearlyOverview: 'Yearly Overview', monthlyTrend: 'Monthly Trend',
+          yearlyIncome: 'Yearly Income', yearlyExpense: 'Yearly Expense', yearlyNet: 'Yearly Net',
           filterAll: 'Status: All', filterUnpaid: 'Status: Unpaid', filterPaid: 'Status: Paid',
           searchPlaceholder: 'Search (title / category)',
           quickTips: '💡 Quick Tips',
@@ -2704,6 +2827,9 @@
         var assetNameEl = document.getElementById('assetName'); if (assetNameEl) assetNameEl.placeholder = t('assetName') + ' (örn: Ziraat, Kapalıçarşı)';
         var assetAmountEl = document.getElementById('assetAmount'); if (assetAmountEl) assetAmountEl.placeholder = t('assetAmount');
         var assetNoteEl = document.getElementById('assetNote'); if (assetNoteEl) assetNoteEl.placeholder = t('note');
+        
+        var mTags = document.getElementById('mTags'); if (mTags) mTags.placeholder = t('tagsPlaceholder');
+        var labelTags = document.getElementById('labelTags'); if (labelTags) labelTags.textContent = t('tags');
       }
 
       var CATEGORY_COLORS = {
@@ -2863,6 +2989,7 @@
         
         document.getElementById("mTitle").value = row.title || "";
         document.getElementById("mNote").value = row.note || "";
+        document.getElementById("mTags").value = row.tags || "";
         
         var rec = !!row.isRecurring;
         document.getElementById("mRecurring").checked = rec;
@@ -3059,6 +3186,7 @@
         document.getElementById('mCategoryOther').style.display = "none";
         document.getElementById('mTitle').value = "";
         document.getElementById('mNote').value = "";
+        document.getElementById('mTags').value = "";
         
         document.getElementById('mRecurring').checked = false;
         document.getElementById('recBox').style.display = "none";
@@ -3118,6 +3246,7 @@
         var noteValue = $("mNote").value.trim();
         var recurringValue = $("mRecurring").checked;
         var recMonthsValue = Number($("mRecMonths").value);
+        var tagsValue = $("mTags").value.trim();
         var updateSeriesValue = $("mUpdateSeries").checked;
 
         if (!amountValue || amountValue <= 0) return toast(t('enterAmount'));
@@ -3147,6 +3276,7 @@
             isTemplate: !!editingRow.isTemplate,
             recurrenceId: rid,
             recurrenceTotalMonths: recurringValue ? recMonthsValue : null,
+            tags: tagsValue || "",
             updatedAt: serverTs()
           };
           
@@ -3232,6 +3362,7 @@
           isTemplate: false,
           recurrenceId: null,
           recurrenceTotalMonths: recurringValue ? recMonthsValue : null,
+          tags: tagsValue || "",
           createdAt: serverTs(),
           updatedAt: serverTs()
         };
@@ -3327,6 +3458,27 @@
         });
 
         out.sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); });
+
+        // Search & Filter Logic
+        var q = ($("search") ? $("search").value : "").toLowerCase().trim();
+        var status = ($("statusFilter") ? $("statusFilter").value : "all");
+
+        if (status !== "all") {
+          out = out.filter(function(r) {
+            return status === "paid" ? isPaid(r) : !isPaid(r);
+          });
+        }
+
+        if (q) {
+          out = out.filter(function(r) {
+            var title = (r.title || "").toLowerCase();
+            var cat = (r.category || "").toLowerCase();
+            var tags = (r.tags || "").toLowerCase();
+            var note = (r.note || "").toLowerCase();
+            return title.includes(q) || cat.includes(q) || tags.includes(q) || note.includes(q);
+          });
+        }
+
         return out;
       }
 
@@ -3485,6 +3637,7 @@
             '<div class="rowMain">' +
             '<div class="rowTitle">' + title + recIcon + '</div>' +
             '<div class="rowMeta">' + dot + '<span>' + cat + '</span><span style="opacity:.4;margin:0 2px">•</span><span>' + dateStr + '</span></div>' +
+            renderTags(r.tags) +
             '</div>' +
             '<div class="rowRight">' +
             '<div class="rowAmt" style="color:' + amtColor + '">' + fmtAmt(Number(r.amount || 0)) + '</div>' +
@@ -4360,8 +4513,13 @@
           var showNav = (currentPage === "dashboard" || currentPage === "expense" || currentPage === "income" || currentPage === "calendar");
           var _monthNav = document.getElementById("monthNav");
           if (_monthNav) _monthNav.style.display = showNav ? "" : "none";
+          
+          var showSearch = (currentPage === "expense" || currentPage === "income" || currentPage === "dashboard");
+          var _searchBar = document.getElementById("searchBar");
+          if (_searchBar) _searchBar.style.display = showSearch ? "flex" : "none";
+
           var _mobileBar = document.getElementById("headerMobileBar");
-          if (_mobileBar) _mobileBar.style.display = (currentPage === "assets" || currentPage === "settings" || currentPage === "subscriptions") ? "none" : "";
+          if (_mobileBar) _mobileBar.style.display = (currentPage === "assets" || currentPage === "settings" || currentPage === "subscriptions" || currentPage === "reports") ? "none" : "";
 
           if (!user) {
             content.innerHTML =
@@ -4471,6 +4629,11 @@
 
           if (currentPage === "assets") {
             renderAssetsPage();
+            return;
+          }
+
+          if (currentPage === "reports") {
+            renderReportsPage();
             return;
           }
 
@@ -4612,6 +4775,121 @@
         } catch (e) { console.error(e); toast(t('saveErr') + ' ' + (e.message || e)); }
       }
 
+      function renderTags(tagsStr) {
+        if (!tagsStr) return "";
+        var tags = tagsStr.split(/[\s,]+/).filter(t => t.trim().length > 0);
+        if (tags.length === 0) return "";
+        return '<div class="tagsList">' + tags.map(t => {
+          var cleanTag = t.startsWith("#") ? t : "#" + t;
+          return '<span class="tag-chip" onclick="window.filterByTag(\'' + escapeHtml(cleanTag) + '\', event)">' + escapeHtml(cleanTag) + '</span>';
+        }).join("") + '</div>';
+      }
+
+      window.filterByTag = function(tag, e) {
+        if (e) e.stopPropagation();
+        var search = document.getElementById("search");
+        if (search) {
+          search.value = tag;
+          // Trigger search
+          if (currentPage !== "expense" && currentPage !== "income") {
+             setActiveTab("expense");
+          }
+          renderPage();
+        }
+      };
+
+      function renderReportsPage() {
+        var content = $("content");
+        var year = selectedMonth.split("-")[0];
+        
+        // Get current real-world year and month for comparison
+        var now = new Date();
+        var todayYm = now.getFullYear() + "-" + pad2(now.getMonth() + 1);
+        
+        // Filter rows by year AND ensure they are not in the future relative to today
+        var yearRows = allRows.filter(function(r) { 
+          var mDoc = monthOfDoc(r);
+          return !isTemplate(r) && String(r.date || "").startsWith(year) && mDoc <= todayYm; 
+        });
+
+        var monthlyData = [];
+        var totalInc = 0;
+        var totalExp = 0;
+
+        for (var m = 1; m <= 12; m++) {
+          var mKey = year + "-" + pad2(m);
+          // Only process months that are NOT in the future
+          if (mKey > todayYm) {
+            monthlyData.push({ month: mKey, inc: 0, exp: 0, isFuture: true });
+            continue;
+          }
+          
+          var mRows = yearRows.filter(r => String(r.date || "").startsWith(mKey));
+          var k = kpisFor(mRows);
+          monthlyData.push({ month: mKey, inc: k.inc, exp: k.exp, isFuture: false });
+          totalInc += k.inc;
+          totalExp += k.exp;
+        }
+
+        var maxVal = Math.max.apply(null, monthlyData.map(d => Math.max(d.inc, d.exp))) || 1;
+
+        var chartHtml = monthlyData.map(function(d, i) {
+          var hInc = (d.inc / maxVal * 100).toFixed(1);
+          var hExp = (d.exp / maxVal * 100).toFixed(1);
+          var mName = new Date(year, i, 1).toLocaleDateString(currentLang === 'tr' ? 'tr-TR' : 'en-US', { month: 'short' });
+          
+          // Future months will have empty bars or a distinct look if desired, currently 0 height
+          return '' +
+            '<div class="chartCol" style="' + (d.isFuture ? 'opacity: 0.3;' : '') + '">' +
+              (!d.isFuture ? '<div class="barVal">' + fmtAmt(d.inc) + ' / ' + fmtAmt(d.exp) + '</div>' : '') +
+              '<div class="barGroup">' +
+                '<div class="bar inc" style="height:' + hInc + '%"></div>' +
+                '<div class="bar exp" style="height:' + hExp + '%"></div>' +
+              '</div>' +
+              '<div class="colLabel">' + mName + '</div>' +
+            '</div>';
+        }).join("");
+
+        content.innerHTML = 
+          '<div class="reportGrid">' +
+            '<div style="grid-column:span 12; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
+              '<h2 style="margin:0; font-size:20px;">📈 ' + t('reportsTitle') + ' (' + year + ')</h2>' +
+            '</div>' +
+            '<div class="reportKpiRow">' +
+              '<div class="card reportKpi"><div class="hint" style="font-size:11px;">' + t('yearlyIncome') + '</div><div style="font-size:22px; font-weight:800; color:var(--good);">' + fmtAmt(totalInc) + '</div></div>' +
+              '<div class="card reportKpi"><div class="hint" style="font-size:11px;">' + t('yearlyExpense') + '</div><div style="font-size:22px; font-weight:800; color:var(--bad);">' + fmtAmt(totalExp) + '</div></div>' +
+              '<div class="card reportKpi"><div class="hint" style="font-size:11px;">' + t('yearlyNet') + '</div><div style="font-size:22px; font-weight:800; color:var(--brand);">' + fmtAmt(totalInc - totalExp) + '</div></div>' +
+            '</div>' +
+            '<div class="card reportChartCard">' +
+              '<h2 style="font-size:14px; color:var(--muted);">' + t('monthlyTrend') + '</h2>' +
+              '<div class="yearlyChart">' + chartHtml + '</div>' +
+            '</div>' +
+            '<div class="card" style="grid-column:span 12;">' +
+              '<h2>📌 Etiket Bulutu (Top Tags)</h2>' +
+              '<div id="tagCloud" style="display:flex; flex-wrap:wrap; gap:8px; padding:10px 0;">' + renderTagCloud(yearRows) + '</div>' +
+            '</div>' +
+          '</div>';
+      }
+
+      function renderTagCloud(rows) {
+        var counts = {};
+        rows.forEach(r => {
+          if (r.tags) {
+            var ts = r.tags.split(/[\s,]+/).filter(t => t.trim().length > 0);
+            ts.forEach(t => {
+              var clean = t.startsWith("#") ? t : "#" + t;
+              counts[clean] = (counts[clean] || 0) + 1;
+            });
+          }
+        });
+        var sorted = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
+        if (sorted.length === 0) return '<div class="hint">Henüz etiket eklenmemiş.</div>';
+        return sorted.map(t => {
+          var size = Math.min(18, 10 + counts[t] * 2);
+          return '<span class="tag-chip" style="font-size:' + size + 'px; padding:4px 10px;" onclick="window.filterByTag(\'' + escapeHtml(t) + '\', event)">' + escapeHtml(t) + ' (' + counts[t] + ')</span>';
+        }).join("");
+      }
+
       const formatMonthLabel = (m) => {
         const monthsTr = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
         const monthsEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -4680,6 +4958,14 @@
 
       if ($("btnPrivacy")) {
         $("btnPrivacy").addEventListener("click", window.togglePrivacy);
+      }
+
+      // Bind search & filter listeners
+      if ($("search")) {
+        $("search").addEventListener("input", function() { renderPage(); });
+      }
+      if ($("statusFilter")) {
+        $("statusFilter").addEventListener("change", function() { renderPage(); });
       }
 
       renderPage();
