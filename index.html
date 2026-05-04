@@ -2039,6 +2039,21 @@
     </div>
   </div>
 
+  <div id="assetAnalysisBg" class="modalBg">
+    <div class="modal">
+      <div class="modalTop">
+        <strong id="analysisTitle">Varlık Analizi</strong>
+        <button id="analysisClose" class="btn small">✕</button>
+      </div>
+      <div class="modalBody" id="analysisBody">
+        <!-- Performance data will be injected here -->
+      </div>
+      <div class="actions">
+        <button id="analysisOk" class="btn primary" style="flex:1;">Kapat</button>
+      </div>
+    </div>
+  </div>
+
   <div id="assetBg" class="modalBg">
     <div class="modal">
       <div class="modalTop">
@@ -4138,6 +4153,7 @@
 
             assetRates.lastFetch = new Date();
             localStorage.setItem('assetRates', JSON.stringify(assetRates));
+            saveRateHistory(assetRates);
             toast(t('assetRefreshOk'));
           })
           .catch(function(err) {
@@ -4327,7 +4343,10 @@
               '<div class="assetVal" style="color:' + meta.color + '">' + (privacyMode ? '●●●' : totalStr) + '</div>' +
               '<div class="assetRaw">' + (privacyMode ? '●●' : rawStr) + '</div>' +
               profitHtml +
-              '<div style="margin-top:4px;">' + badge + '</div>' +
+              '<div style="margin-top:4px; display:flex; gap:4px; justify-content:flex-end;">' + 
+              '<button class="btn small analysis-btn" style="padding:2px 6px; font-size:10px; border-radius:6px;" data-id="' + escapeHtml(asset.id) + '">📈 Analiz</button>' +
+              badge + 
+              '</div>' +
               '</div>' +
               '</div>';
           }).join('');
@@ -4345,9 +4364,19 @@
         // Karta tıkla → düzenle
         document.querySelectorAll('.assetCard[data-asset-id]').forEach(function(el) {
           el.addEventListener('click', function(e) {
+            if (e.target.closest('.analysis-btn')) return; // Don't open edit if analysis clicked
             var id = el.getAttribute('data-asset-id');
             var asset = allAssets.find(function(a) { return a.id === id; });
             if (asset) openAssetModal(asset);
+          });
+        });
+
+        document.querySelectorAll('.analysis-btn').forEach(function(btn) {
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var id = btn.getAttribute('data-id');
+            var asset = allAssets.find(function(a) { return a.id === id; });
+            if (asset) openAssetAnalysis(asset);
           });
         });
 
@@ -4440,7 +4469,157 @@
         });
       });
 
+      /* ── Rate History Tracking ── */
+      function saveRateHistory(rates) {
+        try {
+          var history = JSON.parse(localStorage.getItem('assetRateHistory') || '[]');
+          var now = Date.now();
+          // Avoid saving too frequently (max once per hour)
+          if (history.length > 0 && (now - history[history.length-1].ts < 3600000)) return;
+          
+          history.push({ ts: now, rates: Object.assign({}, rates) });
+          // Keep last 100 entries (approx 4 days if hourly, or more if less frequent)
+          if (history.length > 100) history.shift();
+          localStorage.setItem('assetRateHistory', JSON.stringify(history));
+        } catch(e) { console.error("History save error", e); }
+      }
 
+      function getHistoricalRateFromHistory(daysAgo) {
+        try {
+          var history = JSON.parse(localStorage.getItem('assetRateHistory') || '[]');
+          if (!history.length) return null;
+          var targetTs = Date.now() - (daysAgo * 86400000);
+          
+          // Find entry closest to targetTs
+          var closest = history[0];
+          var minDiff = Math.abs(history[0].ts - targetTs);
+          
+          for (var i = 1; i < history.length; i++) {
+            var diff = Math.abs(history[i].ts - targetTs);
+            if (diff < minDiff) {
+              minDiff = diff;
+              closest = history[i];
+            }
+          }
+          
+          // Only return if it's reasonably close to the target (within 24h)
+          if (minDiff > 86400000) return null;
+          return closest.rates;
+        } catch(e) { return null; }
+      }
+
+      var analysisBg = document.getElementById('assetAnalysisBg');
+      function openAssetAnalysis(asset) {
+        var body = document.getElementById('analysisBody');
+        var result = calcAssetTRY(asset);
+        var meta = ASSET_META[asset.type] || ASSET_META.other;
+        var typeLabel = t('assetType_' + (asset.type || 'other'));
+
+        var periods = [
+          { label: '1 Günlük', days: 1 },
+          { label: '3 Günlük', days: 3 },
+          { label: '7 Günlük', days: 7 },
+          { label: 'Aylık (30G)', days: 30 }
+        ];
+
+        var perfHtml = periods.map(function(p) {
+          var histRates = getHistoricalRateFromHistory(p.days);
+          var perfVal = '—';
+          var perfClass = '';
+          var perfPercent = '';
+          var icon = '🕒';
+
+          if (histRates) {
+            var histResult = calcAssetTRYWithRates(asset, histRates);
+            if (histResult && histResult.unitTRY && result.unitTRY) {
+              var diff = result.unitTRY - histResult.unitTRY;
+              var pct = (diff / histResult.unitTRY) * 100;
+              perfVal = fmtAmt(diff * Number(asset.amount), true);
+              perfClass = diff >= 0 ? 'good' : 'bad';
+              perfPercent = (diff >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+              icon = diff >= 0 ? '📈' : '📉';
+            }
+          }
+
+          return '<div class="card" style="margin-bottom:12px; padding:16px; display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02); border-radius:18px; transition:all 0.2s; border:1px solid var(--line);">' +
+            '<div style="display:flex; align-items:center; gap:12px;">' +
+              '<div style="width:36px; height:36px; border-radius:12px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:18px;">' + icon + '</div>' +
+              '<div>' +
+                '<div class="hint" style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">' + p.label + '</div>' +
+                '<div style="font-size:14px; font-weight:700; color:var(--text);">' + (perfClass === 'good' ? 'Kazanç' : (perfClass === 'bad' ? 'Kayıp' : 'Değişim Yok')) + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div style="text-align:right;">' +
+              '<div class="value ' + perfClass + '" style="font-size:17px; font-weight:800;">' + perfVal + '</div>' +
+              '<div class="hint ' + perfClass + '" style="font-size:12px; font-weight:650;">' + perfPercent + '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+
+        var totalProfitHtml = '';
+        if (asset.buyPrice && result.total > 0) {
+          var p = result.total - (Number(asset.amount) * asset.buyPrice);
+          var pColor = p > 0 ? 'var(--good)' : (p < 0 ? 'var(--bad)' : 'var(--muted)');
+          var pPct = ((result.unitTRY - asset.buyPrice) / asset.buyPrice) * 100;
+          totalProfitHtml = '<div class="card" style="background:rgba(91,142,255,0.05); border-color:var(--brand); margin-bottom:16px;">' +
+            '<div class="hint">Toplam Getiri (Alıştan İtibaren)</div>' +
+            '<div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:8px;">' +
+              '<div style="font-size:24px; font-weight:800; color:' + pColor + ';">' + (p >= 0 ? '+' : '') + fmtAmt(p, true) + '</div>' +
+              '<div style="font-size:16px; font-weight:700; color:' + pColor + ';">' + (p >= 0 ? '+' : '') + pPct.toFixed(2) + '%</div>' +
+            '</div>' +
+          '</div>';
+        }
+
+        body.innerHTML = 
+          '<div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">' +
+            '<div class="assetIcon" style="background:' + meta.bg + '; width:50px; height:50px; font-size:30px;">' + meta.icon + '</div>' +
+            '<div>' +
+              '<div style="font-size:18px; font-weight:800;">' + escapeHtml(asset.name || typeLabel) + '</div>' +
+              '<div class="hint">' + typeLabel + ' Analiz Görünümü</div>' +
+            '</div>' +
+          '</div>' +
+          totalProfitHtml +
+          '<div style="margin-bottom:10px; font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px;">Performans Geçmişi</div>' +
+          perfHtml +
+          (localStorage.getItem('assetRateHistory') ? '' : '<div class="hint" style="text-align:center; padding:10px; background:rgba(251,191,36,0.05); border-radius:10px; border:1px solid rgba(251,191,36,0.2); color:var(--warn);">' + 
+            'Henüz geçmiş veri toplanmadı. Fiyatları yeniledikçe geçmiş performans burada görünecektir.</div>');
+
+        analysisBg.classList.add('show');
+      }
+
+      function calcAssetTRYWithRates(asset, rates) {
+        var qty = Number(asset.amount || 0);
+        var type = asset.type || 'cash';
+        var cur  = asset.currency || 'TRY';
+
+        if (type === 'cash') {
+          if (cur === 'USD' && rates.USD_TRY) return { total: qty * rates.USD_TRY, unitTRY: rates.USD_TRY };
+          if (cur === 'EUR' && rates.EUR_TRY) return { total: qty * rates.EUR_TRY, unitTRY: rates.EUR_TRY };
+          if (cur === 'GBP' && rates.GBP_TRY) return { total: qty * rates.GBP_TRY, unitTRY: rates.GBP_TRY };
+          return { total: qty, unitTRY: 1 };
+        }
+        if (type === 'usd' && rates.USD_TRY) return { total: qty * rates.USD_TRY, unitTRY: rates.USD_TRY };
+        if (type === 'eur' && rates.EUR_TRY) return { total: qty * rates.EUR_TRY, unitTRY: rates.EUR_TRY };
+        if (type === 'gbp' && rates.GBP_TRY) return { total: qty * rates.GBP_TRY, unitTRY: rates.GBP_TRY };
+
+        if (type === 'gold_gram_24' && rates.GOLD_GRAM_TRY)    return { total: qty * rates.GOLD_GRAM_TRY,    unitTRY: rates.GOLD_GRAM_TRY };
+        if (type === 'gold_gram_22' && rates.GOLD_GRAM_22_TRY) return { total: qty * rates.GOLD_GRAM_22_TRY, unitTRY: rates.GOLD_GRAM_22_TRY };
+        if (type === 'gold_quarter' && rates.GOLD_QUARTER_TRY) return { total: qty * rates.GOLD_QUARTER_TRY, unitTRY: rates.GOLD_QUARTER_TRY };
+        if (type === 'gold_half'    && rates.GOLD_HALF_TRY)    return { total: qty * rates.GOLD_HALF_TRY,    unitTRY: rates.GOLD_HALF_TRY };
+        if (type === 'gold_full'    && rates.GOLD_FULL_TRY)    return { total: qty * rates.GOLD_FULL_TRY,    unitTRY: rates.GOLD_FULL_TRY };
+        if (type === 'silver_gram'  && rates.SILVER_GRAM_TRY)  return { total: qty * rates.SILVER_GRAM_TRY,  unitTRY: rates.SILVER_GRAM_TRY };
+
+        var grams = GOLD_GRAMS[type];
+        if (grams && rates.GOLD_GRAM_TRY) {
+          var unitG = grams * rates.GOLD_GRAM_TRY;
+          return { total: qty * unitG, unitTRY: unitG };
+        }
+        return { total: 0, unitTRY: 0 };
+      }
+
+      document.getElementById('analysisClose').addEventListener('click', function() { analysisBg.classList.remove('show'); });
+      document.getElementById('analysisOk').addEventListener('click', function() { analysisBg.classList.remove('show'); });
+      analysisBg.addEventListener('click', function(e) { if (e.target === analysisBg) analysisBg.classList.remove('show'); });
 
       function startSubListener() {
         if (!user || !db) return;
