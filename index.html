@@ -822,6 +822,66 @@
       gap: 6px;
     }
 
+    /* ── Swipeable Row ── */
+    .swipe-row {
+      position: relative;
+      overflow: hidden;
+      border-radius: 15px;
+      margin-bottom: 8px;
+      background: var(--panel);
+      user-select: none;
+      touch-action: pan-y;
+    }
+
+    .swipe-actions {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1;
+    }
+
+    .swipe-action {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 11px;
+      width: 70px;
+      gap: 4px;
+      transition: opacity 0.2s;
+    }
+
+    .swipe-action.left {
+      background: var(--good);
+      margin-right: auto;
+    }
+
+    .swipe-action.right {
+      background: var(--bad);
+      margin-left: auto;
+    }
+
+    .swipe-action i {
+      font-size: 18px;
+      font-style: normal;
+    }
+
+    .rowCard {
+      position: relative;
+      z-index: 2;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      margin-bottom: 0 !important;
+    }
+
+    .rowCard.swiping {
+      transition: none;
+    }
+
     /* ── KPI Card ── */
     .kpiCard h2 {
       display: flex;
@@ -3544,14 +3604,7 @@
         addBg.classList.add("show");
       }
 
-      // Delegated actions (works in overflow tables + mobile Safari)
-      document.addEventListener("click", function (e) {
-        var btn = e.target && e.target.closest ? e.target.closest("button[data-act]") : null;
-        if (!btn) return;
-        var act = btn.getAttribute("data-act");
-        var id = btn.getAttribute("data-id");
-        if (!act || !id) return;
-
+      function executeRowAction(act, id) {
         if (!user) {
           toast(t('notLoggedIn'));
           return;
@@ -3602,6 +3655,16 @@
           document.getElementById("mRecMonths").disabled = false;
           addBg.classList.add("show");
         }
+      }
+
+      // Delegated actions (works in overflow tables + mobile Safari)
+      document.addEventListener("click", function (e) {
+        var btn = e.target && e.target.closest ? e.target.closest("button[data-act]") : null;
+        if (!btn) return;
+        var act = btn.getAttribute("data-act");
+        var id = btn.getAttribute("data-id");
+        if (!act || !id) return;
+        executeRowAction(act, id);
       });
 
       var app = null, auth = null, db = null;
@@ -4185,21 +4248,31 @@
           var amtColor = rowDir === 'income' ? 'var(--good)' : 'var(--bad)';
           var cardCls = rowDir === 'income' ? 'inc-card' : 'exp-card';
           var recIcon = r.isRecurring ? ' <span style="color:var(--brand);font-size:10px;">🔄</span>' : '';
-          var st = isPaid(r)
+          var paid = isPaid(r);
+          var st = paid
             ? '<span class="miniPill paid">' + (rowDir === 'income' ? t('received') : t('paidShort')) + '</span>'
             : '<span class="miniPill unpaid">' + (rowDir === 'income' ? t('waiting') : t('unpaidShort')) + '</span>';
 
+          var toggleIcon = paid ? '↩️' : (rowDir === 'income' ? '✅' : '💸');
+          var toggleLabel = paid ? t('undo') : (rowDir === 'income' ? t('markReceived') : t('markPaid'));
+
           return '' +
-            '<div class="rowCard ' + cardCls + '" data-open="item" data-id="' + escapeHtml(r.id) + '">' +
-            '<div class="rowMain">' +
-            '<div class="rowTitle">' + title + recIcon + '</div>' +
-            '<div class="rowMeta">' + dot + '<span>' + cat + '</span><span style="opacity:.4;margin:0 2px">•</span><span>' + dateStr + '</span></div>' +
-            renderTags(r.tags) +
-            '</div>' +
-            '<div class="rowRight">' +
-            '<div class="rowAmt" style="color:' + amtColor + '">' + fmtAmt(Number(r.amount || 0)) + '</div>' +
-            st +
-            '</div>' +
+            '<div class="swipe-row">' +
+              '<div class="swipe-actions">' +
+                '<div class="swipe-action left"><i>' + toggleIcon + '</i><span>' + toggleLabel + '</span></div>' +
+                '<div class="swipe-action right"><i>🗑️</i><span>' + t('del') + '</span></div>' +
+              '</div>' +
+              '<div class="rowCard ' + cardCls + '" data-open="item" data-id="' + escapeHtml(r.id) + '">' +
+                '<div class="rowMain">' +
+                  '<div class="rowTitle">' + title + recIcon + '</div>' +
+                  '<div class="rowMeta">' + dot + '<span>' + cat + '</span><span style="opacity:.4;margin:0 2px">•</span><span>' + dateStr + '</span></div>' +
+                  renderTags(r.tags) +
+                '</div>' +
+                '<div class="rowRight">' +
+                  '<div class="rowAmt" style="color:' + amtColor + '">' + fmtAmt(Number(r.amount || 0)) + '</div>' +
+                  st +
+                '</div>' +
+              '</div>' +
             '</div>';
         }).join('') + '</div>';
       }
@@ -4325,6 +4398,71 @@
         document.querySelectorAll('[data-open="item"]').forEach(function (el) {
           el.addEventListener("click", function () {
             openItemModal(el.getAttribute("data-id"));
+          });
+        });
+        bindSwipeEvents();
+      }
+
+      function bindSwipeEvents() {
+        var rows = document.querySelectorAll('.swipe-row');
+        rows.forEach(function (row) {
+          var card = row.querySelector('.rowCard');
+          var id = card.getAttribute('data-id');
+          var startX = 0, startY = 0;
+          var currentX = 0;
+          var isSwiping = false, isScrolling = false;
+          var threshold = 80;
+
+          card.addEventListener('touchstart', function (e) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            isSwiping = false;
+            isScrolling = false;
+            card.classList.add('swiping');
+          }, { passive: true });
+
+          card.addEventListener('touchmove', function (e) {
+            var diffX = e.touches[0].clientX - startX;
+            var diffY = e.touches[0].clientY - startY;
+
+            if (!isSwiping && !isScrolling) {
+              if (Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY)) {
+                isSwiping = true;
+              } else if (Math.abs(diffY) > 10) {
+                isScrolling = true;
+              }
+            }
+
+            if (isSwiping) {
+              if (e.cancelable) e.preventDefault();
+              currentX = diffX;
+              // Add resistance
+              if (currentX > threshold + 20) currentX = threshold + 20 + (currentX - threshold - 20) * 0.2;
+              if (currentX < -threshold - 20) currentX = -threshold - 20 + (currentX + threshold + 20) * 0.2;
+              
+              card.style.transform = 'translateX(' + currentX + 'px)';
+              
+              var leftAction = row.querySelector('.swipe-action.left');
+              var rightAction = row.querySelector('.swipe-action.right');
+              if (leftAction) leftAction.style.opacity = currentX > 20 ? 1 : 0.2;
+              if (rightAction) rightAction.style.opacity = currentX < -20 ? 1 : 0.2;
+            }
+          }, { passive: false });
+
+          card.addEventListener('touchend', function () {
+            card.classList.remove('swiping');
+            card.style.transform = '';
+            
+            if (isSwiping) {
+              if (currentX > threshold) {
+                executeRowAction('toggle', id);
+              } else if (currentX < -threshold) {
+                executeRowAction('del', id);
+              }
+            }
+            isSwiping = false;
+            isScrolling = false;
+            currentX = 0;
           });
         });
       }
