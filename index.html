@@ -851,19 +851,22 @@
       color: white;
       font-weight: 800;
       font-size: 11px;
-      width: 70px;
+      width: 85px;
       gap: 4px;
       transition: opacity 0.2s;
+      opacity: 0; /* Hidden by default */
     }
 
     .swipe-action.left {
       background: var(--good);
       margin-right: auto;
+      border-radius: 15px 0 0 15px;
     }
 
     .swipe-action.right {
       background: var(--bad);
       margin-left: auto;
+      border-radius: 0 15px 15px 0;
     }
 
     .swipe-action i {
@@ -1347,17 +1350,17 @@
 
     /* Row cards */
     [data-theme="light"] .rowCard {
-      background: rgba(255, 255, 255, .85);
+      background: #ffffff;
       border-color: rgba(0, 0, 0, .09);
     }
 
     [data-theme="light"] .rowCard.exp-card {
-      background: rgba(217, 63, 92, .06);
+      background: #fff0f3;
       border-color: rgba(217, 63, 92, .18);
     }
 
     [data-theme="light"] .rowCard.inc-card {
-      background: rgba(15, 168, 120, .06);
+      background: #f0fff9;
       border-color: rgba(15, 168, 120, .18);
     }
 
@@ -1739,23 +1742,27 @@
     }
 
     /* ── Row card soft colors by type ── */
+    .rowCard {
+      background: #111b2b; /* Opaque background to hide swipe actions */
+    }
+
     .rowCard.exp-card {
-      background: rgba(245, 104, 128, .07);
+      background: #1c151b;
       border-color: rgba(245, 104, 128, .18);
     }
 
     .rowCard.exp-card:hover {
-      background: rgba(245, 104, 128, .12);
+      background: #251820;
       border-color: rgba(245, 104, 128, .3);
     }
 
     .rowCard.inc-card {
-      background: rgba(34, 211, 170, .07);
+      background: #111f1c;
       border-color: rgba(34, 211, 170, .18);
     }
 
     .rowCard.inc-card:hover {
-      background: rgba(34, 211, 170, .12);
+      background: #162a26;
       border-color: rgba(34, 211, 170, .3);
     }
 
@@ -4444,8 +4451,8 @@
               
               var leftAction = row.querySelector('.swipe-action.left');
               var rightAction = row.querySelector('.swipe-action.right');
-              if (leftAction) leftAction.style.opacity = currentX > 20 ? 1 : 0.2;
-              if (rightAction) rightAction.style.opacity = currentX < -20 ? 1 : 0.2;
+              if (leftAction) leftAction.style.opacity = currentX > 20 ? 1 : 0;
+              if (rightAction) rightAction.style.opacity = currentX < -20 ? 1 : 0;
             }
           }, { passive: false });
 
