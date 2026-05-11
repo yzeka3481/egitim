@@ -822,6 +822,30 @@
       gap: 6px;
     }
 
+    /* ── Paid/Received State ── */
+    .rowCard.is-paid {
+      border-left: 4px solid var(--good) !important;
+      border-top-left-radius: 4px;
+      border-bottom-left-radius: 4px;
+    }
+
+    .rowCard.is-paid .rowTitle {
+      text-decoration: line-through;
+      opacity: 0.5;
+    }
+
+    .rowCard.is-paid .rowAmt {
+      opacity: 0.6;
+    }
+
+    .rowCard.is-paid .rowMeta {
+      opacity: 0.5;
+    }
+
+    .rowCard.is-paid .rowMain {
+      position: relative;
+    }
+
     /* ── Swipeable Row ── */
     .swipe-row {
       position: relative;
@@ -4262,6 +4286,8 @@
 
           var toggleIcon = paid ? '↩️' : (rowDir === 'income' ? '✅' : '💸');
           var toggleLabel = paid ? t('undo') : (rowDir === 'income' ? t('markReceived') : t('markPaid'));
+          var paidClass = paid ? ' is-paid' : '';
+          var checkIcon = paid ? '<span style="color:var(--good);margin-right:6px;font-weight:bold;">✓</span>' : '';
 
           return '' +
             '<div class="swipe-row">' +
@@ -4269,9 +4295,9 @@
                 '<div class="swipe-action left"><i>' + toggleIcon + '</i><span>' + toggleLabel + '</span></div>' +
                 '<div class="swipe-action right"><i>🗑️</i><span>' + t('del') + '</span></div>' +
               '</div>' +
-              '<div class="rowCard ' + cardCls + '" data-open="item" data-id="' + escapeHtml(r.id) + '">' +
+              '<div class="rowCard ' + cardCls + paidClass + '" data-open="item" data-id="' + escapeHtml(r.id) + '">' +
                 '<div class="rowMain">' +
-                  '<div class="rowTitle">' + title + recIcon + '</div>' +
+                  '<div class="rowTitle">' + checkIcon + title + recIcon + '</div>' +
                   '<div class="rowMeta">' + dot + '<span>' + cat + '</span><span style="opacity:.4;margin:0 2px">•</span><span>' + dateStr + '</span></div>' +
                   renderTags(r.tags) +
                 '</div>' +
