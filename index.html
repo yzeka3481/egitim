@@ -3266,7 +3266,9 @@
           more: 'Asistan',
           menuDesc: 'Diğer araçlar ve ayarlar',
           tools: 'Araçlar',
-          other: 'Diğer'
+          other: 'Diğer',
+          rateNote: 'Döviz kurları ile TL\'ye çevrildi',
+          rateSource: 'Güncel kur'
         },
         en: {
           appTitle: 'Payment Tracker',
@@ -3353,7 +3355,9 @@
           more: 'Assistant',
           menuDesc: 'Other tools and settings',
           tools: 'Tools',
-          other: 'Other'
+          other: 'Other',
+          rateNote: 'Converted to TRY using exchange rates',
+          rateSource: 'Current rate'
         }
       };
       var currentLang = localStorage.getItem('lang') || 'tr';
@@ -4200,30 +4204,49 @@
         return out;
       }
 
+      /* Dövizi TL'ye çevir — assetRates yoksa 1:1 kabul et */
+      function toTRY(amt, cur) {
+        if (!cur || cur === 'TRY') return amt;
+        var rateKey = cur.toUpperCase() + '_TRY';
+        if (typeof assetRates !== 'undefined' && assetRates[rateKey]) {
+          return amt * assetRates[rateKey];
+        }
+        return amt; // kur yoksa orijinal tutar
+      }
+
       function kpisFor(rows) {
         var exp = 0, inc = 0, expPaidAmt = 0, incPaidAmt = 0;
         var expPaidCount = 0, expUnCount = 0, incPaidCount = 0, incUnCount = 0;
         var expByCur = {}, incByCur = {}, expPaidByCur = {}, incPaidByCur = {};
         var expUnpaidByCur = {}, incUnpaidByCur = {};
+        /* TL cinsinden toplamlar */
+        var expTRY = 0, incTRY = 0, expPaidTRY = 0, incPaidTRY = 0;
+        var expUnpaidTRY = 0, incUnpaidTRY = 0;
         rows.forEach(function (r) {
           var amt = Number(r.amount || 0);
           var cur = r.currency || 'TRY';
+          var amtTL = toTRY(amt, cur);
           var isInc = normalizeDir(r) === "income";
           var paid = isPaid(r);
           if (isInc) {
             inc += amt;
+            incTRY += amtTL;
             incByCur[cur] = (incByCur[cur] || 0) + amt;
-            if (paid) { incPaidAmt += amt; incPaidCount++; incPaidByCur[cur] = (incPaidByCur[cur] || 0) + amt; }
-            else { incUnCount++; incUnpaidByCur[cur] = (incUnpaidByCur[cur] || 0) + amt; }
+            if (paid) { incPaidAmt += amt; incPaidCount++; incPaidByCur[cur] = (incPaidByCur[cur] || 0) + amt; incPaidTRY += amtTL; }
+            else { incUnCount++; incUnpaidByCur[cur] = (incUnpaidByCur[cur] || 0) + amt; incUnpaidTRY += amtTL; }
           } else {
             exp += amt;
+            expTRY += amtTL;
             expByCur[cur] = (expByCur[cur] || 0) + amt;
-            if (paid) { expPaidAmt += amt; expPaidCount++; expPaidByCur[cur] = (expPaidByCur[cur] || 0) + amt; }
-            else { expUnCount++; expUnpaidByCur[cur] = (expUnpaidByCur[cur] || 0) + amt; }
+            if (paid) { expPaidAmt += amt; expPaidCount++; expPaidByCur[cur] = (expPaidByCur[cur] || 0) + amt; expPaidTRY += amtTL; }
+            else { expUnCount++; expUnpaidByCur[cur] = (expUnpaidByCur[cur] || 0) + amt; expUnpaidTRY += amtTL; }
           }
         });
         return {
           exp: exp, inc: inc, net: inc - exp,
+          expTRY: expTRY, incTRY: incTRY, netTRY: incTRY - expTRY,
+          expPaidTRY: expPaidTRY, incPaidTRY: incPaidTRY,
+          expUnpaidTRY: expUnpaidTRY, incUnpaidTRY: incUnpaidTRY,
           expPaid: expPaidCount, expUn: expUnCount, expPaidAmt: expPaidAmt,
           incPaid: incPaidCount, incUn: incUnCount, incPaidAmt: incPaidAmt,
           expByCur: expByCur, incByCur: incByCur,
@@ -5608,8 +5631,8 @@
           var k = kpisFor(rowsMonth);
 
           if (currentPage === "dashboard") {
-            var expPct = k.exp > 0 ? (k.expPaidAmt / k.exp) * 100 : 0;
-            var incPct = k.inc > 0 ? (k.incPaidAmt / k.inc) * 100 : 0;
+            var expPct = k.expTRY > 0 ? (k.expPaidTRY / k.expTRY) * 100 : 0;
+            var incPct = k.incTRY > 0 ? (k.incPaidTRY / k.incTRY) * 100 : 0;
 
             content.innerHTML =
               '<div class="dashGrid">' +
@@ -5617,16 +5640,16 @@
               '<div class="card kpiCard kpi-exp" onclick="window.setActiveTab(\'expense\')" style="border-color:rgba(245,104,128,.25); background:rgba(245,104,128,.04); cursor:pointer; transition:transform 0.15s ease;">' +
               '<h2><span class="ttl"><span class="kico">💸</span><span>' + t('expense') + '</span></span><span class="tag bad">' + t('thisMonth') + '</span></h2>' +
               '<div class="kpi">' +
-              '<div class="value bad">' + fmtMultiCurrency(k.expByCur) + '</div>' +
+              '<div class="value bad">' + fmtAmtWithCurrency(k.expTRY, 'TRY') + '</div>' +
               '<div style="height:4px; background:rgba(245,104,128,0.1); border-radius:2px; margin: 10px 0; overflow:hidden;">' +
               '<div style="height:100%; background:var(--bad); width:' + expPct + '%; transition:width 0.4s ease;"></div>' +
               '</div>' +
               '<div class="sub" style="display:flex; justify-content:space-between; align-items:center;">' +
-              '<span style="font-size:11px; font-weight:650; color:var(--bad);">' + fmtMultiCurrency(k.expPaidByCur) + ' ' + t('paidShort').toLowerCase() + '</span>' +
+              '<span style="font-size:11px; font-weight:650; color:var(--bad);">' + fmtAmtWithCurrency(k.expPaidTRY, 'TRY') + ' ' + t('paidShort').toLowerCase() + '</span>' +
               '<span class="hint" style="font-size:10px;">' + k.expPaid + ' ' + t('paidShort').toLowerCase() + '</span>' +
               '</div>' +
-              (Object.keys(k.expUnpaidByCur).length > 0 ? '<div class="sub" style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">' +
-              '<span style="font-size:11px; font-weight:650; color:var(--warn);">' + fmtMultiCurrency(k.expUnpaidByCur) + ' ' + t('waiting').toLowerCase() + '</span>' +
+              (k.expUnpaidTRY > 0 ? '<div class="sub" style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">' +
+              '<span style="font-size:11px; font-weight:650; color:var(--warn);">' + fmtAmtWithCurrency(k.expUnpaidTRY, 'TRY') + ' ' + t('waiting').toLowerCase() + '</span>' +
               '<span class="hint" style="font-size:10px;">' + k.expUn + ' ' + t('waiting').toLowerCase() + '</span>' +
               '</div>' : '') +
               '</div>' +
@@ -5634,16 +5657,16 @@
               '<div class="card kpiCard kpi-inc" onclick="window.setActiveTab(\'income\')" style="border-color:rgba(34,211,170,.22); background:rgba(34,211,170,.04); cursor:pointer; transition:transform 0.15s ease;">' +
               '<h2><span class="ttl"><span class="kico">💰</span><span>' + t('income') + '</span></span><span class="tag good">' + t('thisMonth') + '</span></h2>' +
               '<div class="kpi">' +
-              '<div class="value good">' + fmtMultiCurrency(k.incByCur) + '</div>' +
+              '<div class="value good">' + fmtAmtWithCurrency(k.incTRY, 'TRY') + '</div>' +
               '<div style="height:4px; background:rgba(34,211,170,0.1); border-radius:2px; margin: 10px 0; overflow:hidden;">' +
               '<div style="height:100%; background:var(--good); width:' + incPct + '%; transition:width 0.4s ease;"></div>' +
               '</div>' +
               '<div class="sub" style="display:flex; justify-content:space-between; align-items:center;">' +
-              '<span style="font-size:11px; font-weight:650; color:var(--good);">' + fmtMultiCurrency(k.incPaidByCur) + ' ' + t('received').toLowerCase() + '</span>' +
+              '<span style="font-size:11px; font-weight:650; color:var(--good);">' + fmtAmtWithCurrency(k.incPaidTRY, 'TRY') + ' ' + t('received').toLowerCase() + '</span>' +
               '<span class="hint" style="font-size:10px;">' + k.incPaid + ' ' + t('received').toLowerCase() + '</span>' +
               '</div>' +
-              (Object.keys(k.incUnpaidByCur).length > 0 ? '<div class="sub" style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">' +
-              '<span style="font-size:11px; font-weight:650; color:var(--warn);">' + fmtMultiCurrency(k.incUnpaidByCur) + ' ' + t('waiting').toLowerCase() + '</span>' +
+              (k.incUnpaidTRY > 0 ? '<div class="sub" style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">' +
+              '<span style="font-size:11px; font-weight:650; color:var(--warn);">' + fmtAmtWithCurrency(k.incUnpaidTRY, 'TRY') + ' ' + t('waiting').toLowerCase() + '</span>' +
               '<span class="hint" style="font-size:10px;">' + k.incUn + ' ' + t('waiting').toLowerCase() + '</span>' +
               '</div>' : '') +
               '</div>' +
@@ -5654,9 +5677,29 @@
               '<button onclick="window.togglePrivacy()" class="btn small" style="padding:4px 8px; font-size:14px; background:rgba(255,255,255,0.05); border:1px solid var(--line);">' + (privacyMode ? '🙈' : '👁️') + '</button>' +
               '<span class="tag">' + t('thisMonth') + '</span>' +
               '</div></h2>' +
-              '<div class="kpi" style="align-items:center;text-align:center;"><div class="value ' + (k.net >= 0 ? 'good' : 'bad') + '">' + fmtMultiCurrency(netByCurrency(k.incByCur, k.expByCur)) + '</div><div class="sub" style="justify-content:center;"><span class="hint">' + t('income') + ' − ' + t('expense') + '</span></div></div>' +
+              '<div class="kpi" style="align-items:center;text-align:center;"><div class="value ' + (k.netTRY >= 0 ? 'good' : 'bad') + '">' + fmtAmtWithCurrency(k.netTRY, 'TRY') + '</div><div class="sub" style="justify-content:center;"><span class="hint">' + t('income') + ' − ' + t('expense') + '</span></div></div>' +
               '</div>' +
               '</div>' +
+              /* Döviz kuru notu — sadece TRY dışı para birimi varsa göster */
+              (function() {
+                var allCurs = Object.assign({}, k.expByCur, k.incByCur);
+                var foreignCurs = Object.keys(allCurs).filter(function(c) { return c !== 'TRY'; });
+                if (foreignCurs.length === 0) return '';
+                var rateTexts = [];
+                foreignCurs.forEach(function(c) {
+                  var rateKey = c.toUpperCase() + '_TRY';
+                  if (typeof assetRates !== 'undefined' && assetRates[rateKey]) {
+                    var sym = c === 'USD' ? '$' : c === 'EUR' ? '€' : c === 'GBP' ? '£' : c;
+                    rateTexts.push('1 ' + sym + ' = ₺' + Number(assetRates[rateKey]).toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2}));
+                  }
+                });
+                if (rateTexts.length === 0) return '';
+                return '<div style="display:flex; align-items:center; gap:6px; padding:6px 10px; background:rgba(91,142,255,0.06); border:1px solid rgba(91,142,255,0.12); border-radius:10px; font-size:11px; color:var(--muted); flex-wrap:wrap;">' +
+                  '<span style="font-size:14px;">💱</span>' +
+                  '<span style="font-weight:600;">' + t('rateNote') + ':</span> ' +
+                  '<span>' + rateTexts.join(' · ') + '</span>' +
+                  '</div>';
+              })() +
               '<div class="dashFullRow">' + renderSpendingChart(rowsMonth) + '</div>' +
               renderTrialAlerts() +
               '<div class="dashFullRow"><div class="card" style="background:linear-gradient(135deg,rgba(91,142,255,.08),rgba(124,92,255,.05)); border-color:rgba(91,142,255,.18);">' +
