@@ -2676,8 +2676,8 @@
           <label for="mDirInc">Gelir</label>
         </div>
 
-        <!-- Tutar ve Tarih Yan Yana -->
-        <div class="grid2" style="gap: 15px;">
+        <!-- Tutar, Para Birimi ve Tarih -->
+        <div style="display:grid; grid-template-columns: 1fr auto 1fr; gap: 15px; align-items: end;">
           <div class="formGroup">
             <label>Tutar</label>
             <div style="position: relative;">
@@ -2686,6 +2686,15 @@
               <span id="mCurrSymbol"
                 style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 700; color: var(--muted);">₺</span>
             </div>
+          </div>
+          <div class="formGroup">
+            <label style="font-size:11px;">Birim</label>
+            <select id="mCurrency"
+              style="padding: 0 8px; border-radius: 12px; width: 72px; height: 40px !important; box-sizing: border-box; font-size: 13px; font-weight: 700; background: rgba(255,255,255,0.03); border: 1px solid var(--line); color: var(--text); cursor: pointer;">
+              <option value="TRY">₺ TL</option>
+              <option value="EUR">€ EUR</option>
+              <option value="USD">$ USD</option>
+            </select>
           </div>
           <div class="formGroup">
             <label>Tarih</label>
@@ -3358,6 +3367,13 @@
         if (privacyMode) return '●●●';
         return getCurrencyFmt(noDec).format(convertTRY(n));
       }
+      function fmtAmtWithCurrency(n, currencyCode, noDec) {
+        if (privacyMode) return '●●●';
+        var c = CURRENCIES[currencyCode] || CURRENCIES.TRY;
+        var opts = { style: 'currency', currency: c.code };
+        if (noDec) opts.maximumFractionDigits = 0;
+        return new Intl.NumberFormat(c.locale, opts).format(n);
+      }
 
       /* ── Apply language to static HTML elements ── */
       function applyLang() {
@@ -3386,7 +3402,12 @@
         // Modal: Add/Edit
         var mAmount = document.getElementById('mAmount');
         if (mAmount) mAmount.placeholder = '0.00';
-        document.getElementById('mCurrSymbol').textContent = (CURRENCIES[currentCurrency] || CURRENCIES.TRY).symbol;
+        var mCurrSel = document.getElementById('mCurrency');
+        if (mCurrSel) {
+          document.getElementById('mCurrSymbol').textContent = (CURRENCIES[mCurrSel.value] || CURRENCIES.TRY).symbol;
+        } else {
+          document.getElementById('mCurrSymbol').textContent = (CURRENCIES[currentCurrency] || CURRENCIES.TRY).symbol;
+        }
 
         var mTitle = document.getElementById('mTitle');
         if (mTitle) mTitle.placeholder = t('titlePlaceholder');
@@ -3595,6 +3616,9 @@
         else document.getElementById('mStatusUnpaid').checked = true;
 
         document.getElementById('mAmount').value = Number(row.amount || 0) || "";
+        var rowCur = row.currency || 'TRY';
+        document.getElementById('mCurrency').value = rowCur;
+        document.getElementById('mCurrSymbol').textContent = (CURRENCIES[rowCur] || CURRENCIES.TRY).symbol;
         document.getElementById('mDate').value = String(row.date || selectedMonth + "-01").slice(0, 10);
 
         window.__fillingEdit = true;
@@ -3815,6 +3839,10 @@
         updateAddStatusVisibility();
       });
       $("mRecurring").addEventListener("change", function () { $("recBox").style.display = $("mRecurring").checked ? "block" : "none"; });
+      $("mCurrency").addEventListener("change", function () {
+        var sym = (CURRENCIES[this.value] || CURRENCIES.TRY).symbol;
+        document.getElementById('mCurrSymbol').textContent = sym;
+      });
 
       function openAddModalForCreate() {
         if (!user) return toast(t('notLoggedIn'));
@@ -3825,6 +3853,8 @@
 
         document.getElementById('mStatusUnpaid').checked = true;
         document.getElementById('mAmount').value = "";
+        document.getElementById('mCurrency').value = 'TRY';
+        document.getElementById('mCurrSymbol').textContent = '₺';
 
         var today = new Date();
         var todayYm = today.getFullYear() + "-" + pad2(today.getMonth() + 1);
@@ -3914,9 +3944,12 @@
             rid = Date.now().toString();
           }
 
+          var currencyValue = document.getElementById('mCurrency').value || 'TRY';
+
           var payloadE = {
             userId: user.uid,
             amount: amountValue,
+            currency: currencyValue,
             category: catValue,
             date: dateValue,
             isPaid: isStatusPaid,
@@ -4000,9 +4033,12 @@
           return;
         }
 
+        var currencyValue = document.getElementById('mCurrency').value || 'TRY';
+
         var payload = {
           userId: user.uid,
           amount: amountValue,
+          currency: currencyValue,
           category: catValue,
           date: dateValue,
           isPaid: isStatusPaid,
@@ -4136,23 +4172,49 @@
       function kpisFor(rows) {
         var exp = 0, inc = 0, expPaidAmt = 0, incPaidAmt = 0;
         var expPaidCount = 0, expUnCount = 0, incPaidCount = 0, incUnCount = 0;
+        var expByCur = {}, incByCur = {}, expPaidByCur = {}, incPaidByCur = {};
+        var expUnpaidByCur = {}, incUnpaidByCur = {};
         rows.forEach(function (r) {
           var amt = Number(r.amount || 0);
+          var cur = r.currency || 'TRY';
           var isInc = normalizeDir(r) === "income";
           var paid = isPaid(r);
           if (isInc) {
             inc += amt;
-            if (paid) { incPaidAmt += amt; incPaidCount++; } else incUnCount++;
+            incByCur[cur] = (incByCur[cur] || 0) + amt;
+            if (paid) { incPaidAmt += amt; incPaidCount++; incPaidByCur[cur] = (incPaidByCur[cur] || 0) + amt; }
+            else { incUnCount++; incUnpaidByCur[cur] = (incUnpaidByCur[cur] || 0) + amt; }
           } else {
             exp += amt;
-            if (paid) { expPaidAmt += amt; expPaidCount++; } else expUnCount++;
+            expByCur[cur] = (expByCur[cur] || 0) + amt;
+            if (paid) { expPaidAmt += amt; expPaidCount++; expPaidByCur[cur] = (expPaidByCur[cur] || 0) + amt; }
+            else { expUnCount++; expUnpaidByCur[cur] = (expUnpaidByCur[cur] || 0) + amt; }
           }
         });
         return {
           exp: exp, inc: inc, net: inc - exp,
           expPaid: expPaidCount, expUn: expUnCount, expPaidAmt: expPaidAmt,
-          incPaid: incPaidCount, incUn: incUnCount, incPaidAmt: incPaidAmt
+          incPaid: incPaidCount, incUn: incUnCount, incPaidAmt: incPaidAmt,
+          expByCur: expByCur, incByCur: incByCur,
+          expPaidByCur: expPaidByCur, incPaidByCur: incPaidByCur,
+          expUnpaidByCur: expUnpaidByCur, incUnpaidByCur: incUnpaidByCur
         };
+      }
+
+      function fmtMultiCurrency(byCurMap, noDec) {
+        var keys = Object.keys(byCurMap);
+        if (keys.length === 0) return fmtAmtWithCurrency(0, 'TRY', noDec);
+        if (keys.length === 1) return fmtAmtWithCurrency(byCurMap[keys[0]], keys[0], noDec);
+        // Sort by amount descending so the main currency comes first
+        keys.sort(function (a, b) { return byCurMap[b] - byCurMap[a]; });
+        return keys.map(function (c) { return fmtAmtWithCurrency(byCurMap[c], c, noDec); }).join(' + ');
+      }
+
+      function netByCurrency(incByCur, expByCur) {
+        var allCurs = {};
+        Object.keys(incByCur).forEach(function (c) { allCurs[c] = (allCurs[c] || 0) + incByCur[c]; });
+        Object.keys(expByCur).forEach(function (c) { allCurs[c] = (allCurs[c] || 0) - expByCur[c]; });
+        return allCurs;
       }
 
       function groupExpensesByCategory(rows) {
@@ -4254,7 +4316,7 @@
             '<td>' + dirLabel + '</td>' +
             '<td><div style="font-weight:650">' + title + '</div></td>' +
             '<td>' + dot + '<span>' + cat + '</span></td>' +
-            '<td class="right nowrap" style="font-weight:750;color:' + amtColor + '">' + fmtAmt(Number(r.amount || 0)) + '</td>' +
+            '<td class="right nowrap" style="font-weight:750;color:' + amtColor + '">' + fmtAmtWithCurrency(Number(r.amount || 0), r.currency) + '</td>' +
             '<td>' + s + '</td>' +
             '<td>' + rec + '</td>' +
             '<td class="right nowrap">' +
@@ -4302,7 +4364,7 @@
                   renderTags(r.tags) +
                 '</div>' +
                 '<div class="rowRight">' +
-                  '<div class="rowAmt" style="color:' + amtColor + '">' + fmtAmt(Number(r.amount || 0)) + '</div>' +
+                  '<div class="rowAmt" style="color:' + amtColor + '">' + fmtAmtWithCurrency(Number(r.amount || 0), r.currency) + '</div>' +
                   st +
                 '</div>' +
               '</div>' +
@@ -4340,7 +4402,7 @@
           '<div class="itemDetailCard">' +
           '<div class="itemDetailHero" style="background:' + heroBg + ';border-bottom:1px solid ' + heroBorder + ';">' +
           '<div style="width:48px;height:48px;border-radius:50%;background:' + heroBg + ';border:2px solid ' + heroBorder + ';display:flex;align-items:center;justify-content:center;font-size:22px;">' + (isInc ? '💰' : '💸') + '</div>' +
-          '<div class="heroAmt" style="color:' + heroColor + ';">' + (isInc ? '+' : '-') + fmtAmt(Number(row.amount || 0)) + '</div>' +
+          '<div class="heroAmt" style="color:' + heroColor + ';">' + (isInc ? '+' : '-') + fmtAmtWithCurrency(Number(row.amount || 0), row.currency) + '</div>' +
           '<div class="heroTitle">' + escapeHtml(row.title || '—') + '</div>' +
           '<div class="heroMeta">' + dateStr + '</div>' +
           '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px;">' + dirTag + paidTag + recTag + '</div>' +
@@ -5523,27 +5585,35 @@
               '<div class="card kpiCard kpi-exp" onclick="window.setActiveTab(\'expense\')" style="grid-column:span 4; border-color:rgba(245,104,128,.25); background:rgba(245,104,128,.04); cursor:pointer; transition:transform 0.15s ease;">' +
               '<h2><span class="ttl"><span class="kico">💸</span><span>' + t('expense') + '</span></span><span class="tag bad">' + t('thisMonth') + '</span></h2>' +
               '<div class="kpi">' +
-              '<div class="value bad">' + fmtAmt(k.exp) + '</div>' +
+              '<div class="value bad">' + fmtMultiCurrency(k.expByCur) + '</div>' +
               '<div style="height:4px; background:rgba(245,104,128,0.1); border-radius:2px; margin: 10px 0; overflow:hidden;">' +
               '<div style="height:100%; background:var(--bad); width:' + expPct + '%; transition:width 0.4s ease;"></div>' +
               '</div>' +
               '<div class="sub" style="display:flex; justify-content:space-between; align-items:center;">' +
-              '<span style="font-size:11px; font-weight:650; color:var(--bad);">' + fmtAmt(k.expPaidAmt) + ' ' + t('paidShort').toLowerCase() + '</span>' +
-              '<span class="hint" style="font-size:10px;">' + k.expUn + ' ' + t('waiting').toLowerCase() + '</span>' +
+              '<span style="font-size:11px; font-weight:650; color:var(--bad);">' + fmtMultiCurrency(k.expPaidByCur) + ' ' + t('paidShort').toLowerCase() + '</span>' +
+              '<span class="hint" style="font-size:10px;">' + k.expPaid + ' ' + t('paidShort').toLowerCase() + '</span>' +
               '</div>' +
+              (Object.keys(k.expUnpaidByCur).length > 0 ? '<div class="sub" style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">' +
+              '<span style="font-size:11px; font-weight:650; color:var(--warn);">' + fmtMultiCurrency(k.expUnpaidByCur) + ' ' + t('waiting').toLowerCase() + '</span>' +
+              '<span class="hint" style="font-size:10px;">' + k.expUn + ' ' + t('waiting').toLowerCase() + '</span>' +
+              '</div>' : '') +
               '</div>' +
               '</div>' +
               '<div class="card kpiCard kpi-inc" onclick="window.setActiveTab(\'income\')" style="grid-column:span 4; border-color:rgba(34,211,170,.22); background:rgba(34,211,170,.04); cursor:pointer; transition:transform 0.15s ease;">' +
               '<h2><span class="ttl"><span class="kico">💰</span><span>' + t('income') + '</span></span><span class="tag good">' + t('thisMonth') + '</span></h2>' +
               '<div class="kpi">' +
-              '<div class="value good">' + fmtAmt(k.inc) + '</div>' +
+              '<div class="value good">' + fmtMultiCurrency(k.incByCur) + '</div>' +
               '<div style="height:4px; background:rgba(34,211,170,0.1); border-radius:2px; margin: 10px 0; overflow:hidden;">' +
               '<div style="height:100%; background:var(--good); width:' + incPct + '%; transition:width 0.4s ease;"></div>' +
               '</div>' +
               '<div class="sub" style="display:flex; justify-content:space-between; align-items:center;">' +
-              '<span style="font-size:11px; font-weight:650; color:var(--good);">' + fmtAmt(k.incPaidAmt) + ' ' + t('received').toLowerCase() + '</span>' +
-              '<span class="hint" style="font-size:10px;">' + k.incUn + ' ' + t('waiting').toLowerCase() + '</span>' +
+              '<span style="font-size:11px; font-weight:650; color:var(--good);">' + fmtMultiCurrency(k.incPaidByCur) + ' ' + t('received').toLowerCase() + '</span>' +
+              '<span class="hint" style="font-size:10px;">' + k.incPaid + ' ' + t('received').toLowerCase() + '</span>' +
               '</div>' +
+              (Object.keys(k.incUnpaidByCur).length > 0 ? '<div class="sub" style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">' +
+              '<span style="font-size:11px; font-weight:650; color:var(--warn);">' + fmtMultiCurrency(k.incUnpaidByCur) + ' ' + t('waiting').toLowerCase() + '</span>' +
+              '<span class="hint" style="font-size:10px;">' + k.incUn + ' ' + t('waiting').toLowerCase() + '</span>' +
+              '</div>' : '') +
               '</div>' +
               '</div>' +
               '<div class="card kpiCard kpi-net" style="grid-column:span 4; border-color:rgba(91,142,255,.25); background:rgba(91,142,255,.04);">' +
@@ -5552,7 +5622,7 @@
               '<button onclick="window.togglePrivacy()" class="btn small" style="padding:4px 8px; font-size:14px; background:rgba(255,255,255,0.05); border:1px solid var(--line);">' + (privacyMode ? '🙈' : '👁️') + '</button>' +
               '<span class="tag">' + t('thisMonth') + '</span>' +
               '</div></h2>' +
-              '<div class="kpi" style="align-items:center;text-align:center;"><div class="value ' + (k.net >= 0 ? 'good' : 'bad') + '">' + fmtAmt(k.net) + '</div><div class="sub" style="justify-content:center;"><span class="hint">' + t('income') + ' − ' + t('expense') + '</span></div></div>' +
+              '<div class="kpi" style="align-items:center;text-align:center;"><div class="value ' + (k.net >= 0 ? 'good' : 'bad') + '">' + fmtMultiCurrency(netByCurrency(k.incByCur, k.expByCur)) + '</div><div class="sub" style="justify-content:center;"><span class="hint">' + t('income') + ' − ' + t('expense') + '</span></div></div>' +
               '</div>' +
               renderSpendingChart(rowsMonth) +
               renderTrialAlerts() +
@@ -5569,12 +5639,13 @@
 
           if (currentPage === "expense") {
             var rowsE = filteredRowsForMonth("expense");
-            var expTotal = rowsE.reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
+            var expTotalByCur = {};
+            rowsE.forEach(function (r) { var c = r.currency || 'TRY'; expTotalByCur[c] = (expTotalByCur[c] || 0) + Number(r.amount || 0); });
             content.innerHTML =
               '<div class="card">' +
               '<div class="listPageHeader">' +
               '<h2>💸 ' + t('expense') + '</h2>' +
-              '<div class="sub">' + selectedMonth + ' • ' + rowsE.length + ' ' + t('entries') + ' • ' + t('total') + ': <span style="color:var(--bad)">' + fmtAmt(expTotal) + '</span></div>' +
+              '<div class="sub">' + selectedMonth + ' • ' + rowsE.length + ' ' + t('entries') + ' • ' + t('total') + ': <span style="color:var(--bad)">' + fmtMultiCurrency(expTotalByCur) + '</span></div>' +
               '</div>' +
               renderCompactList(rowsE, "expense") +
               '</div>';
@@ -5584,12 +5655,13 @@
 
           if (currentPage === "income") {
             var rowsI = filteredRowsForMonth("income");
-            var incTotal = rowsI.reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
+            var incTotalByCur = {};
+            rowsI.forEach(function (r) { var c = r.currency || 'TRY'; incTotalByCur[c] = (incTotalByCur[c] || 0) + Number(r.amount || 0); });
             content.innerHTML =
               '<div class="card">' +
               '<div class="listPageHeader">' +
               '<h2>💰 ' + t('income') + '</h2>' +
-              '<div class="sub">' + selectedMonth + ' • ' + rowsI.length + ' ' + t('entries') + ' • ' + t('total') + ': <span style="color:var(--good)">' + fmtAmt(incTotal) + '</span></div>' +
+              '<div class="sub">' + selectedMonth + ' • ' + rowsI.length + ' ' + t('entries') + ' • ' + t('total') + ': <span style="color:var(--good)">' + fmtMultiCurrency(incTotalByCur) + '</span></div>' +
               '</div>' +
               renderCompactList(rowsI, "income") +
               '</div>';
