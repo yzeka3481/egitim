@@ -910,6 +910,19 @@
     }
 
     /* ── KPI Card ── */
+    .dashKpiRow .kpiCard[onclick] {
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .dashKpiRow .kpiCard[onclick]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+    }
+
+    .dashKpiRow .kpiCard[onclick]:active {
+      transform: translateY(0);
+    }
+
     .kpiCard h2 {
       display: flex;
       align-items: center;
@@ -1001,6 +1014,27 @@
     }
 
 
+    /* ── Dashboard Grid ── */
+    .dashGrid {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .dashKpiRow {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+    }
+
+    .dashKpiRow > .card {
+      grid-column: span 1;
+    }
+
+    .dashFullRow {
+      width: 100%;
+    }
+
     /* ── Responsive Breakpoints ── */
     @media (max-width: 900px) {
       .grid {
@@ -1008,19 +1042,14 @@
       }
     }
 
-    /* Tablet: dashboard KPI side by side */
+    /* Tablet: dashboard KPI 2+1 layout */
     @media (max-width: 860px) {
-      .dashGrid>.card {
-        grid-column: span 6 !important;
+      .dashKpiRow {
+        grid-template-columns: 1fr 1fr;
       }
 
-      .dashGrid>.card.kpi-exp,
-      .dashGrid>.card.kpi-inc {
-        grid-column: span 3 !important;
-      }
-
-      .dashGrid>.card.kpi-net {
-        grid-column: span 6 !important;
+      .dashKpiRow > .card.kpi-net {
+        grid-column: span 2;
       }
     }
 
@@ -1048,18 +1077,12 @@
         grid-template-columns: repeat(6, 1fr);
       }
 
-      /* Dashboard grid: gider+gelir yan yana, net+diğer full-width */
-      .dashGrid>.card {
-        grid-column: span 6 !important;
+      .dashKpiRow {
+        grid-template-columns: 1fr 1fr;
       }
 
-      .dashGrid>.card.kpi-exp,
-      .dashGrid>.card.kpi-inc {
-        grid-column: span 3 !important;
-      }
-
-      .dashGrid>.card.kpi-net {
-        grid-column: span 6 !important;
+      .dashKpiRow > .card.kpi-net {
+        grid-column: span 2;
       }
 
       /* Chart */
@@ -1237,6 +1260,14 @@
       .donutWrap {
         flex-direction: column;
         align-items: flex-start;
+      }
+
+      .dashKpiRow {
+        grid-template-columns: 1fr;
+      }
+
+      .dashKpiRow > .card.kpi-net {
+        grid-column: span 1;
       }
     }
 
@@ -4207,7 +4238,7 @@
         if (keys.length === 1) return fmtAmtWithCurrency(byCurMap[keys[0]], keys[0], noDec);
         // Sort by amount descending so the main currency comes first
         keys.sort(function (a, b) { return byCurMap[b] - byCurMap[a]; });
-        return keys.map(function (c) { return fmtAmtWithCurrency(byCurMap[c], c, noDec); }).join(' + ');
+        return keys.map(function (c) { return fmtAmtWithCurrency(byCurMap[c], c, noDec); }).join('<br>');
       }
 
       function netByCurrency(incByCur, expByCur) {
@@ -4245,7 +4276,7 @@
 
       function renderSpendingChart(rows) {
         var cats = groupExpensesByCategory(rows);
-        if (!cats.length) return '<div class="card spending" style="grid-column:span 8;"><h2>' + t('spendingTitle') + '</h2><div class="hint" style="padding:16px 0;text-align:center;">' + t('spendingEmpty') + '</div></div>';
+        if (!cats.length) return '<div class="card spending"><h2>' + t('spendingTitle') + '</h2><div class="hint" style="padding:16px 0;text-align:center;">' + t('spendingEmpty') + '</div></div>';
         var total = cats.reduce(function (s, x) { return s + x.amount; }, 0);
         var max = cats[0].amount || 1;
 
@@ -4269,7 +4300,7 @@
         }).join('');
 
         return '' +
-          '<div class="card spending" style="grid-column:span 8;">' +
+          '<div class="card spending">' +
           '<h2>' + t('spendingTitle') + '</h2>' +
           '<div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">' +
           '<div class="donut" style="flex-shrink:0;">' +
@@ -5408,7 +5439,7 @@
           }
         });
         if (!alertsHtml) return '';
-        return '<div style="grid-column:span 4; margin-top:4px;">' + alertsHtml + '</div>';
+        return '<div class="dashFullRow" style="margin-top:4px;">' + alertsHtml + '</div>';
       }
 
       function renderSubscriptionsPage() {
@@ -5581,8 +5612,9 @@
             var incPct = k.inc > 0 ? (k.incPaidAmt / k.inc) * 100 : 0;
 
             content.innerHTML =
-              '<div class="grid dashGrid">' +
-              '<div class="card kpiCard kpi-exp" onclick="window.setActiveTab(\'expense\')" style="grid-column:span 4; border-color:rgba(245,104,128,.25); background:rgba(245,104,128,.04); cursor:pointer; transition:transform 0.15s ease;">' +
+              '<div class="dashGrid">' +
+              '<div class="dashKpiRow">' +
+              '<div class="card kpiCard kpi-exp" onclick="window.setActiveTab(\'expense\')" style="border-color:rgba(245,104,128,.25); background:rgba(245,104,128,.04); cursor:pointer; transition:transform 0.15s ease;">' +
               '<h2><span class="ttl"><span class="kico">💸</span><span>' + t('expense') + '</span></span><span class="tag bad">' + t('thisMonth') + '</span></h2>' +
               '<div class="kpi">' +
               '<div class="value bad">' + fmtMultiCurrency(k.expByCur) + '</div>' +
@@ -5599,7 +5631,7 @@
               '</div>' : '') +
               '</div>' +
               '</div>' +
-              '<div class="card kpiCard kpi-inc" onclick="window.setActiveTab(\'income\')" style="grid-column:span 4; border-color:rgba(34,211,170,.22); background:rgba(34,211,170,.04); cursor:pointer; transition:transform 0.15s ease;">' +
+              '<div class="card kpiCard kpi-inc" onclick="window.setActiveTab(\'income\')" style="border-color:rgba(34,211,170,.22); background:rgba(34,211,170,.04); cursor:pointer; transition:transform 0.15s ease;">' +
               '<h2><span class="ttl"><span class="kico">💰</span><span>' + t('income') + '</span></span><span class="tag good">' + t('thisMonth') + '</span></h2>' +
               '<div class="kpi">' +
               '<div class="value good">' + fmtMultiCurrency(k.incByCur) + '</div>' +
@@ -5616,7 +5648,7 @@
               '</div>' : '') +
               '</div>' +
               '</div>' +
-              '<div class="card kpiCard kpi-net" style="grid-column:span 4; border-color:rgba(91,142,255,.25); background:rgba(91,142,255,.04);">' +
+              '<div class="card kpiCard kpi-net" style="border-color:rgba(91,142,255,.25); background:rgba(91,142,255,.04);">' +
               '<h2><span class="ttl"><span class="kico">⚖️</span><span>' + t('netBalance') + '</span></span>' +
               '<div style="display:flex; gap:8px; align-items:center;">' +
               '<button onclick="window.togglePrivacy()" class="btn small" style="padding:4px 8px; font-size:14px; background:rgba(255,255,255,0.05); border:1px solid var(--line);">' + (privacyMode ? '🙈' : '👁️') + '</button>' +
@@ -5624,12 +5656,13 @@
               '</div></h2>' +
               '<div class="kpi" style="align-items:center;text-align:center;"><div class="value ' + (k.net >= 0 ? 'good' : 'bad') + '">' + fmtMultiCurrency(netByCurrency(k.incByCur, k.expByCur)) + '</div><div class="sub" style="justify-content:center;"><span class="hint">' + t('income') + ' − ' + t('expense') + '</span></div></div>' +
               '</div>' +
-              renderSpendingChart(rowsMonth) +
+              '</div>' +
+              '<div class="dashFullRow">' + renderSpendingChart(rowsMonth) + '</div>' +
               renderTrialAlerts() +
-              '<div class="card" style="grid-column:span 4; background:linear-gradient(135deg,rgba(91,142,255,.08),rgba(124,92,255,.05)); border-color:rgba(91,142,255,.18);">' +
+              '<div class="dashFullRow"><div class="card" style="background:linear-gradient(135deg,rgba(91,142,255,.08),rgba(124,92,255,.05)); border-color:rgba(91,142,255,.18);">' +
               '<h2>' + t('quickTips') + '</h2>' +
               '<div class="hint" style="line-height:1.8;">' + t('quickTipsBody') + '</div>' +
-              '</div>' +
+              '</div></div>' +
               '</div>';
 
             bindTableActions();
